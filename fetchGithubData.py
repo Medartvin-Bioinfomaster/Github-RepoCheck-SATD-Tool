@@ -3,19 +3,17 @@ from pydriller import Repository
 
 # opt-in: ask users  what folders to loook throguh ( like R folder) - pydriller clones a whole repo, can we only download R-folder?
 
-# repoUrl = "https://github.com/bobauser/parapim-quiz"
 repositoryToInput = 'https://github.com/Medartvin-Bioinfomaster/Test-R-Data-Repo'
-# C:\Users\edvin\Desktop\Studiegreier\Masteroppgave\Test-R-Data-Repo
 
-files = [] # a list containing all files? useful?
+files = []
 
-fileAndContributors = {} # a object containing multiple file object. File.contributors should contain every user that has channged that file. Also it should contain how many commits it has been part of, amount of times changed in commits.
+fileAndContributors = {} # an object containing multiple "file" objects. File.contributors should contain every user that has channged that file. Also it should contain how many commits it has been part of, amount of times changed in commits.
 
 projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
 
-issues = [] # list with amount of issues from the github
+# issues = [] # list with amount of issues from the github. OBS: not implemented yet
 
-# foldersToInclude = []
+foldersToInclude = []
 
 repoName = ""
 
@@ -31,6 +29,8 @@ elif urlForRepo.lower() == "cancel":
     cancelProgram = True
     reasonForCancel = "User cancelled"
 
+
+#TODO: include a filter on the period you want to recieve commits for. You can choose to view them all or just a period of commits
 # useDateFilter = input("Do you want to filter commits based on dates? ('yes/1' or 'no/0'):")
 
 # if (useDateFilter == "yes" or useDateFilter == "0"):
@@ -62,21 +62,50 @@ def findRepo (repoUrl):
         # return
         # remove the return for now, just make sure that a local repo can be picked up
 
+def includeFolders ():
+    endSection = False
+    print("Write what folders and files you would like to include. \nWrite a name of a folder in the repo and hit 'enter' to add it. Type +f and a name to add single files. Type -r to remove an item from the view.")
+    while endSection == False:
+        print("Current selection: " + foldersToInclude)
+        folderInput = input("Write what folders and files you would like to include")
+
+        if (folderInput.lower() == "cancel"):
+            cancelProgram = True
+            reasonForCancel = "User canceled at file inclusion section."
+            endSection = True
+
+        elif (folderInput.lower() == "done"):
+            endSection = True
+
+        elif (folderInput.lower().__contains__("+f")):
+            foldersToInclude.append( "(F)" + folderInput.removeprefix("+f ") )
+            #FIXME: her er det ikke implementert å bytte ut +f med denne (F) stringen i stedet. Dette bør legges til asap
+
+        elif (folderInput.lower().__contains__("-r")):
+            foldersToInclude.remove(folderInput)
+            #TODO: implement feedback to user if folder/file isn't found
+
+        else:
+            foldersToInclude.append(folderInput)
+
+    # foldersToInclude
+
+
 if cancelProgram != True:
     findRepo( repositoryToInput )
 
+if cancelProgram != True:
+    includeFolders()
+
 outputFilePlacement = "output.txt"
 
+# Main loop
 if (cancelProgram == False):
     for commit in Repository( repositoryToInput ).traverse_commits():
-        # print("Commit #" + commit.hash)
         repoName = commit.project_name
         print("This is the repo name###: " + repoName)
         print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
         print("Author: " + commit.author.name)
-        # print("Author: " + commit.author.email)
-        # print("Author: " + commit.branches.)
-        # print("Author: " + commit.committer.)
 
         print("Files changed: ")
 
@@ -110,15 +139,6 @@ if (cancelProgram == False):
 
             print(' \\' + file.filename, ' has changed')
         
-        # print("More data, files: " + commit.files)
-        # print("--co authors: " + commit.co_authors)
-        # print("--in main branch?: " + commit.in_main_branch)
-        # print("--lines: " + commit.lines)
-        # print("--branches: " + commit.branches)
-        # print("--committer: " + commit.committer)
-        # print("--deletions: " + commit.deletions)
-        # print("--merge: " + commit.merge)
-        # print("--parents: " + commit.parents)
         print('*End\n')
 
 #TODO: find issues from github using Git API???
@@ -136,10 +156,10 @@ if (cancelProgram == False):
 
     print(files)
 
-    outputString = "Files: " + ", ".join(files)  # Use join to create a comma-separated string of files
+    outputString = "Files: " + ", ".join(files)
     print(fileAndContributors)
 
-    outputString += "\nFiles and their contributors: "  # Using += for a more concise addition
+    outputString += "\nFiles and their contributors: "
 
     for filename, obj in fileAndContributors.items():
         print(filename)
