@@ -3,31 +3,42 @@ from pydriller import Repository
 
 # opt-in: ask users  what folders to loook throguh ( like R folder) - pydriller clones a whole repo, can we only download R-folder?
 
-repositoryToInput = 'https://github.com/Medartvin-Bioinfomaster/Test-R-Data-Repo'
+repositoryToInput = 'https://github.com/Medartvin-Bioinfomaster/Test-R-Data-Repo' # FIXME: remove / delete after a while, only a test repo!!
 
+#Idea for these values: Create an interface or Dictionary containing them, so its easier to refer to them, and it gives them a title like: "ReturnData.files" ...
 files = []
-
 fileAndContributors = {} # an object containing multiple "file" objects. File.contributors should contain every user that has channged that file. Also it should contain how many commits it has been part of, amount of times changed in commits.
-
 projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
-
 # issues = [] # list with amount of issues from the github. OBS: not implemented yet
-
 foldersToInclude = []
 
-repoName = ""
 
-cancelProgram = False
-reasonForCancel = ""
+def WriteRepoName(reposInStorage):
 
-print("Write a command here, 'cancel' to cancel the program.")
-urlForRepo = input("Write repo url here (type 'st' for the standard one): ")
+    if (reposInStorage and len(reposInStorage) > 0):
+        print("\nStored repos:")
+        for i, repo in enumerate(reposInStorage):
+            print("- " + str(i + 1) + ": " + repo)
 
-if urlForRepo.lower() == "st": 
-    urlForRepo = repositoryToInput
-elif urlForRepo.lower() == "cancel":  
-    cancelProgram = True
-    reasonForCancel = "User cancelled"
+    print("Write the repo url bellow. To load a saved repo, type the number from a stored repo above.")
+    urlForRepo = input("Command|: ")
+    urlToReturn = ""
+
+    if urlForRepo.lower() == "st": 
+        urlToReturn = repositoryToInput
+    elif urlForRepo.lower() == "cancel":  
+        cancelProgram = True
+        reasonForCancel = "User cancelled"
+    elif urlForRepo.isnumeric():
+        index = int(urlForRepo)
+        if 0 <= index < len(reposInStorage):
+            urlToReturn = reposInStorage[index]
+        #_
+    else:
+        urlToReturn = urlForRepo
+
+    # Retruing the reponame
+    return urlToReturn
 
 
 #TODO: include a filter on the period you want to recieve commits for. You can choose to view them all or just a period of commits
@@ -41,10 +52,20 @@ elif urlForRepo.lower() == "cancel":
 
 # continue using date or not
 
-def findRepo (repoUrl):
+def CancelProgramDTF(cancelMessage: str) -> None:
+    global cancelProgram, reasonForCancel
+    cancelProgram = True
+    reasonForCancel = reasonForCancel + "\n" + cancelMessage  # safe now
 
+def findRepo (repoUrl, cancelcommand=False):
+    
+    if cancelcommand == True:
+        CancelProgramDTF("Canceled at RepoCheck.")
+        return False
+    
+    repoOK = False
     if repoUrl.startswith('http://') or repoUrl.startswith('https://'):
-        print('Link is OK')
+        print('Link URL is OK')
     else:
         print('Link is NOT a URL. Trying to access as a local path.')
         # Her kan du også implementere logikk for validering av lokal sti hvis nødvendig.
@@ -53,26 +74,29 @@ def findRepo (repoUrl):
         for commit in Repository(repoUrl).traverse_commits():
             # Gjør noe med commit, for eksempel: print(commit)
             print(commit)
+            repoOK = True
+            print("Found repo: " + str(repoUrl))
     except Exception as e:
-        print(f'Error accessing repository: {e}')
-        cancelProgram = True
-        reasonForCancel = "Error accessing local repository. e: " + e
+        print(f'Error accessing repository:')
+        CancelProgramDTF("Error accessing local repository. e: ")
+        repoOK = False
 
         # cancelProgram = True
         # return
         # remove the return for now, just make sure that a local repo can be picked up
 
+    return repoOK
+
 def includeFolders ():
     endSection = False
     print("Write what folders and files you would like to include. \nWrite a name of a folder in the repo and hit 'enter' to add it. Type +f and a name to add single files. Type -r to remove an item from the view.")
-    while endSection == False:
+    
+    while endSection == False and cancelProgram == False:
         print("Current selection: " + foldersToInclude)
         folderInput = input("Write what folders and files you would like to include")
 
         if (folderInput.lower() == "cancel"):
-            cancelProgram = True
-            reasonForCancel = "User canceled at file inclusion section."
-            endSection = True
+            CancelProgramDTF("User canceled at file inclusion section.")
 
         elif (folderInput.lower() == "done"):
             endSection = True
@@ -90,18 +114,88 @@ def includeFolders ():
 
     # foldersToInclude
 
+def saveTheRepoUrlQuestion():
+    print("The Repo Url or Local path is valid, want to store the repo? (Yes / 1 or No / 0)")
+    saveRepo = input("Command|: ")
 
-if cancelProgram != True:
-    findRepo( repositoryToInput )
+    if (saveRepo.strip().lower() == "cancel"):
+        print("Canceling program.")
+        CancelProgramDTF("User canceled progam at saving stage")
+    elif (saveRepo.lower() == "yes" or saveRepo == "1"):
+        print("Saving repo...")
+        #TODO: Implement the file saving of the repository
+    elif (saveRepo.lower() == "no" or saveRepo == "0"):
+        print("Continuing without saving")
+    else:
+        print("Command not recognized. Continuing without saving")
 
-if cancelProgram != True:
-    includeFolders()
 
-outputFilePlacement = "output.txt"
+#TODO: find issues from github using Git API???
 
-# Main loop
-if (cancelProgram == False):
-    for commit in Repository( repositoryToInput ).traverse_commits():
+def write_to_outputfile(output_string):
+    with open(outputFilePlacement, 'w') as fil:
+        fil.write(output_string)
+        print("Written to outputfile success.")
+
+# TODO: FIks repostorage
+
+def readRepoStorageFile():
+    print("Reading Storage..")
+    storedList = []
+    itemnumber = 1
+    terminateLoop = False
+
+    try:
+        with open(path, 'r', encoding='utf-8') as storage:
+            print("Storage exists.")
+    except FileNotFoundError:
+        print(f"Storage not found. Creating a new one")
+        with open(path, 'w', encoding='utf-8') as storage:  # creates the file
+            pass
+        storedList = []
+
+    with open(path, 'r') as storage:
+        storedList = [line.rstrip('\n') for line in storage]
+        itemnumber = len(storedList)
+        # spot = storage.readline()
+
+        # while (spot != "" and terminateLoop == False):
+        #     storedList.append(spot.strip())
+        #     # spot = storage.readline
+        #     itemnumber += 1
+        #     spot = storage.readline()
+        #     if (itemnumber > 99): #loop shouldnt loop over 99 items anyway, cancels automatically if there is a bug or something. Avoids infinite loop
+        #         terminateLoop = True
+
+    print(storedList)
+    print(f"Amount of items read: {itemnumber}")
+    
+    #Returns data as a dictionary
+    return {"repos": storedList, "count": itemnumber}
+#_
+
+def writeRepoToStorage(repo):
+    repo = repo.strip()
+    if not repo:
+        return False
+    with open(path, 'a', encoding='utf-8') as f:
+        f.write(repo + '\n')
+    return True
+
+
+# def write_to_repoStorage(reponame):
+#     with open("repostorage.txt", 'w') as fil:
+#         fil.write(output_string)
+#         print("Written to outputfile success.")
+
+# Main file fetch loop
+def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
+
+    if (cancelcommand == True):
+        CancelProgramDTF("Program already cancelled. Cancelcommand set true. Not running.")
+        return
+
+    for commit in Repository( repoUrl ).traverse_commits():
         repoName = commit.project_name
         print("This is the repo name###: " + repoName)
         print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
@@ -141,15 +235,9 @@ if (cancelProgram == False):
         
         print('*End\n')
 
-#TODO: find issues from github using Git API???
 
-def write_to_outputfile(output_string):
-    with open(outputFilePlacement, 'w') as fil:
-        fil.write(output_string)
-        print("Written to outputfile success.")
-
-if (cancelProgram == False):
-
+# Output the different Repo data
+def RepoOutputDisplay():
     outputString = ""
 
     print("\n\\#/ after program is ran, here are the resulting lists for the repo '" + repoName + "':")
@@ -180,5 +268,45 @@ if (cancelProgram == False):
     write_to_outputfile(outputString)
 
 
+
+
+
+# HERE IS THE MAIN LOOP // MOVE TO MAIN LATER
+
+repoName = ""
+path = 'repostorage.txt'
+
+cancelProgram = False
+reasonForCancel = ""
+
+storageBucket = readRepoStorageFile()
+
+REPOURL = WriteRepoName(storageBucket["repos"])
+
+findRepo( REPOURL, cancelProgram ) #check if the url is valid
+
+if cancelProgram != True:
+    saveTheRepoUrlQuestion( )
+
+# if cancelProgram != True:
+#     includeFolders()
+
+outputFilePlacement = "output.txt"
+
+
+
+CancelProgramDTF("STAGED: set to cancel before fetching repository.") #REMOVE WHEN YOU WANT TO CONTINUE THE PROGRAM
+
+
+
+# Main loop
+RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
+
+#Loop? Should switch to main
+
+if (cancelProgram == False):
+    # RepoFetcher()
+    print("Here the program should have started \__")
 else:
-    print("Task was canceled")
+    print("Task was canceled. \nThis is the full log")
+    print(reasonForCancel)
