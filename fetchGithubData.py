@@ -18,7 +18,14 @@ def WriteRepoName(reposInStorage):
     if (reposInStorage and len(reposInStorage) > 0):
         print("\nStored repos:")
         for i, repo in enumerate(reposInStorage):
-            print("- " + str(i + 1) + ": " + repo)
+            lastlinkname = None
+            if repo.__contains__('\\'):
+                lastlinkname = repo.split("\\")
+            else:
+                lastlinkname = repo.split("/")
+            linklength = len(lastlinkname)
+            tag = "URL" if isUrl(repo) else "Local"
+            print(f"- {str(i + 1)}: {lastlinkname[linklength - 1]} ({tag})")
 
     print("Write the repo url bellow. To load a saved repo, type the number from a stored repo above.")
     urlForRepo = input("Command|: ")
@@ -27,16 +34,16 @@ def WriteRepoName(reposInStorage):
     if urlForRepo.lower() == "st": 
         urlToReturn = repositoryToInput
     elif urlForRepo.lower() == "cancel":  
-        cancelProgram = True
-        reasonForCancel = "User cancelled"
+        CancelProgramDTF("User cancelled")
     elif urlForRepo.isnumeric():
-        index = int(urlForRepo)
-        if 0 <= index < len(reposInStorage):
-            urlToReturn = reposInStorage[index]
+        index = int(urlForRepo) - 1
+        if index >= 0 and index < len(reposInStorage):
+            urlToReturn = reposInStorage[index] #translate the record to index
         #_
     else:
         urlToReturn = urlForRepo
-
+    print("repo?")
+    print(urlToReturn)
     # Retruing the reponame
     return urlToReturn
 
@@ -52,10 +59,11 @@ def WriteRepoName(reposInStorage):
 
 # continue using date or not
 
-def CancelProgramDTF(cancelMessage: str) -> None:
-    global cancelProgram, reasonForCancel
-    cancelProgram = True
-    reasonForCancel = reasonForCancel + "\n" + cancelMessage  # safe now
+def isUrl(repolink):
+    if (repolink.startswith('http://') or repolink.startswith('https://')):
+        return True
+    else:
+        return False
 
 def findRepo (repoUrl, cancelcommand=False):
     
@@ -64,7 +72,7 @@ def findRepo (repoUrl, cancelcommand=False):
         return False
     
     repoOK = False
-    if repoUrl.startswith('http://') or repoUrl.startswith('https://'):
+    if isUrl(repoUrl):
         print('Link URL is OK')
     else:
         print('Link is NOT a URL. Trying to access as a local path.')
@@ -73,9 +81,10 @@ def findRepo (repoUrl, cancelcommand=False):
     try:
         for commit in Repository(repoUrl).traverse_commits():
             # Gjør noe med commit, for eksempel: print(commit)
-            print(commit)
+            authortest = commit.author
             repoOK = True
             print("Found repo: " + str(repoUrl))
+            break
     except Exception as e:
         print(f'Error accessing repository:')
         CancelProgramDTF("Error accessing local repository. e: ")
@@ -114,20 +123,33 @@ def includeFolders ():
 
     # foldersToInclude
 
-def saveTheRepoUrlQuestion():
-    print("The Repo Url or Local path is valid, want to store the repo? (Yes / 1 or No / 0)")
-    saveRepo = input("Command|: ")
+def saveTheRepoUrlQuestion(repo, reposInStorage):
+    print("sadukmos")
+    print(reposInStorage)
+    print(repo)
 
-    if (saveRepo.strip().lower() == "cancel"):
-        print("Canceling program.")
-        CancelProgramDTF("User canceled progam at saving stage")
-    elif (saveRepo.lower() == "yes" or saveRepo == "1"):
-        print("Saving repo...")
-        #TODO: Implement the file saving of the repository
-    elif (saveRepo.lower() == "no" or saveRepo == "0"):
-        print("Continuing without saving")
-    else:
-        print("Command not recognized. Continuing without saving")
+    if (repo == "" or repo == None):
+        print("Error: repo name is empty")
+        CancelProgramDTF("Error: Repo name is empty")
+        return
+    # if repo in reposInStorage:
+        # print("RepoURL from storage detected, continuing...")
+    # else:
+    if repo not in reposInStorage:
+        print("The Repo Url or Local path is valid, want to store the repo? (Yes / 1 or No / 0)")
+        saveRepo = input("Command|: ")
+
+        if (saveRepo.strip().lower() == "cancel"):
+            print("Canceling program.")
+            CancelProgramDTF("User canceled progam at saving stage")
+        elif (saveRepo.lower() == "yes" or saveRepo == "1"):
+            print("Saving repo...")
+            writeRepoToStorage(repo)
+            #TODO: Implement the file saving of the repository
+        elif (saveRepo.lower() == "no" or saveRepo == "0"):
+            print("Continuing without saving")
+        else:
+            print("Command not recognized. Continuing without saving")
 
 
 #TODO: find issues from github using Git API???
@@ -179,8 +201,17 @@ def writeRepoToStorage(repo):
     if not repo:
         return False
     with open(path, 'a', encoding='utf-8') as f:
-        f.write(repo + '\n')
+        f.write('\n' + repo)
+        print("Should have stored the repo in storeage now")
+    #_
+    print("Should have stored the repo in storeage now")
     return True
+#_
+
+def CancelProgramDTF(cancelMessage: str) -> None:
+    global cancelProgram, reasonForCancel
+    cancelProgram = True
+    reasonForCancel = reasonForCancel + "\n" + cancelMessage  # safe now
 
 
 # def write_to_repoStorage(reponame):
@@ -194,6 +225,8 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
     if (cancelcommand == True):
         CancelProgramDTF("Program already cancelled. Cancelcommand set true. Not running.")
         return
+
+    print("START FETCH: fetching from \'" + repoUrl + "\'")
 
     for commit in Repository( repoUrl ).traverse_commits():
         repoName = commit.project_name
@@ -283,10 +316,13 @@ storageBucket = readRepoStorageFile()
 
 REPOURL = WriteRepoName(storageBucket["repos"])
 
-findRepo( REPOURL, cancelProgram ) #check if the url is valid
+repofound = findRepo( REPOURL, cancelProgram ) #check if the url is valid
+
+if repofound == False:
+    CancelProgramDTF("Repo wasnt found")
 
 if cancelProgram != True:
-    saveTheRepoUrlQuestion( )
+    saveTheRepoUrlQuestion( REPOURL, storageBucket["repos"] )
 
 # if cancelProgram != True:
 #     includeFolders()
@@ -295,17 +331,14 @@ outputFilePlacement = "output.txt"
 
 
 
-CancelProgramDTF("STAGED: set to cancel before fetching repository.") #REMOVE WHEN YOU WANT TO CONTINUE THE PROGRAM
+# CancelProgramDTF("STAGED: set to cancel before fetching repository.") #REMOVE WHEN YOU WANT TO CONTINUE THE PROGRAM
 
 
 
 # Main loop
-RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
-
-#Loop? Should switch to main
 
 if (cancelProgram == False):
-    # RepoFetcher()
+    RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
     print("Here the program should have started \__")
 else:
     print("Task was canceled. \nThis is the full log")
