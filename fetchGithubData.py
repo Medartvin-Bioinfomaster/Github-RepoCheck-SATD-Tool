@@ -1,9 +1,9 @@
 from pydriller import Repository
+
+from tools import FindRepoName, CreateTypedRepoName, isUrl
 # filter readmes? example data folder? (.rdata, .rds, r-markdown, .Rmnd)
 
 # opt-in: ask users  what folders to loook throguh ( like R folder) - pydriller clones a whole repo, can we only download R-folder?
-
-repositoryToInput = 'https://github.com/Medartvin-Bioinfomaster/Test-R-Data-Repo' # FIXME: remove / delete after a while, only a test repo!!
 
 #Idea for these values: Create an interface or Dictionary containing them, so its easier to refer to them, and it gives them a title like: "ReturnData.files" ...
 files = []
@@ -11,31 +11,6 @@ fileAndContributors = {} # an object containing multiple "file" objects. File.co
 projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
 # issues = [] # list with amount of issues from the github. OBS: not implemented yet
 foldersToInclude = []
-
-def FindRepoName(repourl):
-    lastlinkname = None
-    if repourl.__contains__('\\'):
-        lastlinkname = repourl.split("\\")
-    else:
-        lastlinkname = repourl.split("/")
-        
-    linklength = len(lastlinkname)
-    nameFromList = lastlinkname[linklength - 1]
-    return nameFromList
-
-def CreateTypedRepoName(repourl, iteration):
-    # lastlinkname = None
-    # if repourl.__contains__('\\'):
-    #     lastlinkname = repourl.split("\\")
-    # else:
-    #     lastlinkname = repourl.split("/")
-    repName = FindRepoName(repourl)
-    # linklength = len(lastlinkname)
-    tag = "URL" if isUrl(repourl) else "Local"
-    # print(f"- {str(iteration + 1)}: {lastlinkname[linklength - 1]} ({tag})")
-    typedName = f"- {str(iteration + 1)}: {repName} ({tag})"
-    return typedName
-
 
 def WriteRepoName(reposInStorage):
 
@@ -57,9 +32,7 @@ def WriteRepoName(reposInStorage):
     urlForRepo = input("Command|: ")
     urlToReturn = ""
 
-    if urlForRepo.lower() == "st": 
-        urlToReturn = repositoryToInput
-    elif urlForRepo.lower() == "cancel":  
+    if urlForRepo.lower() == "cancel":  
         CancelProgramDTF("User cancelled")
     elif urlForRepo.isnumeric():
         index = int(urlForRepo) - 1
@@ -85,11 +58,6 @@ def WriteRepoName(reposInStorage):
 
 # continue using date or not
 
-def isUrl(repolink):
-    if (repolink.startswith('http://') or repolink.startswith('https://')):
-        return True
-    else:
-        return False
 
 def findRepo (repoUrl, cancelcommand=False):
     
@@ -239,11 +207,6 @@ def CancelProgramDTF(cancelMessage: str) -> None:
     cancelProgram = True
     reasonForCancel = reasonForCancel + "\n" + cancelMessage  # safe now
 
-
-# def write_to_repoStorage(reponame):
-#     with open("repostorage.txt", 'w') as fil:
-#         fil.write(output_string)
-#         print("Written to outputfile success.")
 
 # Main file fetch loop
 def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
