@@ -1,6 +1,8 @@
 #project files that are personal
 output.txt
 repostorage.txt
+output_tests/ 
+# <-- this is the folder where output files are stored for later "analysis" and discussion. How do we present the data in a way that is easily understandeable?
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
