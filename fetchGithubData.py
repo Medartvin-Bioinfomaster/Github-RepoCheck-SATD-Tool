@@ -12,20 +12,46 @@ projectContributors = [] # a list that will contain all contributors from the gi
 # issues = [] # list with amount of issues from the github. OBS: not implemented yet
 foldersToInclude = []
 
+def FindRepoName(repourl):
+    lastlinkname = None
+    if repourl.__contains__('\\'):
+        lastlinkname = repourl.split("\\")
+    else:
+        lastlinkname = repourl.split("/")
+        
+    linklength = len(lastlinkname)
+    nameFromList = lastlinkname[linklength - 1]
+    return nameFromList
+
+def CreateTypedRepoName(repourl, iteration):
+    # lastlinkname = None
+    # if repourl.__contains__('\\'):
+    #     lastlinkname = repourl.split("\\")
+    # else:
+    #     lastlinkname = repourl.split("/")
+    repName = FindRepoName(repourl)
+    # linklength = len(lastlinkname)
+    tag = "URL" if isUrl(repourl) else "Local"
+    # print(f"- {str(iteration + 1)}: {lastlinkname[linklength - 1]} ({tag})")
+    typedName = f"- {str(iteration + 1)}: {repName} ({tag})"
+    return typedName
+
 
 def WriteRepoName(reposInStorage):
 
     if (reposInStorage and len(reposInStorage) > 0):
         print("\nStored repos:")
         for i, repo in enumerate(reposInStorage):
-            lastlinkname = None
-            if repo.__contains__('\\'):
-                lastlinkname = repo.split("\\")
-            else:
-                lastlinkname = repo.split("/")
-            linklength = len(lastlinkname)
-            tag = "URL" if isUrl(repo) else "Local"
-            print(f"- {str(i + 1)}: {lastlinkname[linklength - 1]} ({tag})")
+            # lastlinkname = None
+            # if repo.__contains__('\\'):
+            #     lastlinkname = repo.split("\\")
+            # else:
+            #     lastlinkname = repo.split("/")
+            # linklength = len(lastlinkname)
+            # tag = "URL" if isUrl(repo) else "Local"
+            # print(f"- {str(i + 1)}: {lastlinkname[linklength - 1]} ({tag})")
+            repoNameTyped = CreateTypedRepoName(repo, i)
+            print(repoNameTyped)
 
     print("Write the repo url bellow. To load a saved repo, type the number from a stored repo above.")
     urlForRepo = input("Command|: ")
@@ -333,13 +359,20 @@ outputFilePlacement = "output.txt"
 
 # CancelProgramDTF("STAGED: set to cancel before fetching repository.") #REMOVE WHEN YOU WANT TO CONTINUE THE PROGRAM
 
+if (cancelProgram != True):
+    print('System is ready to analyze the github \"' + FindRepoName(REPOURL) + '\". Type any key + ENTER to continue, or type "stop" or 0 to stop the program. ')
+    readyToCont = input("Command|: ")
+    if (readyToCont.lower() == "stop" or readyToCont == "0"):
+        CancelProgramDTF("User stopped program before analyzation.")
+
 
 
 # Main loop
 
 if (cancelProgram == False):
-    RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
     print("Here the program should have started \__")
+    RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
+    RepoOutputDisplay()
 else:
     print("Task was canceled. \nThis is the full log")
     print(reasonForCancel)
