@@ -81,7 +81,7 @@ def findRepo (repoUrl, cancelcommand=False):
     try:
         for commit in Repository(repoUrl).traverse_commits():
             # Gjør noe med commit, for eksempel: print(commit)
-            authortest = commit.author
+            authortest = commit.author.name
             repoOK = True
             print("Found repo: " + str(repoUrl))
             break
