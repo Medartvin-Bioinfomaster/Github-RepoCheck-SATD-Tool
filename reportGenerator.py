@@ -3,6 +3,8 @@ import re
 from collections import Counter, defaultdict
 
 
+
+# For SATD
 def _parse_report_file(path: str):
 	"""Parse a single SATD report file to extract finding types and per-file counts."""
 	types = []
@@ -19,6 +21,8 @@ def _parse_report_file(path: str):
 	return types
 
 
+
+# For SATD
 def generate_satd_overview(output_dir: str, repo_name: str) -> str:
 	"""
 	Generate a concise SATD overview TXT report.
@@ -76,6 +80,10 @@ def generate_satd_overview(output_dir: str, repo_name: str) -> str:
 
 	return overview_path
 
+
+
+
+# Main summary report in base folder
 
 def generate_base_summary(base_dir: str, repo_name: str, satd_total: int, satd_files: int, github_metrics: dict | None = None) -> str:
 	
