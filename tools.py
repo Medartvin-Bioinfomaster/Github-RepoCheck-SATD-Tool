@@ -28,3 +28,38 @@ def isUrl(repolink):
         return True
     else:
         return False
+    
+def WriteRepoName(reposInStorage):
+
+    if (reposInStorage and len(reposInStorage) > 0):
+        print("\nStored repos:")
+        for i, repo in enumerate(reposInStorage):
+            # lastlinkname = None
+            # if repo.__contains__('\\'):
+            #     lastlinkname = repo.split("\\")
+            # else:
+            #     lastlinkname = repo.split("/")
+            # linklength = len(lastlinkname)
+            # tag = "URL" if isUrl(repo) else "Local"
+            # print(f"- {str(i + 1)}: {lastlinkname[linklength - 1]} ({tag})")
+            repoNameTyped = CreateTypedRepoName(repo, i)
+            print(repoNameTyped)
+
+    print("Write the repo url bellow. To load a saved repo, type the number from a stored repo above.")
+    urlForRepo = input("Command|: ")
+    urlToReturn = ""
+
+    if urlForRepo.lower() == "cancel":  
+        # CancelProgramDTF("User cancelled")
+        return {"text": "User cancelled", "status": False}
+    elif urlForRepo.isnumeric():
+        index = int(urlForRepo) - 1
+        if index >= 0 and index < len(reposInStorage):
+            urlToReturn = reposInStorage[index] #translate the record to index
+        #_
+    else:
+        urlToReturn = urlForRepo
+    print("repo?")
+    print(urlToReturn)
+    # Retruing the reponame
+    return urlToReturn

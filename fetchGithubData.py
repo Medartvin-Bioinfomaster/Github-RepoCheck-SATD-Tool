@@ -1,50 +1,16 @@
 from pydriller import Repository
 
-from tools import FindRepoName, CreateTypedRepoName, isUrl
+from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
+
+from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName
 # filter readmes? example data folder? (.rdata, .rds, r-markdown, .Rmnd)
 
 # opt-in: ask users  what folders to loook throguh ( like R folder) - pydriller clones a whole repo, can we only download R-folder?
 
 #Idea for these values: Create an interface or Dictionary containing them, so its easier to refer to them, and it gives them a title like: "ReturnData.files" ...
-files = []
-fileAndContributors = {} # an object containing multiple "file" objects. File.contributors should contain every user that has channged that file. Also it should contain how many commits it has been part of, amount of times changed in commits.
-projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
-# issues = [] # list with amount of issues from the github. OBS: not implemented yet
-foldersToInclude = []
 
-def WriteRepoName(reposInStorage):
 
-    if (reposInStorage and len(reposInStorage) > 0):
-        print("\nStored repos:")
-        for i, repo in enumerate(reposInStorage):
-            # lastlinkname = None
-            # if repo.__contains__('\\'):
-            #     lastlinkname = repo.split("\\")
-            # else:
-            #     lastlinkname = repo.split("/")
-            # linklength = len(lastlinkname)
-            # tag = "URL" if isUrl(repo) else "Local"
-            # print(f"- {str(i + 1)}: {lastlinkname[linklength - 1]} ({tag})")
-            repoNameTyped = CreateTypedRepoName(repo, i)
-            print(repoNameTyped)
 
-    print("Write the repo url bellow. To load a saved repo, type the number from a stored repo above.")
-    urlForRepo = input("Command|: ")
-    urlToReturn = ""
-
-    if urlForRepo.lower() == "cancel":  
-        CancelProgramDTF("User cancelled")
-    elif urlForRepo.isnumeric():
-        index = int(urlForRepo) - 1
-        if index >= 0 and index < len(reposInStorage):
-            urlToReturn = reposInStorage[index] #translate the record to index
-        #_
-    else:
-        urlToReturn = urlForRepo
-    print("repo?")
-    print(urlToReturn)
-    # Retruing the reponame
-    return urlToReturn
 
 
 #TODO: include a filter on the period you want to recieve commits for. You can choose to view them all or just a period of commits
@@ -58,12 +24,14 @@ def WriteRepoName(reposInStorage):
 
 # continue using date or not
 
+#File should be called RepoHandler? Since Main will call on functions from other classes or tools, this "repoFetcher" class acts more
+# as the manager for handling and fetching from a repository
 
 def findRepo (repoUrl, cancelcommand=False):
     
     if cancelcommand == True:
-        CancelProgramDTF("Canceled at RepoCheck.")
-        return False
+        # CancelProgramDTF("Canceled at RepoCheck.")
+        return {"text": "Canceled at RepoCheck.", "status": False}
     
     repoOK = False
     if isUrl(repoUrl):
@@ -81,7 +49,8 @@ def findRepo (repoUrl, cancelcommand=False):
             break
     except Exception as e:
         print(f'Error accessing repository:')
-        CancelProgramDTF("Error accessing local repository. e: ")
+        # CancelProgramDTF("Error accessing local repository. e: ")
+        return {"text": "Error accessing local repository. e: ", "status": False}
         repoOK = False
 
         # cancelProgram = True
@@ -90,30 +59,33 @@ def findRepo (repoUrl, cancelcommand=False):
 
     return repoOK
 
-def includeFolders ():
-    endSection = False
-    print("Write what folders and files you would like to include. \nWrite a name of a folder in the repo and hit 'enter' to add it. Type +f and a name to add single files. Type -r to remove an item from the view.")
+
+# TODO: Implement this folder opt-in system to the program
+# def includeFolders ():
+#     endSection = False
+#     print("Write what folders and files you would like to include. \nWrite a name of a folder in the repo and hit 'enter' to add it. Type +f and a name to add single files. Type -r to remove an item from the view.")
     
-    while endSection == False and cancelProgram == False:
-        print("Current selection: " + foldersToInclude)
-        folderInput = input("Write what folders and files you would like to include")
+#     while endSection == False and cancelProgram == False:
+#         print("Current selection: " + foldersToInclude)
+#         folderInput = input("Write what folders and files you would like to include")
 
-        if (folderInput.lower() == "cancel"):
-            CancelProgramDTF("User canceled at file inclusion section.")
+#         if (folderInput.lower() == "cancel"):
+#             # CancelProgramDTF("User canceled at file inclusion section.")
+#             return {"text": "User canceled at file inclusion section.", "status": False}
 
-        elif (folderInput.lower() == "done"):
-            endSection = True
+#         elif (folderInput.lower() == "done"):
+#             endSection = True
 
-        elif (folderInput.lower().__contains__("+f")):
-            foldersToInclude.append( "(F)" + folderInput.removeprefix("+f ") )
-            #FIXME: her er det ikke implementert å bytte ut +f med denne (F) stringen i stedet. Dette bør legges til asap
+#         elif (folderInput.lower().__contains__("+f")):
+#             foldersToInclude.append( "(F)" + folderInput.removeprefix("+f ") )
+#             #FIXME: her er det ikke implementert å bytte ut +f med denne (F) stringen i stedet. Dette bør legges til asap
 
-        elif (folderInput.lower().__contains__("-r")):
-            foldersToInclude.remove(folderInput)
-            #TODO: implement feedback to user if folder/file isn't found
+#         elif (folderInput.lower().__contains__("-r")):
+#             foldersToInclude.remove(folderInput)
+#             #TODO: implement feedback to user if folder/file isn't found
 
-        else:
-            foldersToInclude.append(folderInput)
+#         else:
+#             foldersToInclude.append(folderInput)
 
     # foldersToInclude
 
@@ -124,8 +96,8 @@ def saveTheRepoUrlQuestion(repo, reposInStorage):
 
     if (repo == "" or repo == None):
         print("Error: repo name is empty")
-        CancelProgramDTF("Error: Repo name is empty")
-        return
+        # CancelProgramDTF("Error: Repo name is empty")
+        return {"text": "Error: Repo name is empty", "status": False}
     # if repo in reposInStorage:
         # print("RepoURL from storage detected, continuing...")
     # else:
@@ -135,7 +107,8 @@ def saveTheRepoUrlQuestion(repo, reposInStorage):
 
         if (saveRepo.strip().lower() == "cancel"):
             print("Canceling program.")
-            CancelProgramDTF("User canceled progam at saving stage")
+            # CancelProgramDTF("User canceled progam at saving stage")
+            return {"text": "User canceled progam at saving stage", "status": False}
         elif (saveRepo.lower() == "yes" or saveRepo == "1"):
             print("Saving repo...")
             writeRepoToStorage(repo)
@@ -148,72 +121,18 @@ def saveTheRepoUrlQuestion(repo, reposInStorage):
 
 #TODO: find issues from github using Git API???
 
-def write_to_outputfile(output_string):
-    with open(outputFilePlacement, 'w') as fil:
-        fil.write(output_string)
-        print("Written to outputfile success.")
-
-# TODO: FIks repostorage
-
-def readRepoStorageFile():
-    print("Reading Storage..")
-    storedList = []
-    itemnumber = 1
-    terminateLoop = False
-
-    try:
-        with open(path, 'r', encoding='utf-8') as storage:
-            print("Storage exists.")
-    except FileNotFoundError:
-        print(f"Storage not found. Creating a new one")
-        with open(path, 'w', encoding='utf-8') as storage:  # creates the file
-            pass
-        storedList = []
-
-    with open(path, 'r') as storage:
-        storedList = [line.rstrip('\n') for line in storage]
-        itemnumber = len(storedList)
-        # spot = storage.readline()
-
-        # while (spot != "" and terminateLoop == False):
-        #     storedList.append(spot.strip())
-        #     # spot = storage.readline
-        #     itemnumber += 1
-        #     spot = storage.readline()
-        #     if (itemnumber > 99): #loop shouldnt loop over 99 items anyway, cancels automatically if there is a bug or something. Avoids infinite loop
-        #         terminateLoop = True
-
-    print(storedList)
-    print(f"Amount of items read: {itemnumber}")
-    
-    #Returns data as a dictionary
-    return {"repos": storedList, "count": itemnumber}
-#_
-
-def writeRepoToStorage(repo):
-    repo = repo.strip()
-    if not repo:
-        return False
-    with open(path, 'a', encoding='utf-8') as f:
-        f.write('\n' + repo)
-        print("Should have stored the repo in storeage now")
-    #_
-    print("Should have stored the repo in storeage now")
-    return True
-#_
-
-def CancelProgramDTF(cancelMessage: str) -> None:
-    global cancelProgram, reasonForCancel
-    cancelProgram = True
-    reasonForCancel = reasonForCancel + "\n" + cancelMessage  # safe now
-
-
 # Main file fetch loop
 def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
+    filesToReturn = []
+    fileAndContributors = {}
+    projectContributors = [] 
+    repoName = "" # FIXME: Unnødvendig??
+ 
+
     if (cancelcommand == True):
-        CancelProgramDTF("Program already cancelled. Cancelcommand set true. Not running.")
-        return
+        # CancelProgramDTF("Program already cancelled. Cancelcommand set true. Not running.")
+        return {"text": "Program already cancelled. Cancelcommand set true. Not running.", "status": False}
 
     print("START FETCH: fetching from \'" + repoUrl + "\'")
 
@@ -227,9 +146,9 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
         for file in commit.modified_files: 
 
-            if file.filename not in files:
+            if file.filename not in filesToReturn:
                 print("*    Add unique file to list")
-                files.append(file.filename)
+                filesToReturn.append(file.filename)
 
             if file.filename not in fileAndContributors:
                 print("*-   unique file will be added")
@@ -256,86 +175,8 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             print(' \\' + file.filename, ' has changed')
         
         print('*End\n')
-
-
-# Output the different Repo data
-def RepoOutputDisplay():
-    outputString = ""
-
-    print("\n\\#/ after program is ran, here are the resulting lists for the repo '" + repoName + "':")
-
-    print(files)
-
-    outputString = "Files: " + ", ".join(files)
-    print(fileAndContributors)
-
-    outputString += "\nFiles and their contributors: "
-
-    for filename, obj in fileAndContributors.items():
-        print(filename)
-        outputString += "\nFile data: " + filename
-        # Append contributor information
-        for contributor in obj["contributors"]:
-            print("contributor: " + contributor + ' - commits :', obj["commits"])
-            outputString += f": contributor: {contributor} - commits :{obj['commits']}, "  # Use f-strings for cleaner formatting
-
-    if isinstance(projectContributors, list):
-        projectContributorsString = ', '.join(projectContributors)  # Join if it's a list
-    else:
-        projectContributorsString = str(projectContributors)  # Ensure it's a string
-
-    print(projectContributors)  # Print to console
-    outputString += "\nAll contributors: " + projectContributorsString
-
-    write_to_outputfile(outputString)
-
-
-
-
-
-# HERE IS THE MAIN LOOP // MOVE TO MAIN LATER
-
-repoName = ""
-path = 'repostorage.txt'
-
-cancelProgram = False
-reasonForCancel = ""
-
-storageBucket = readRepoStorageFile()
-
-REPOURL = WriteRepoName(storageBucket["repos"])
-
-repofound = findRepo( REPOURL, cancelProgram ) #check if the url is valid
-
-if repofound == False:
-    CancelProgramDTF("Repo wasnt found")
-
-if cancelProgram != True:
-    saveTheRepoUrlQuestion( REPOURL, storageBucket["repos"] )
-
-# if cancelProgram != True:
-#     includeFolders()
-
-outputFilePlacement = "output.txt"
-
-
-
-# CancelProgramDTF("STAGED: set to cancel before fetching repository.") #REMOVE WHEN YOU WANT TO CONTINUE THE PROGRAM
-
-if (cancelProgram != True):
-    print('System is ready to analyze the github \"' + FindRepoName(REPOURL) + '\". Type any key + ENTER to continue, or type "stop" or 0 to stop the program. ')
-    readyToCont = input("Command|: ")
-    if (readyToCont.lower() == "stop" or readyToCont == "0"):
-        CancelProgramDTF("User stopped program before analyzation.")
-
-
-
-# Main loop
-
-if (cancelProgram == False):
-    print("Here the program should have started \__")
-    RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
-    RepoOutputDisplay()
-else:
-    print("Task was canceled. \nThis is the full log")
-    print(reasonForCancel)
+    
+    # filesToReturn = []
+    # fileAndContributors = {}
+    # projectContributors = [] 
+    return {"files": filesToReturn, "fileAndContributors": fileAndContributors, "projectContributors": projectContributors, "repoName": repoName}
