@@ -3,6 +3,8 @@ from pydriller import Repository
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
 
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName
+
+from dataClasses import RepoDetails, FileContributors
 # filter readmes? example data folder? (.rdata, .rds, r-markdown, .Rmnd)
 
 # opt-in: ask users  what folders to loook throguh ( like R folder) - pydriller clones a whole repo, can we only download R-folder?
@@ -152,14 +154,10 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
             if file.filename not in fileAndContributors:
                 print("*-   unique file will be added")
-                fileDictionary = {
-                    "filename:" : file.filename,
-                    "contributors": [],
-                    "commits" : 0,
-                }                
-                fileDictionary["contributors"].append(commit.author.name)
-                fileDictionary["commits"] += 1
-                fileAndContributors[file.filename] = fileDictionary
+                fileDictionary = FileContributors(file.filename, commit.author.name, 1)
+                # fileDictionary["contributors"].append(commit.author.name)
+                # fileDictionary["commits"] += 1
+                fileAndContributors[file.filename] = fileDictionary ## Fungerer CLASS???
                 if commit.author.name not in projectContributors:
                     projectContributors.append(commit.author.name)
             else:
