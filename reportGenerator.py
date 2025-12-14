@@ -25,7 +25,6 @@ def generate_satd_overview(output_dir: str, repo_name: str) -> str:
 
 	- Aggregates counts of SATD types across all files in output_dir
 	- Highlights the most frequent SATD categories
-	- Mentions that detailed findings are available in the SATD_findings folder
 
 	Returns the path to the created overview file.
 	"""
@@ -76,4 +75,37 @@ def generate_satd_overview(output_dir: str, repo_name: str) -> str:
 		out.write("- Review per-file reports for specific lines and comments.\n")
 
 	return overview_path
+
+
+def generate_base_summary(base_dir: str, repo_name: str, satd_total: int, satd_files: int, github_metrics: dict | None = None) -> str:
+	
+
+
+	os.makedirs(base_dir, exist_ok=True)
+	summary_path = os.path.join(base_dir, 'Project_Summary.txt')
+	
+
+	with open(summary_path, 'w', encoding='utf-8') as out:
+		out.write(f"Repository: {repo_name}\n")
+		out.write("Project Summary\n")
+		out.write("=" * 60 + "\n\n")
+
+
+		# SATD section
+		out.write("[SATD]\n")
+		out.write(f"- Total SATD items: {satd_total}\n")
+		out.write(f"- Files with SATD: {satd_files}\n")
+		out.write("- Detailed SATD findings are available in the 'SATD_findings' folder.\n")
+		out.write("- See 'SATD_Overview.txt' in that folder for a summarized breakdown.\n\n")
+
+
+		# GitHub data section
+		out.write("[GitHub Data]\n")
+		if github_metrics:
+			for key, value in github_metrics.items():
+				out.write(f"- {key}: {value}\n")
+		else:
+			out.write("- No GitHub metrics provided yet. This section will include contributors, commits, and file change stats when available.\n")
+
+	return summary_path
 
