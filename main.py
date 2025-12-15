@@ -11,53 +11,91 @@ def CancelProgramDTF(cancelMessage: str) -> None:
 #Output information to a output.txt file -- maybe change to report.txt for iteration1?
 def RepoOutputDisplay(files, fileAndContributors, projectContributors, repoName):
     repoNameStr = str(repoName or "")
-    print(f"\n\\#/ after program is ran, here are the resulting lists for the repo '{repoNameStr}':")
+    # print(f"\n\\#/ after program is ran, here are the resulting lists for the repo '{repoNameStr}':")
 
-    # Safe representation of files
+    # ===== Files section =====
+    output_lines = []
+
+    # Normalize and print files info:
     if files is None:
         files = {}
-    print(files)
 
-    output_lines = []
-    files_str = ", ".join(files) if isinstance(files, (list, tuple)) else str(files)
-    output_lines.append(f"Files: {files_str}")
+    files_repr = []
+    # Case A: files is a dict mapping filename -> FileData (or dict)
+    if isinstance(files, dict):
+        for fname, fobj in files.items():
+            # fobj may be FileData or dict; handle both
+            if fobj is None:
+                fullpath = None
+            elif hasattr(fobj, "fullpath"):
+                fullpath = fobj.fullpath
+            elif isinstance(fobj, dict):
+                fullpath = fobj.get("fullpath")
+            else:
+                fullpath = str(fobj)
+            files_repr.append(f"{fname} ({fullpath})" if fullpath else f"{fname}")
+    # Case B: files is a list/tuple of FileData or strings
+    elif isinstance(files, (list, tuple)):
+        for entry in files:
+            if isinstance(entry, str):
+                files_repr.append(entry)
+            elif hasattr(entry, "filename"):
+                name = entry.filename
+                fullpath = getattr(entry, "fullpath", None)
+                files_repr.append(f"{name} ({fullpath})" if fullpath else name)
+            elif isinstance(entry, dict):
+                name = entry.get("filename") or entry.get("name") or str(entry)
+                fullpath = entry.get("fullpath")
+                files_repr.append(f"{name} ({fullpath})" if fullpath else name)
+            else:
+                files_repr.append(str(entry))
+    else:
+        # fallback: any other type -> stringify
+        files_repr.append(str(files))
 
+    output_lines.append("Files: " + ", ".join(files_repr) if files_repr else "Files: (none)")
+    # print(output_lines[-1])
+
+    # ===== Files and contributors =====
     output_lines.append("Files and their contributors:")
+    # print(output_lines[-1])
 
     if not fileAndContributors:
-        output_lines.append("  (no files)")
+        output_lines.append("  (no files with contributor info)")
+        # print(output_lines[-1])
     else:
         for filename, obj in fileAndContributors.items():
             output_lines.append(f"\nFile data: {filename}")
-            # Support both dict-style and object-style (FileContributors)
+            output_lines.append(f"\n - File Absolute Path: {fullpath}")
+            # Support dict-style and object-style for obj
             if isinstance(obj, dict):
                 contributors = obj.get("contributors", [])
-                commits = obj.get("commits", None)
+                commits = obj.get("commits")
             else:
-                # assume object with attributes .contributors and .commits
                 contributors = getattr(obj, "contributors", [])
                 commits = getattr(obj, "commits", None)
 
-            # Print summary once per file (commits apply to file)
             output_lines.append(f"  commits: {commits}")
+            # print(f"File data: {filename}  commits: {commits}")
             for contributor in contributors or []:
                 output_lines.append(f"    contributor: {contributor}")
+                # print(f"    contributor: {contributor}")
 
-    # Project contributors: accept list or set
+    # ===== Project contributors =====
     if projectContributors is None:
         projectContributors = []
-    if isinstance(projectContributors, (list, tuple, set)):
-        proj_str = ", ".join(sorted(projectContributors)) if isinstance(projectContributors, set) else ", ".join(projectContributors)
+    if isinstance(projectContributors, set):
+        proj_str = ", ".join(sorted(projectContributors))
+    elif isinstance(projectContributors, (list, tuple)):
+        proj_str = ", ".join(projectContributors)
     else:
         proj_str = str(projectContributors)
 
     output_lines.append(f"\nAll contributors: {proj_str}")
-
-    # Print to console
-    for line in output_lines:
-        print(line)
+    # print("All contributors:", proj_str)
 
     return "\n".join(output_lines)
+
 
 
 def main_loop():
@@ -105,8 +143,7 @@ def main_loop():
         if (readyToCont.lower() == "stop" or readyToCont == "0"):
             CancelProgramDTF("User stopped program before analyzation.")
     
-    # Main loop
-
+    # Loop where Fetch happens
     if (cancelProgram == False):
         print("Here the program should have started \__")
         out = RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
@@ -119,11 +156,27 @@ def main_loop():
             projectContributors = out.get("projectContributors", [])
             repoName = out.get("repoName")
         outputFetchingString = RepoOutputDisplay(files, fileAndContributors, projectContributors, repoName)
-        write_to_outputfile(outputFilePlacement, outputFetchingString)
+        write_to_outputfile(outputFilePlacement, outputFetchingString) #outputer det fetcher mottar, fjern senere eller bruk i report.txt på et vis
 
     else:
         print("Task was canceled. \nThis is the full log")
         print(reasonForCancel)
+
+    # one check before analyzing files, to avoid a long loop :)
+    if (cancelProgram != True):
+        print('Github analyzation complete! You can begin the file analyzation. Type any key + ENTER to continue, or type "stop" or 0 to stop the program. ')
+        readyToCont = input("Command|: ")
+        if (readyToCont.lower() == "stop" or readyToCont == "0"):
+            CancelProgramDTF("User stopped program before analyzation.")
+
+    #Loop through files and analyze them:
+
+    # ---- TODO: Implementer FileAnalyzer her 👈👈👈👈
+    print("Running file analyzer...")
+    for key, fobj in files.items():
+        filename = getattr(fobj, "filename", key) # <-- selve Filnanvnet, altså "dosomething.R"
+        fullpath = getattr(fobj, "fullpath", None) # <-- absolute path, altså "www./github.no/files/dosomehing.R"
+        # print("filename:", filename, "fullpath:", fullpath)
 
 # run main loop
 main_loop()

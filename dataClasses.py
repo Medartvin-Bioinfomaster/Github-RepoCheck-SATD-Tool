@@ -4,8 +4,9 @@ class RepoDetails:
         self.files = files
 
 class FileContributors:
-    def __init__(self, filename, contributor, commits):
+    def __init__(self, filename, fullpath, contributor, commits):
         self.filename = filename
+        self.fullpath = fullpath
         self.contributors = []
         if contributor is not None:
             self.contributors.append(contributor)

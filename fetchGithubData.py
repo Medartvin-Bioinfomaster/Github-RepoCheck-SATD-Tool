@@ -2,7 +2,7 @@ from pydriller import Repository
 
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
 
-from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName
+from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, choose_separator
 
 from dataClasses import RepoDetails, FileContributors, FileData
 # filter readmes? example data folder? (.rdata, .rds, r-markdown, .Rmnd)
@@ -148,16 +148,21 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
         for file in commit.modified_files: 
 
+            relative = file.new_path or file.old_path
+            symbol = choose_separator(repoUrl)
+            absolute = repoUrl + symbol + relative
+            fileObj = FileData(file.filename, absolute)
+            print("Here are the absolutes lmao:")
+            print(absolute)
+            print("\nN\nN\nN")
+
             if file.filename not in filesToReturn:
                 print("*    Add unique file to list")
-                relative = file.new_path or file.old_path
-                absolute = repoUrl + "/" + relative
-                fileObj = FileData(file.filename, absolute)
-                filesToReturn.append(fileObj)
+                filesToReturn[file.filename] = fileObj
 
             if file.filename not in fileAndContributors:
                 print("*-   unique file will be added")
-                fileDictionary = FileContributors(file.filename, commit.author.name, 1)
+                fileDictionary = FileContributors(file.filename, absolute, commit.author.name, 1)
                 # fileDictionary["contributors"].append(commit.author.name)
                 # fileDictionary["commits"] += 1
                 fileAndContributors[file.filename] = fileDictionary ## Fungerer CLASS???

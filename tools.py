@@ -63,3 +63,12 @@ def WriteRepoName(reposInStorage):
     print(urlToReturn)
     # Retruing the reponame
     return urlToReturn
+
+
+def choose_separator(repoUrl):
+    if "/" in repoUrl and "\\" not in repoUrl:
+        return "/"
+    if "\\" in repoUrl and "/" not in repoUrl:
+        return "\\"
+    # Hvis begge eller ingen finnes, velg forward slash som standard
+    return "/"
