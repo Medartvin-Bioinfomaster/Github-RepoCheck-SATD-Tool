@@ -7,9 +7,12 @@ class FileContributors:
     def __init__(self, filename, contributor, commits):
         self.filename = filename
         self.contributors = []
-        self.contributors.append(contributor)
+        if contributor is not None:
+            self.contributors.append(contributor)
         self.commits = commits
-        
+
+# class GitFetchReturn:
+#     def in
         
 
 # fileDictionary = {

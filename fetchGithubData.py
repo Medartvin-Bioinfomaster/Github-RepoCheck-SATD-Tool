@@ -161,15 +161,12 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                 if commit.author.name not in projectContributors:
                     projectContributors.append(commit.author.name)
             else:
-                fileAndContributors.get(file.filename)
-                existingFileDict = fileAndContributors[file.filename]
-                existingFileDict["commits"] += 1
-                if (commit.author.name not in existingFileDict["contributors"]):
-                    existingFileDict["contributors"].append(commit.author.name)
-                
+                existing = fileAndContributors[file.filename]
+                existing.commits += 1
+                if commit.author.name not in existing.contributors:
+                    existing.contributors.append(commit.author.name)
                 if commit.author.name not in projectContributors:
                     projectContributors.append(commit.author.name)
-
             print(' \\' + file.filename, ' has changed')
         
         print('*End\n')

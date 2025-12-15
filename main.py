@@ -2,15 +2,6 @@ from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoTo
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
 
-# Define Variables to store information that is picked up
-files = []
-fileAndContributors = {} # an object containing multiple "file" objects. File.contributors should contain every user that has channged that file. Also it should contain how many commits it has been part of, amount of times changed in commits.
-projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
-# issues = [] # list with amount of issues from the github. OBS: not implemented yet
-foldersToInclude = []
-repoName = ""
-
-
 # Function that changes the variables that handles the program stopping functions
 def CancelProgramDTF(cancelMessage: str) -> None:
     global cancelProgram, reasonForCancel
@@ -18,9 +9,7 @@ def CancelProgramDTF(cancelMessage: str) -> None:
     reasonForCancel = reasonForCancel + "\n" + cancelMessage  # safe now
 
 #Output information to a output.txt file -- maybe change to report.txt for iteration1?
-def RepoOutputDisplay():
-    outputString = ""
-
+def RepoOutputDisplay(files, fileAndContributors, projectContributors, repoName):
     print("\n\\#/ after program is ran, here are the resulting lists for the repo '" + repoName + "':")
 
     print(files)
@@ -30,7 +19,7 @@ def RepoOutputDisplay():
 
     outputString += "\nFiles and their contributors: "
 
-    for filename, obj in fileAndContributors.items():
+    for filename, obj in fileAndContributors.items(): # creating the output string with the files
         print(filename)
         outputString += "\nFile data: " + filename
         # Append contributor information
@@ -46,10 +35,17 @@ def RepoOutputDisplay():
     print(projectContributors)  # Print to console
     outputString += "\nAll contributors: " + projectContributorsString
 
-    write_to_outputfile(outputString)
+    return outputString
 
 
 def main_loop():
+    # Define Variables to store information that is picked up
+    files = []
+    fileAndContributors = {} # an object containing multiple "file" objects. File.contributors should contain every user that has channged that file. Also it should contain how many commits it has been part of, amount of times changed in commits.
+    projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
+    # issues = [] # list with amount of issues from the github. OBS: not implemented yet
+    foldersToInclude = []
+    repoName = ""
     print("#/3#/3 Welcome to the SATD Tool 3\\#3\\#")
 
     #stage 1
@@ -57,13 +53,12 @@ def main_loop():
 
     # HERE IS THE MAIN LOOP // MOVE TO MAIN LATER
 
-    repoName = ""
     path = 'repostorage.txt'
 
     cancelProgram = False
     reasonForCancel = ""
 
-    storageBucket = readRepoStorageFile()
+    storageBucket = readRepoStorageFile(path)
 
     REPOURL = WriteRepoName(storageBucket["repos"])
 
@@ -78,7 +73,7 @@ def main_loop():
     # if cancelProgram != True:
     #     includeFolders()
 
-    outputFilePlacement = "output.txt"
+    outputFilePlacement = "output.txt" # Fjern etterhvert, er kun for å teste at GitFetching gikk OK
 
     # CancelProgramDTF("STAGED: set to cancel before fetching repository.") #REMOVE WHEN YOU WANT TO CONTINUE THE PROGRAM
 
@@ -92,8 +87,18 @@ def main_loop():
 
     if (cancelProgram == False):
         print("Here the program should have started \__")
-        files, fileAndContributors, projectContributors, repoName = RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
-        RepoOutputDisplay()
+        out = RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
+        if (out.get("status")):
+            CancelProgramDTF("Something went wrong:", out.get("text"))
+        else:
+            # ingen feil — hent feltene med .get for å unngå KeyError
+            files = out.get("files", [])
+            fileAndContributors = out.get("fileAndContributors", {})
+            projectContributors = out.get("projectContributors", [])
+            repoName = out.get("repoName")
+        outputFetchingString = RepoOutputDisplay(files, fileAndContributors, projectContributors, repoName)
+        write_to_outputfile(outputFilePlacement, outputFetchingString)
+
     else:
         print("Task was canceled. \nThis is the full log")
         print(reasonForCancel)
