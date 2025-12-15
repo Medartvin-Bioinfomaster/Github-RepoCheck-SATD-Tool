@@ -10,37 +10,59 @@ def CancelProgramDTF(cancelMessage: str) -> None:
 
 #Output information to a output.txt file -- maybe change to report.txt for iteration1?
 def RepoOutputDisplay(files, fileAndContributors, projectContributors, repoName):
-    print("\n\\#/ after program is ran, here are the resulting lists for the repo '" + repoName + "':")
+    repoNameStr = str(repoName or "")
+    print(f"\n\\#/ after program is ran, here are the resulting lists for the repo '{repoNameStr}':")
 
+    # Safe representation of files
+    if files is None:
+        files = {}
     print(files)
 
-    outputString = "Files: " + ", ".join(files)
-    print(fileAndContributors)
+    output_lines = []
+    files_str = ", ".join(files) if isinstance(files, (list, tuple)) else str(files)
+    output_lines.append(f"Files: {files_str}")
 
-    outputString += "\nFiles and their contributors: "
+    output_lines.append("Files and their contributors:")
 
-    for filename, obj in fileAndContributors.items(): # creating the output string with the files
-        print(filename)
-        outputString += "\nFile data: " + filename
-        # Append contributor information
-        for contributor in obj["contributors"]:
-            print("contributor: " + contributor + ' - commits :', obj["commits"])
-            outputString += f": contributor: {contributor} - commits :{obj['commits']}, "  # Use f-strings for cleaner formatting
-
-    if isinstance(projectContributors, list):
-        projectContributorsString = ', '.join(projectContributors)  # Join if it's a list
+    if not fileAndContributors:
+        output_lines.append("  (no files)")
     else:
-        projectContributorsString = str(projectContributors)  # Ensure it's a string
+        for filename, obj in fileAndContributors.items():
+            output_lines.append(f"\nFile data: {filename}")
+            # Support both dict-style and object-style (FileContributors)
+            if isinstance(obj, dict):
+                contributors = obj.get("contributors", [])
+                commits = obj.get("commits", None)
+            else:
+                # assume object with attributes .contributors and .commits
+                contributors = getattr(obj, "contributors", [])
+                commits = getattr(obj, "commits", None)
 
-    print(projectContributors)  # Print to console
-    outputString += "\nAll contributors: " + projectContributorsString
+            # Print summary once per file (commits apply to file)
+            output_lines.append(f"  commits: {commits}")
+            for contributor in contributors or []:
+                output_lines.append(f"    contributor: {contributor}")
 
-    return outputString
+    # Project contributors: accept list or set
+    if projectContributors is None:
+        projectContributors = []
+    if isinstance(projectContributors, (list, tuple, set)):
+        proj_str = ", ".join(sorted(projectContributors)) if isinstance(projectContributors, set) else ", ".join(projectContributors)
+    else:
+        proj_str = str(projectContributors)
+
+    output_lines.append(f"\nAll contributors: {proj_str}")
+
+    # Print to console
+    for line in output_lines:
+        print(line)
+
+    return "\n".join(output_lines)
 
 
 def main_loop():
     # Define Variables to store information that is picked up
-    files = []
+    files = {}
     fileAndContributors = {} # an object containing multiple "file" objects. File.contributors should contain every user that has channged that file. Also it should contain how many commits it has been part of, amount of times changed in commits.
     projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
     # issues = [] # list with amount of issues from the github. OBS: not implemented yet

@@ -11,6 +11,11 @@ class FileContributors:
             self.contributors.append(contributor)
         self.commits = commits
 
+class FileData:
+    def __init__(self, filename, fullpath):
+        self.filename = filename
+        self.fullpath = fullpath
+
 # class GitFetchReturn:
 #     def in
         

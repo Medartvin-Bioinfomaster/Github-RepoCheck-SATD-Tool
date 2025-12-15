@@ -4,7 +4,7 @@ from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoTo
 
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName
 
-from dataClasses import RepoDetails, FileContributors
+from dataClasses import RepoDetails, FileContributors, FileData
 # filter readmes? example data folder? (.rdata, .rds, r-markdown, .Rmnd)
 
 # opt-in: ask users  what folders to loook throguh ( like R folder) - pydriller clones a whole repo, can we only download R-folder?
@@ -126,7 +126,7 @@ def saveTheRepoUrlQuestion(repo, reposInStorage):
 # Main file fetch loop
 def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
-    filesToReturn = []
+    filesToReturn = {}
     fileAndContributors = {}
     projectContributors = [] 
     repoName = "" # FIXME: Unnødvendig??
@@ -150,7 +150,10 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
             if file.filename not in filesToReturn:
                 print("*    Add unique file to list")
-                filesToReturn.append(file.filename)
+                relative = file.new_path or file.old_path
+                absolute = repoUrl + "/" + relative
+                fileObj = FileData(file.filename, absolute)
+                filesToReturn.append(fileObj)
 
             if file.filename not in fileAndContributors:
                 print("*-   unique file will be added")
