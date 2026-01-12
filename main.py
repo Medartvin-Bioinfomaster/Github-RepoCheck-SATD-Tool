@@ -1,7 +1,7 @@
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
-from fileAnalyzer import scan_repo_and_save_reports
+from fileAnalyzer import scan_repo_and_save_reports, analyze_file
 
 # Function that changes the variables that handles the program stopping functions
 def CancelProgramDTF(cancelMessage: str) -> None:
@@ -185,18 +185,18 @@ def main_loop():
     outputFileAnalyzeString = "Here is the rundown of the Total Findings:"
     # for key, fobj in files.items():
     for rF in RFilesToAnalyze:
-        # RFilesToAnalyze - bruk, denne har absolute path (eller, skal ha det)
-        # filename = getattr(fobj, "filename", key) # <-- selve Filnanvnet, altså "dosomething.R"
-        # fullpath = getattr(fobj, "fullpath", None) # <-- absolute path, altså "www./github.no/files/dosomehing.R"
-
+        # print("-empty for now-")
         #return --> total_findings, files_with_satd, reports
         outputFileAnalyzeString += f"\nAnalyze results for File: {FindRepoName(rF)}" # <-- her burde det egt het FindFILEName??
 
         total_findings, files_with_satd, reports = scan_repo_and_save_reports(repo_path=rF, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
         outputFileAnalyzeString += f"\nTotal findings: {total_findings}\nFiles that contain SATD: {files_with_satd}\nReports: {reports}\n"
-        # print("filename:", filename, "fullpath:", fullpath)
+
+    # total_findings, files_with_satd, reports = scan_repo_and_save_reports(repo_path=REPOURL, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
 
     write_to_outputfile("fileAnalyzetest.txt", outputFileAnalyzeString)
+
+
 
     print("If everything went well, the findings should have been printed to a file in dir \"dirTestFileAnalyze\"")
 

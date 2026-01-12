@@ -1,7 +1,0 @@
-Here is the rundown of the Total Findings:
-Total findings: 0
-Files that contain SATD: 0
-Reports: []
-Total findings: 0
-Files that contain SATD: 0
-Reports: []

@@ -90,6 +90,7 @@ def scan_repo_and_save_reports(repo_path: str, output_dir: str, repo_name: str):
     reports = []
     for root, dirs, files in os.walk(repo_path):
         if '.git' in root:
+            print(".git found in the root, for some reason we skip this then?")
             continue
         for fname in files:
             if not fname.lower().endswith('.r'):
@@ -97,6 +98,7 @@ def scan_repo_and_save_reports(repo_path: str, output_dir: str, repo_name: str):
             path = os.path.join(root, fname)
             try:
                 with open(path, 'r', encoding='utf-8', errors='replace') as fh:
+                    print("Found content, file has been read")
                     content = fh.read()
             except Exception as e:
                 print(f"Error reading {path}: {e}")
@@ -109,3 +111,31 @@ def scan_repo_and_save_reports(repo_path: str, output_dir: str, repo_name: str):
                 reports.append(rp)
                 print(f"Found {len(results)} SATD items in: {os.path.basename(path)}")
     return total_findings, files_with_satd, reports
+
+
+def analyze_file(repo_path: str, file_path: str, output_dir: str, repo_name: str):
+    total_findings = 0
+    files_with_satd = 0
+    reports = []
+    path = os.path.join(repo_path, file_path)
+    try:
+        with open(path, 'r', encoding='utf-8', errors='replace') as fh:
+            print("Found content, file has been read")
+            content = fh.read()
+    except Exception as e:
+        print(f"Error reading {path}: {e}")
+        # continue
+
+    results = detect_satd_in_code(content, path)
+    if results:
+        total_findings += len(results)
+        files_with_satd += 1
+        rp = save_report_for_file(results, output_dir, path, repo_name)
+        reports.append(rp)
+        print(f"Found {len(results)} SATD items in: {os.path.basename(path)}")
+
+    return total_findings, files_with_satd, reports
+
+# def analyze_file(repo_path: str, output_dir: str, repo_name: str) {
+
+# }
