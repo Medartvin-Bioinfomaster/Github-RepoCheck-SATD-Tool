@@ -154,6 +154,7 @@ def main_loop():
             files = out.get("files", [])
             fileAndContributors = out.get("fileAndContributors", {})
             projectContributors = out.get("projectContributors", [])
+            RFilesToAnalyze = out.get("rFilesToUse", [])
             repoName = out.get("repoName")
         outputFetchingString = RepoOutputDisplay(files, fileAndContributors, projectContributors, repoName)
         write_to_outputfile(outputFilePlacement, outputFetchingString) #outputer det fetcher mottar, fjern senere eller bruk i report.txt på et vis
@@ -174,6 +175,7 @@ def main_loop():
     # ---- TODO: Implementer FileAnalyzer her 👈👈👈👈
     print("Running file analyzer...")
     for key, fobj in files.items():
+        # RFilesToAnalyze - bruk, denne har absolute path (eller, skal ha det)
         filename = getattr(fobj, "filename", key) # <-- selve Filnanvnet, altså "dosomething.R"
         fullpath = getattr(fobj, "fullpath", None) # <-- absolute path, altså "www./github.no/files/dosomehing.R"
         # print("filename:", filename, "fullpath:", fullpath)

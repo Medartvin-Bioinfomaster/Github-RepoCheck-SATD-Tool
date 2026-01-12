@@ -64,7 +64,7 @@ def WriteRepoName(reposInStorage):
     # Retruing the reponame
     return urlToReturn
 
-
+# TLDR: This is a help-function. Some paths use a / and others use \, this function is used to more easily disect which symbol to use
 def choose_separator(repoUrl):
     if "/" in repoUrl and "\\" not in repoUrl:
         return "/"

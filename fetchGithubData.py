@@ -128,8 +128,12 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
     filesToReturn = {}
     fileAndContributors = {}
-    projectContributors = [] 
+    projectContributors = []
+    rFilesToUse = [] #R only files
+
     repoName = "" # FIXME: Unnødvendig??
+
+    fileTagsToInclude = "R" #just a placeholder for now
  
 
     if (cancelcommand == True):
@@ -159,6 +163,10 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             if file.filename not in filesToReturn:
                 print("*    Add unique file to list")
                 filesToReturn[file.filename] = fileObj
+                if file.filename.lower().endswith(".r"):
+                    # rFilesToUse.append(file.filename) # legger til .R filer til folder, fullpath
+                    rFilesToUse.append(absolute) # legger inn fullpath, sjekk at navn er riktig etc.
+                    
 
             if file.filename not in fileAndContributors:
                 print("*-   unique file will be added")
@@ -182,4 +190,4 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
     # filesToReturn = []
     # fileAndContributors = {}
     # projectContributors = [] 
-    return {"files": filesToReturn, "fileAndContributors": fileAndContributors, "projectContributors": projectContributors, "repoName": repoName}
+    return {"files": filesToReturn, "fileAndContributors": fileAndContributors, "projectContributors": projectContributors, "rFilesToUse": rFilesToUse, "repoName": repoName}
