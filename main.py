@@ -1,6 +1,7 @@
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
+from fileAnalyzer import scan_repo_and_save_reports
 
 # Function that changes the variables that handles the program stopping functions
 def CancelProgramDTF(cancelMessage: str) -> None:
@@ -9,7 +10,7 @@ def CancelProgramDTF(cancelMessage: str) -> None:
     reasonForCancel = reasonForCancel + "\n" + cancelMessage  # safe now
 
 #Output information to a output.txt file -- maybe change to report.txt for iteration1?
-def RepoOutputDisplay(files, fileAndContributors, projectContributors, repoName):
+def RepoOutputDisplay(files, fileAndContributors, projectContributors, rFiles, repoName): # FIXME: Her trengs det en refac, mye uleselig kode grunnet chatDGBGT
     repoNameStr = str(repoName or "")
     # print(f"\n\\#/ after program is ran, here are the resulting lists for the repo '{repoNameStr}':")
 
@@ -80,7 +81,15 @@ def RepoOutputDisplay(files, fileAndContributors, projectContributors, repoName)
             for contributor in contributors or []:
                 output_lines.append(f"    contributor: {contributor}")
                 # print(f"    contributor: {contributor}")
+    if not rFiles:
+        output_lines.append("  (no R files with registered)")
+    else:
+        output_lines.append(f"\n **R files found:")
 
+        for ab_path in rFiles:
+            RfileName = FindRepoName(ab_path)
+            output_lines.append(f"\n - R File \"{RfileName}\" Absolute Path: {ab_path}")
+            
     # ===== Project contributors =====
     if projectContributors is None:
         projectContributors = []
@@ -95,8 +104,6 @@ def RepoOutputDisplay(files, fileAndContributors, projectContributors, repoName)
     # print("All contributors:", proj_str)
 
     return "\n".join(output_lines)
-
-
 
 def main_loop():
     # Define Variables to store information that is picked up
@@ -139,8 +146,8 @@ def main_loop():
 
     if (cancelProgram != True):
         print('System is ready to analyze the github \"' + FindRepoName(REPOURL) + '\". Type any key + ENTER to continue, or type "stop" or 0 to stop the program. ')
-        readyToCont = input("Command|: ")
-        if (readyToCont.lower() == "stop" or readyToCont == "0"):
+        readyToContinue = input("Command|: ")
+        if (readyToContinue.lower() == "stop" or readyToContinue == "0"):
             CancelProgramDTF("User stopped program before analyzation.")
     
     # Loop where Fetch happens
@@ -156,7 +163,7 @@ def main_loop():
             projectContributors = out.get("projectContributors", [])
             RFilesToAnalyze = out.get("rFilesToUse", [])
             repoName = out.get("repoName")
-        outputFetchingString = RepoOutputDisplay(files, fileAndContributors, projectContributors, repoName)
+        outputFetchingString = RepoOutputDisplay(files, fileAndContributors, projectContributors, RFilesToAnalyze, repoName)
         write_to_outputfile(outputFilePlacement, outputFetchingString) #outputer det fetcher mottar, fjern senere eller bruk i report.txt på et vis
 
     else:
@@ -166,19 +173,32 @@ def main_loop():
     # one check before analyzing files, to avoid a long loop :)
     if (cancelProgram != True):
         print('Github analyzation complete! You can begin the file analyzation. Type any key + ENTER to continue, or type "stop" or 0 to stop the program. ')
-        readyToCont = input("Command|: ")
-        if (readyToCont.lower() == "stop" or readyToCont == "0"):
+        readyToContinue = input("Command|: ")
+        if (readyToContinue.lower() == "stop" or readyToContinue == "0"):
             CancelProgramDTF("User stopped program before analyzation.")
 
     #Loop through files and analyze them:
 
     # ---- TODO: Implementer FileAnalyzer her 👈👈👈👈
     print("Running file analyzer...")
-    for key, fobj in files.items():
+    
+    outputFileAnalyzeString = "Here is the rundown of the Total Findings:"
+    # for key, fobj in files.items():
+    for rF in RFilesToAnalyze:
         # RFilesToAnalyze - bruk, denne har absolute path (eller, skal ha det)
-        filename = getattr(fobj, "filename", key) # <-- selve Filnanvnet, altså "dosomething.R"
-        fullpath = getattr(fobj, "fullpath", None) # <-- absolute path, altså "www./github.no/files/dosomehing.R"
+        # filename = getattr(fobj, "filename", key) # <-- selve Filnanvnet, altså "dosomething.R"
+        # fullpath = getattr(fobj, "fullpath", None) # <-- absolute path, altså "www./github.no/files/dosomehing.R"
+
+        #return --> total_findings, files_with_satd, reports
+        outputFileAnalyzeString += f"\nAnalyze results for File: {FindRepoName(rF)}" # <-- her burde det egt het FindFILEName??
+
+        total_findings, files_with_satd, reports = scan_repo_and_save_reports(repo_path=rF, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
+        outputFileAnalyzeString += f"\nTotal findings: {total_findings}\nFiles that contain SATD: {files_with_satd}\nReports: {reports}\n"
         # print("filename:", filename, "fullpath:", fullpath)
+
+    write_to_outputfile("fileAnalyzetest.txt", outputFileAnalyzeString)
+
+    print("If everything went well, the findings should have been printed to a file in dir \"dirTestFileAnalyze\"")
 
 # run main loop
 main_loop()
