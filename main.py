@@ -177,10 +177,16 @@ def main_loop():
         if (readyToContinue.lower() == "stop" or readyToContinue == "0"):
             CancelProgramDTF("User stopped program before analyzation.")
 
+
+
+
+
     #Loop through files and analyze them:
 
     # ---- TODO: Implementer FileAnalyzer her 👈👈👈👈
     print("Running file analyzer...")
+
+    #file analyzer code here:
     
     outputFileAnalyzeString = "Here is the rundown of the Total Findings:"
     # for key, fobj in files.items():
