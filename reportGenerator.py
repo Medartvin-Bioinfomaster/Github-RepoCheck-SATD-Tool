@@ -82,7 +82,7 @@ def generate_satd_overview(output_dir: str, repo_name: str) -> str:
 
 
 
-
+ 
 # Main summary report in base folder
 
 def generate_base_summary(base_dir: str, repo_name: str, satd_total: int, satd_files: int, github_metrics: dict | None = None) -> str:
