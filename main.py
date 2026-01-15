@@ -67,7 +67,7 @@ def RepoOutputDisplay(files, fileAndContributors, projectContributors, rFiles, r
     else:
         for filename, obj in fileAndContributors.items():
             output_lines.append(f"\nFile data: {filename}")
-            output_lines.append(f"\n - File Absolute Path: {fullpath}")
+            output_lines.append(f"\n - File Absolute Path: {obj.fullpath}")
             # Support dict-style and object-style for obj
             if isinstance(obj, dict):
                 contributors = obj.get("contributors", [])
@@ -195,7 +195,8 @@ def main_loop():
         #return --> total_findings, files_with_satd, reports
         outputFileAnalyzeString += f"\nAnalyze results for File: {FindRepoName(rF)}" # <-- her burde det egt het FindFILEName??
 
-        total_findings, files_with_satd, reports = scan_repo_and_save_reports(repo_path=rF, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
+        # total_findings, files_with_satd, reports = scan_repo_and_save_reports(repo_path=rF, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
+        total_findings, files_with_satd, reports = analyze_file(repo_path=REPOURL, file_path=rF, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
         outputFileAnalyzeString += f"\nTotal findings: {total_findings}\nFiles that contain SATD: {files_with_satd}\nReports: {reports}\n"
 
     # total_findings, files_with_satd, reports = scan_repo_and_save_reports(repo_path=REPOURL, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
