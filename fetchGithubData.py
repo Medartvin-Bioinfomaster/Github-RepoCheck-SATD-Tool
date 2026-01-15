@@ -45,7 +45,10 @@ def findRepo (repoUrl, cancelcommand=False):
     try:
         for commit in Repository(repoUrl).traverse_commits():
             # Gjør noe med commit, for eksempel: print(commit)
-            authortest = commit.author.name
+
+            repoName = commit.project_name
+            print("This is the repo name###: " + repoName)
+            print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
             repoOK = True
             print("Found repo: " + str(repoUrl))
             break
@@ -142,13 +145,13 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
     print("START FETCH: fetching from \'" + repoUrl + "\'")
 
-    for commit in Repository( repoUrl ).traverse_commits():
+    for commit in Repository( repoUrl ).traverse_commits(): # kan endres til traverse files?
         repoName = commit.project_name
         print("This is the repo name###: " + repoName)
         print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
         print("Author: " + commit.author.name)
 
-        print("Files changed: ")
+        print("Analyzing github ...")
 
         for file in commit.modified_files: 
 
@@ -156,12 +159,12 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             symbol = choose_separator(repoUrl)
             absolute = repoUrl + symbol + relative
             fileObj = FileData(file.filename, absolute)
-            print("Here are the absolutes lmao:")
-            print(absolute)
-            print("\nN\nN\nN")
+            # print("Here are the absolutes lmao:")
+            # print(absolute)
+            # print("\nN\nN\nN")
 
             if file.filename not in filesToReturn:
-                print("*    Add unique file to list")
+                # print("*    Add unique file to list")
                 filesToReturn[file.filename] = fileObj
                 if file.filename.lower().endswith(".r"):
                     # rFilesToUse.append(file.filename) # legger til .R filer til folder, fullpath
@@ -169,7 +172,7 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                     
 
             if file.filename not in fileAndContributors:
-                print("*-   unique file will be added")
+                # print("*-   unique file will be added")
                 fileDictionary = FileContributors(file.filename, absolute, commit.author.name, 1)
                 # fileDictionary["contributors"].append(commit.author.name)
                 # fileDictionary["commits"] += 1
@@ -183,7 +186,7 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                     existing.contributors.append(commit.author.name)
                 if commit.author.name not in projectContributors:
                     projectContributors.append(commit.author.name)
-            print(' \\' + file.filename, ' has changed')
+            # print(' \\' + file.filename, ' has changed')
         
         print('*End\n')
     
