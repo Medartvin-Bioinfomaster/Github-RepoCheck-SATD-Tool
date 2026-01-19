@@ -126,7 +126,7 @@ def saveTheRepoUrlQuestion(repo, reposInStorage):
 
 #TODO: find issues from github using Git API???
 
-# Main file fetch loop
+# Main file fetch loop - isLocal tag not implemented yet, probably not a problem right?
 def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
     filesToReturn = {}
@@ -145,15 +145,26 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
     print("START FETCH: fetching from \'" + repoUrl + "\'")
 
+    comTraveresed = 0
+    filesTraversed = 0
+
     for commit in Repository( repoUrl ).traverse_commits(): # kan endres til traverse files?
-        repoName = commit.project_name
-        print("This is the repo name###: " + repoName)
-        print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
-        print("Author: " + commit.author.name)
+        if repoName == "":
+            repoName = commit.project_name
+        # print("This is the repo name###: " + repoName)
+        # print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
+        # print("Author: " + commit.author.name)
+        # print(f"Is in Main branch?: {commit.in_main_branch}")
+        # print("Branch name: " + Repository.)
+        # print(f"Can we find total commits? {Repository.}")
+
+        comTraveresed += 1
 
         print("Analyzing github ...")
 
         for file in commit.modified_files: 
+
+            filesTraversed += 1
 
             relative = file.new_path or file.old_path
             symbol = choose_separator(repoUrl)
@@ -187,8 +198,8 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                 if commit.author.name not in projectContributors:
                     projectContributors.append(commit.author.name)
             # print(' \\' + file.filename, ' has changed')
-        
-        print('*End\n')
+
+        print(f'Commits read: {comTraveresed}, files iterated: {filesTraversed}')
     
     # filesToReturn = []
     # fileAndContributors = {}

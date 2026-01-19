@@ -9,14 +9,14 @@ def write_to_outputfile(outputFilePlacement, output_string):
 # TODO: FIks repostorage
 
 def readRepoStorageFile(path):
-    print("Reading Storage..")
+    # print("Reading Storage..")
     storedList = []
     itemnumber = 1
     terminateLoop = False
 
     try:
         with open(path, 'r', encoding='utf-8') as storage:
-            print("Storage exists.")
+            print("Reading Storage...")
     except FileNotFoundError:
         print(f"Storage not found. Creating a new one")
         with open(path, 'w', encoding='utf-8') as storage:  # creates the file
@@ -36,8 +36,8 @@ def readRepoStorageFile(path):
         #     if (itemnumber > 99): #loop shouldnt loop over 99 items anyway, cancels automatically if there is a bug or something. Avoids infinite loop
         #         terminateLoop = True
 
-    print(storedList)
-    print(f"Amount of items read: {itemnumber}")
+    # print(storedList)
+    # print(f"Amount of items read: {itemnumber}")
     
     #Returns data as a dictionary
     return {"repos": storedList, "count": itemnumber}
