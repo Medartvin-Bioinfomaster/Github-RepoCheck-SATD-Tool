@@ -124,6 +124,9 @@ def analyze_file(repo_path: str, file_path: str, output_dir: str, repo_name: str
     except Exception as e:
         print(f"Error reading {file_path}: {e}")
         # continue
+    # if file has no content (could have been deleted or emptied), skip it
+    if not content:
+        return total_findings, files_with_satd, reports
 
     results = detect_satd_in_code(content, file_path)
     if results:
