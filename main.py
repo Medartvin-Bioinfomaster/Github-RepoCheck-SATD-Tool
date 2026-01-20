@@ -135,7 +135,7 @@ def main_loop():
         CancelProgramDTF("Repo wasnt found")
 
     if cancelProgram != True:
-        saveTheRepoUrlQuestion( REPOURL, storageBucket["repos"] )
+        saveTheRepoUrlQuestion( REPOURL, storageBucket["repos"], path)
 
     # if cancelProgram != True:
     #     includeFolders()

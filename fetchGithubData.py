@@ -94,7 +94,7 @@ def findRepo (repoUrl, cancelcommand=False):
 
     # foldersToInclude
 
-def saveTheRepoUrlQuestion(repo, reposInStorage):
+def saveTheRepoUrlQuestion(repo, reposInStorage, path):
     print("sadukmos")
     print(reposInStorage)
     print(repo)
@@ -116,7 +116,7 @@ def saveTheRepoUrlQuestion(repo, reposInStorage):
             return {"text": "User canceled progam at saving stage", "status": False}
         elif (saveRepo.lower() == "yes" or saveRepo == "1"):
             print("Saving repo...")
-            writeRepoToStorage(repo)
+            writeRepoToStorage(repo, path)
             #TODO: Implement the file saving of the repository
         elif (saveRepo.lower() == "no" or saveRepo == "0"):
             print("Continuing without saving")
