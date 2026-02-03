@@ -36,10 +36,13 @@ def findRepo (repoUrl, cancelcommand=False):
         return {"text": "Canceled at RepoCheck.", "status": False}
     
     repoOK = False
+
+    printFeedback = ""
+
     if isUrl(repoUrl):
-        print('Link URL is OK')
+        printFeedback = 'Link URL is OK'
     else:
-        print('Link is NOT a URL. Trying to access as a local path.')
+        printFeedback = 'Link is NOT a URL. Trying to access as a local path.'
         # Her kan du også implementere logikk for validering av lokal sti hvis nødvendig.
 
     try:
@@ -47,10 +50,10 @@ def findRepo (repoUrl, cancelcommand=False):
             # Gjør noe med commit, for eksempel: print(commit)
 
             repoName = commit.project_name
-            print("This is the repo name###: " + repoName)
-            print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
+            printFeedback += "\nThis is the repo name###: " + repoName
+            # print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
             repoOK = True
-            print("Found repo: " + str(repoUrl))
+            printFeedback += f"\nFound repo \"{repoName}\": {str(repoUrl)}"
             break
     except Exception as e:
         print(f'Error accessing repository:')
@@ -95,9 +98,10 @@ def findRepo (repoUrl, cancelcommand=False):
     # foldersToInclude
 
 def saveTheRepoUrlQuestion(repo, reposInStorage, path):
-    print("sadukmos")
-    print(reposInStorage)
-    print(repo)
+    # print("sadukmos")
+    # print(reposInStorage)
+    # print(repo)
+    print("")
 
     if (repo == "" or repo == None):
         print("Error: repo name is empty")
@@ -133,6 +137,8 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
     fileAndContributors = {}
     projectContributors = []
     rFilesToUse = [] #R only files
+
+    listOfAbsolutePaths = []
 
     repoName = "" # FIXME: Unnødvendig??
 
@@ -173,13 +179,26 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             # print("Here are the absolutes lmao:")
             # print(absolute)
             # print("\nN\nN\nN")
-
-            if file.filename not in filesToReturn:
-                # print("*    Add unique file to list")
+            if (absolute not in listOfAbsolutePaths): #check that the full path of a file is NOT already in this list
+                listOfAbsolutePaths.append(absolute)
                 filesToReturn[file.filename] = fileObj
+
                 if file.filename.lower().endswith(".r"):
                     # rFilesToUse.append(file.filename) # legger til .R filer til folder, fullpath
                     rFilesToUse.append(absolute) # legger inn fullpath, sjekk at navn er riktig etc.
+
+                    
+            # if (file.filename not in filesToReturn) or (absolute not in rFilesToUse):
+                # print("*    Add unique file to list")
+                
+                # filesToReturn - list looks like this:
+                # {
+                #   filename: {
+                #               filename: "filename.filetype",
+                #               fullpath: "path/path/filename.filetype"
+                #             },
+                #   ...
+                # }
                     
 
             if file.filename not in fileAndContributors:

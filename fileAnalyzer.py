@@ -118,6 +118,7 @@ def analyze_file(repo_path: str, file_path: str, output_dir: str, repo_name: str
     total_findings = 0
     files_with_satd = 0
     reports = []
+    content = ""
     try:
         with open(file_path, 'r', encoding='utf-8', errors='replace') as fh:
             print("Found content, file has been read")
