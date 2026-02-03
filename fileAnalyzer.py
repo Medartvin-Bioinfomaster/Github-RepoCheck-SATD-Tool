@@ -88,6 +88,7 @@ def scan_repo_and_save_reports(repo_path: str, output_dir: str, repo_name: str):
     total_findings = 0
     files_with_satd = 0
     reports = []
+    content = ""
     for root, dirs, files in os.walk(repo_path):
         if '.git' in root:
             print(".git found in the root, for some reason we skip this then?")
