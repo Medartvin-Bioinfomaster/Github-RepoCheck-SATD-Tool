@@ -36,18 +36,24 @@ def findRepo (repoUrl, cancelcommand=False):
         return {"text": "Canceled at RepoCheck.", "status": False}
     
     repoOK = False
+
+    printFeedback = ""
+
     if isUrl(repoUrl):
-        print('Link URL is OK')
+        printFeedback = 'Link URL is OK'
     else:
-        print('Link is NOT a URL. Trying to access as a local path.')
+        printFeedback = 'Link is NOT a URL. Trying to access as a local path.'
         # Her kan du også implementere logikk for validering av lokal sti hvis nødvendig.
 
     try:
         for commit in Repository(repoUrl).traverse_commits():
             # Gjør noe med commit, for eksempel: print(commit)
-            authortest = commit.author.name
+
+            repoName = commit.project_name
+            printFeedback += "\nThis is the repo name###: " + repoName
+            # print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
             repoOK = True
-            print("Found repo: " + str(repoUrl))
+            printFeedback += f"\nFound repo \"{repoName}\": {str(repoUrl)}"
             break
     except Exception as e:
         print(f'Error accessing repository:')
@@ -91,10 +97,11 @@ def findRepo (repoUrl, cancelcommand=False):
 
     # foldersToInclude
 
-def saveTheRepoUrlQuestion(repo, reposInStorage):
-    print("sadukmos")
-    print(reposInStorage)
-    print(repo)
+def saveTheRepoUrlQuestion(repo, reposInStorage, path):
+    # print("sadukmos")
+    # print(reposInStorage)
+    # print(repo)
+    print("")
 
     if (repo == "" or repo == None):
         print("Error: repo name is empty")
@@ -113,7 +120,7 @@ def saveTheRepoUrlQuestion(repo, reposInStorage):
             return {"text": "User canceled progam at saving stage", "status": False}
         elif (saveRepo.lower() == "yes" or saveRepo == "1"):
             print("Saving repo...")
-            writeRepoToStorage(repo)
+            writeRepoToStorage(repo, path)
             #TODO: Implement the file saving of the repository
         elif (saveRepo.lower() == "no" or saveRepo == "0"):
             print("Continuing without saving")
@@ -123,13 +130,15 @@ def saveTheRepoUrlQuestion(repo, reposInStorage):
 
 #TODO: find issues from github using Git API???
 
-# Main file fetch loop
+# Main file fetch loop - isLocal tag not implemented yet, probably not a problem right?
 def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
     filesToReturn = {}
     fileAndContributors = {}
     projectContributors = []
     rFilesToUse = [] #R only files
+
+    listOfAbsolutePaths = []
 
     repoName = "" # FIXME: Unnødvendig??
 
@@ -142,34 +151,58 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
     print("START FETCH: fetching from \'" + repoUrl + "\'")
 
-    for commit in Repository( repoUrl ).traverse_commits():
-        repoName = commit.project_name
-        print("This is the repo name###: " + repoName)
-        print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
-        print("Author: " + commit.author.name)
+    comTraveresed = 0
+    filesTraversed = 0
 
-        print("Files changed: ")
+    for commit in Repository( repoUrl ).traverse_commits(): # kan endres til traverse files?
+        if repoName == "":
+            repoName = commit.project_name
+        # print("This is the repo name###: " + repoName)
+        # print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
+        # print("Author: " + commit.author.name)
+        # print(f"Is in Main branch?: {commit.in_main_branch}")
+        # print("Branch name: " + Repository.)
+        # print(f"Can we find total commits? {Repository.}")
+
+        comTraveresed += 1
+
+        print("Analyzing github ...")
 
         for file in commit.modified_files: 
+
+            filesTraversed += 1
 
             relative = file.new_path or file.old_path
             symbol = choose_separator(repoUrl)
             absolute = repoUrl + symbol + relative
             fileObj = FileData(file.filename, absolute)
-            print("Here are the absolutes lmao:")
-            print(absolute)
-            print("\nN\nN\nN")
-
-            if file.filename not in filesToReturn:
-                print("*    Add unique file to list")
+            # print("Here are the absolutes lmao:")
+            # print(absolute)
+            # print("\nN\nN\nN")
+            if (absolute not in listOfAbsolutePaths): #check that the full path of a file is NOT already in this list
+                listOfAbsolutePaths.append(absolute)
                 filesToReturn[file.filename] = fileObj
+
                 if file.filename.lower().endswith(".r"):
                     # rFilesToUse.append(file.filename) # legger til .R filer til folder, fullpath
                     rFilesToUse.append(absolute) # legger inn fullpath, sjekk at navn er riktig etc.
+
+                    
+            # if (file.filename not in filesToReturn) or (absolute not in rFilesToUse):
+                # print("*    Add unique file to list")
+                
+                # filesToReturn - list looks like this:
+                # {
+                #   filename: {
+                #               filename: "filename.filetype",
+                #               fullpath: "path/path/filename.filetype"
+                #             },
+                #   ...
+                # }
                     
 
             if file.filename not in fileAndContributors:
-                print("*-   unique file will be added")
+                # print("*-   unique file will be added")
                 fileDictionary = FileContributors(file.filename, absolute, commit.author.name, 1)
                 # fileDictionary["contributors"].append(commit.author.name)
                 # fileDictionary["commits"] += 1
@@ -183,9 +216,9 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                     existing.contributors.append(commit.author.name)
                 if commit.author.name not in projectContributors:
                     projectContributors.append(commit.author.name)
-            print(' \\' + file.filename, ' has changed')
-        
-        print('*End\n')
+            # print(' \\' + file.filename, ' has changed')
+
+        print(f'Commits read: {comTraveresed}, files iterated: {filesTraversed}')
     
     # filesToReturn = []
     # fileAndContributors = {}

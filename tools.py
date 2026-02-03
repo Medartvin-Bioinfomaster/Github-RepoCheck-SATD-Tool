@@ -59,8 +59,8 @@ def WriteRepoName(reposInStorage):
         #_
     else:
         urlToReturn = urlForRepo
-    print("repo?")
-    print(urlToReturn)
+    # print("repo?")
+    # print(urlToReturn)
     # Retruing the reponame
     return urlToReturn
 
