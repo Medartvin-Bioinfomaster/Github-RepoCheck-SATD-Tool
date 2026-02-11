@@ -1,1 +1,1 @@
-['Edvin Ulvestad', 'bobauser']
+['bobauser']

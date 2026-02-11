@@ -129,7 +129,7 @@ def scan_repo_and_save_reports(repo_path: str, output_dir: str, repo_name: str):
 
 def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo_name: str): # remove repopath? <--
     total_findings = 0
-    files_with_satd = 0
+    file_has_satd = False
     textResult = ""
     content = ""
     loc = 0
@@ -152,14 +152,14 @@ def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo
         results = detect_satd_in_code(content, file_path)
         if results:
             total_findings += len(results)
-            files_with_satd += 1
+            file_has_satd = True
             textResult = generateTextResponseForFile(file_path, results)
             # rp = save_report_for_file(results, output_dir, file_path, repo_name)
             # reports.append(rp)
             # reports.append(textResult)
             print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
 
-    return total_findings, files_with_satd, textResult, loc, foundFile
+    return total_findings, file_has_satd, textResult, loc, foundFile
 
 # def analyze_file(repo_path: str, output_dir: str, repo_name: str) {
 
