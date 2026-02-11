@@ -1,3 +1,4 @@
+import json
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
@@ -90,7 +91,8 @@ def main_loop():
             # firstCommitHash = out.get("firstCommitHash")
             # lastCommitHash = out.get("lastCommitHash")
         outputFetchingString = RepoOutputDisplay(files, fileAndContributors, projectContributors, RFilesToAnalyze, repoName)
-        write_to_outputfile(outputFilePlacement, outputFetchingString) #outputer det fetcher mottar, fjern senere eller bruk i report.txt på et vis
+
+        # write_to_outputfile(outputFilePlacement, outputFetchingString) #outputer det fetcher mottar, fjern senere eller bruk i report.txt på et vis
 
     else:
         print("Task was canceled. \nThis is the full log")
@@ -129,13 +131,13 @@ def main_loop():
         outputFileAnalyzeString += f"\nAnalyze results for File: {FindRepoName(rF.fullpath)}" # <-- her burde det egt het FindFILEName??
 
         # total_findings, files_with_satd, reports = scan_repo_and_save_reports(repo_path=rF, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
-        total_findings, files_with_satd, reports, loc, foundFile = analyze_file(repo_path=REPOURL, RFileInstance=rF, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
+        total_findings, files_with_satd, textResult, loc, foundFile = analyze_file(repo_path=REPOURL, RFileInstance=rF, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
         
         if foundFile:
             churndatafromrf = rF.churndata
             churndatafromrf["loc"] = loc
             rF.churndata = churndatafromrf
-            outputFileAnalyzeString += f"\nTotal findings: {total_findings}\nFiles that contain SATD: {files_with_satd}\nReports: {reports}\n"
+            outputFileAnalyzeString += f"\nTotal findings: {total_findings}\nFiles that contain SATD: {files_with_satd}\n" #Reports: {reports}\n
             
             total_churn = rF.churndata["added"] + rF.churndata["deleted"]
             # loc = rF.churndata["loc"] or 1  # avoid division by zero
@@ -151,7 +153,8 @@ def main_loop():
             else:
                 risk = "Low"
 
-            rFileOutputStrings.append({
+            datajson = {
+                "Text": textResult,
                 "filename": rF.filename,
                 "file": rF.fullpath,
                 "metrics": {
@@ -163,12 +166,15 @@ def main_loop():
                     "churn_per_loc": round(churn_per_loc, 2)
                 },
                 "risk_level": risk
-            })
+            }
+            rFileOutputStrings.append(datajson)
+
         else:
-            rFileOutputStrings.append({
+            datajson = {
                 "filename": rF.filename + "_(Not found)",
                 "file": rF.fullpath,
-            })
+            }
+            rFileOutputStrings.append(datajson)
 
     # total_findings, files_with_satd, reports = scan_repo_and_save_reports(repo_path=REPOURL, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
 
@@ -181,7 +187,7 @@ def main_loop():
     MainReport(getProjectRoot(), "Main", outputFileAnalyzeString)
     
     for filereport in rFileOutputStrings:
-        CreateSingleFileReport(getProjectRoot(), outputfilefolder, filereport["filename"], str(filereport))
+        CreateSingleFileReport(getProjectRoot(), outputfilefolder, filereport["filename"], (json.dumps(filereport, indent=4)))
 
 
     # write_to_outputfile("fileAnalyzetest.txt", outputFileAnalyzeString)
