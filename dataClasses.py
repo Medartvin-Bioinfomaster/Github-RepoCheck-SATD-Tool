@@ -4,18 +4,45 @@ class RepoDetails:
         self.files = files
 
 class FileContributors:
-    def __init__(self, filename, fullpath, contributor, commits):
+    def __init__(self, filename, fullpath, contributor, commits, commitHash):
         self.filename = filename
         self.fullpath = fullpath
+        self.commits = commits
         self.contributors = []
+        self.commitHashes = []
+        self.churn = 0
         if contributor is not None:
             self.contributors.append(contributor)
-        self.commits = commits
+        if commitHash is not None:
+            self.commitHashes.append(commitHash)
+
+    def addContributor(self, contributor):
+        if contributor not in self.contributors:
+            self.contributors.append(contributor)
+
+    def addCommitHash(self, commitHash):
+        if commitHash not in self.commitHashes:
+            self.commitHashes.append(commitHash)
+
+    def addCommit(self):
+        self.commits += 1
+
+    def addChurnValue(self, churnvalue):
+        self.churn = churnvalue
+
 
 class FileData:
     def __init__(self, filename, fullpath):
         self.filename = filename
         self.fullpath = fullpath
+
+class RFileData:
+    def __init__(self, filename, fullpath, churndata):
+        self.filename = filename
+        self.fullpath = fullpath
+        self.churndata = {"added": 0, "deleted": 0, "commits": 0, "loc": 0}
+        if churndata is not None:
+            self.churndata = churndata
 
 # class GitFetchReturn:
 #     def in

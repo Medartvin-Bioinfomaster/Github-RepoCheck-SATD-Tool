@@ -5,6 +5,9 @@ import subprocess
 import shutil
 import tempfile
 
+from tools import FindRepoName
+from dataClasses import RFileData
+
 KEYWORDS = ['TODO', 'TO-DO', 'FIXME', 'FIX-ME', 'FIX', 'HACK', 'XXX', 'NOTE', 'WARNING', 'SATD']
 _SINGLE_RE = re.compile(r'#.*(' + '|'.join(KEYWORDS) + ').*', re.IGNORECASE)
 _MULTI_RE = re.compile(r'/\*.*?(' + '|'.join(KEYWORDS) + ').*?\*/', re.IGNORECASE | re.DOTALL)
@@ -114,31 +117,37 @@ def scan_repo_and_save_reports(repo_path: str, output_dir: str, repo_name: str):
     return total_findings, files_with_satd, reports
 
 
-def analyze_file(repo_path: str, file_path: str, output_dir: str, repo_name: str):
+def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo_name: str): # remove repopath? <--
     total_findings = 0
     files_with_satd = 0
     reports = []
     content = ""
+    loc = 0
+    foundFile = False
+    file_path = RFileInstance.fullpath
+
     try:
         with open(file_path, 'r', encoding='utf-8', errors='replace') as fh:
             print("Found content, file has been read")
             content = fh.read()
+            loc = sum(1 for line in fh)
+            foundFile = True
+            print(f"File {FindRepoName(file_path)} has {loc} lines of code")
     except Exception as e:
         print(f"Error reading {file_path}: {e}")
+        foundFile = False
         # continue
     # if file has no content (could have been deleted or emptied), skip it
-    if not content:
-        return total_findings, files_with_satd, reports
+    if content: #før var det if not content, men da blir det to like returns. Heller bedre å bare skippe ifen all together hvis fil ikke ble funnet
+        results = detect_satd_in_code(content, file_path)
+        if results:
+            total_findings += len(results)
+            files_with_satd += 1
+            rp = save_report_for_file(results, output_dir, file_path, repo_name)
+            reports.append(rp)
+            print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
 
-    results = detect_satd_in_code(content, file_path)
-    if results:
-        total_findings += len(results)
-        files_with_satd += 1
-        rp = save_report_for_file(results, output_dir, file_path, repo_name)
-        reports.append(rp)
-        print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
-
-    return total_findings, files_with_satd, reports
+    return total_findings, files_with_satd, reports, loc, foundFile
 
 # def analyze_file(repo_path: str, output_dir: str, repo_name: str) {
 

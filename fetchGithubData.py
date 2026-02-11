@@ -4,7 +4,10 @@ from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoTo
 
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, choose_separator
 
-from dataClasses import RepoDetails, FileContributors, FileData
+from dataClasses import RepoDetails, FileContributors, FileData, RFileData
+
+import time
+
 # filter readmes? example data folder? (.rdata, .rds, r-markdown, .Rmnd)
 
 # opt-in: ask users  what folders to loook throguh ( like R folder) - pydriller clones a whole repo, can we only download R-folder?
@@ -133,16 +136,24 @@ def saveTheRepoUrlQuestion(repo, reposInStorage, path):
 # Main file fetch loop - isLocal tag not implemented yet, probably not a problem right?
 def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
+    #TODO: change of file return. We only need a metric for the amount of files + commits in the repo. 
+    # Otherwise, R files and creating a connection between an R file and its contributors and commits can be nice
+    # potentially we can also create a general connection from contributors to other files in the system, if a specific contributor is tied to alot of SATD already
     filesToReturn = {}
     fileAndContributors = {}
     projectContributors = []
     rFilesToUse = [] #R only files
+
+    firstCommitHash = ""
+    lastCommitHash = ""
 
     listOfAbsolutePaths = []
 
     repoName = "" # FIXME: Unnødvendig??
 
     fileTagsToInclude = "R" #just a placeholder for now
+
+    startAnalyzation = time.time()
  
 
     if (cancelcommand == True):
@@ -164,6 +175,10 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
         # print("Branch name: " + Repository.)
         # print(f"Can we find total commits? {Repository.}")
 
+        if (firstCommitHash == ""):
+            firstCommitHash = commit.hash
+        lastCommitHash = commit.hash
+
         comTraveresed += 1
 
         print("Analyzing github ...")
@@ -183,9 +198,36 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                 listOfAbsolutePaths.append(absolute)
                 filesToReturn[file.filename] = fileObj
 
-                if file.filename.lower().endswith(".r"):
+                if file.filename.lower().endswith(".r"): # CHECKS SPECIFICALLY R FILES -->
                     # rFilesToUse.append(file.filename) # legger til .R filer til folder, fullpath
-                    rFilesToUse.append(absolute) # legger inn fullpath, sjekk at navn er riktig etc.
+                    churn_stats = {"added": 0, "deleted": 0, "commits": 0, "loc": 0}
+                    # path = file.new_path.replace("\\", "/") if file.new_path else None
+                    churn_stats["added"] = file.added_lines
+                    churn_stats["deleted"] = file.deleted_lines
+                    churn_stats["commits"] = 1
+                    churn_stats["loc"] = 1
+                    newRFile = RFileData(file.filename, absolute, churn_stats)
+                    rFilesToUse.append(newRFile) # legger inn fullpath, sjekk at navn er riktig etc.
+
+                # still under the "if path is not registered" if-statement
+                fileDictionary = FileContributors(file.filename, absolute, commit.author.name, 1, commit.hash)
+                fileAndContributors[file.filename] = fileDictionary
+                if commit.author.name not in projectContributors:
+                    projectContributors.append(commit.author.name)
+
+            else: #Otherwise, update data in file+Contributors
+                existing = fileAndContributors[file.filename]
+                existing.addCommit()
+                # existing.addContributor(commit.author.name)
+                existing.addCommitHash(commit.hash)
+
+                if commit.author.name not in existing.contributors:
+                    existing.addContributor(commit.author.name)
+
+                # add contributor to the counter of total cont- in the project, if not there already
+                if commit.author.name not in projectContributors:
+                    projectContributors.append(commit.author.name)
+            # print(' \\' + file.filename, ' has changed')
 
                     
             # if (file.filename not in filesToReturn) or (absolute not in rFilesToUse):
@@ -201,26 +243,14 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                 # }
                     
 
-            if file.filename not in fileAndContributors:
-                # print("*-   unique file will be added")
-                fileDictionary = FileContributors(file.filename, absolute, commit.author.name, 1)
-                # fileDictionary["contributors"].append(commit.author.name)
-                # fileDictionary["commits"] += 1
-                fileAndContributors[file.filename] = fileDictionary ## Fungerer CLASS???
-                if commit.author.name not in projectContributors:
-                    projectContributors.append(commit.author.name)
-            else:
-                existing = fileAndContributors[file.filename]
-                existing.commits += 1
-                if commit.author.name not in existing.contributors:
-                    existing.contributors.append(commit.author.name)
-                if commit.author.name not in projectContributors:
-                    projectContributors.append(commit.author.name)
-            # print(' \\' + file.filename, ' has changed')
+
 
         print(f'Commits read: {comTraveresed}, files iterated: {filesTraversed}')
     
+    endAnalyzation = time.time()
+    print(f"\nTime spent fetching: {endAnalyzation - startAnalyzation} seconds")
+
     # filesToReturn = []
     # fileAndContributors = {}
     # projectContributors = [] 
-    return {"files": filesToReturn, "fileAndContributors": fileAndContributors, "projectContributors": projectContributors, "rFilesToUse": rFilesToUse, "repoName": repoName}
+    return {"files": filesToReturn, "fileAndContributors": fileAndContributors, "projectContributors": projectContributors, "rFilesToUse": rFilesToUse, "repoName": repoName, "firstCommitHash": firstCommitHash, "lastCommitHash": lastCommitHash}
