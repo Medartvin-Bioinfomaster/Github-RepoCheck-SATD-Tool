@@ -100,14 +100,14 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             relative_filepath = file.new_path or file.old_path
             symbol = choose_separator(repoUrl)
             absolute_path = repoUrl + symbol + relative_filepath
+            filename = file.filename
 
-            fileObj = FileData(file.filename, absolute_path) #creating a basic dataclass for the file
+            fileObj = FileData(filename, absolute_path) #creating a basic dataclass for the file
 
-            if (absolute_path not in listOfAbsolutePaths and file.filename.lower().endswith(".r")): #check that the full path of a file is NOT already in this list
-                
+            if (absolute_path not in listOfAbsolutePaths and filename.lower().endswith(".r")): #check that the full path of a file is NOT already in this list
                 # add the files to the "keeping count" list
                 listOfAbsolutePaths.append(absolute_path)
-                filesToReturn[file.filename] = fileObj
+                filesToReturn[filename] = fileObj
 
                 # Handle R file data and collect
 
@@ -117,7 +117,7 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                 churn_stats["commits"] = 1
                 churn_stats["loc"] = 1
                 
-                r_file = RFileData(file.filename, 
+                r_file = RFileData(filename, 
                                    absolute_path, 
                                    churn_stats, 
                                    commit.author.name, 
@@ -125,14 +125,15 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                                    commit.hash)
                 
                 # adding the final object to the list
-                r_files_data_list[file.filename] = r_file
+                r_files_data_list[filename] = r_file
 
                 if commit.author.name not in all_contributors: # add contributor to its own list
                     all_contributors.append(commit.author.name)
 
             else: # if the file has been logged, update data
-                if (file.filename.lower().endswith(".r")):
-                    existing_r_file: RFileData = r_files_data_list[file.filename]
+                if (filename.lower().endswith(".r")):
+
+                    existing_r_file: RFileData = r_files_data_list[filename]
                     existing_r_file.addCommit()
                     existing_r_file.addCommitHash(commit.hash)
                     # add only unique contributor
@@ -142,15 +143,15 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                     if commit.author.name not in all_contributors:
                         all_contributors.append(commit.author.name)
 
-        print(f'Commits read: {commitsTraveresedCounter}, total files iterated: {filesTraveresedCounter}')
-    
+        # print(f'Commits read: {commitsTraveresedCounter}, total files iterated: {filesTraveresedCounter}')
+
     endAnalyzation = time.time()
     print(f"\nTime spent fetching: {endAnalyzation - startAnalyzation} seconds")
 
     return {
-            "repoName": repositoryName, 
+            "repositoryName": repositoryName, 
             "files": filesToReturn, 
-            "rfiles": r_files_data_list, 
+            "r_files": r_files_data_list, 
             "projectContributors": all_contributors, 
             "firstCommitHash": firstCommitHash, 
             "lastCommitHash": lastCommitHash

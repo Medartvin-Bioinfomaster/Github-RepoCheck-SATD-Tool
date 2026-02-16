@@ -7,7 +7,7 @@ from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdTe
 
 from pathlib import Path
 
-from typing import List
+from typing import List, Dict
 from dataClasses import RFileData
 
 # Function that changes the variables that handles the program stopping functions
@@ -30,7 +30,8 @@ def main_loop():
     files = []
     r_files_data: list[RFileData] = {}
     projectContributors = []
-    
+    outputfilefolder = "File_Reports" #name of the folder where individual file reports are stored
+
     print("#/3#/3 Welcome to the SATD Tool 3\\#3\\#")
 
     #stage 1
@@ -70,9 +71,9 @@ def main_loop():
             CancelProgram("Something went wrong:", data_fetched.get("text"))
         else:
             files = data_fetched.get("filesToReturn", [])
-            r_files_data = data_fetched.get("r_files_data_list", {})
+            r_files_data = data_fetched.get("r_files", {})
             projectContributors = data_fetched.get("projectContributors", [])
-            repoName = data_fetched.get("repoName")
+            repoName = data_fetched.get("repositoryName")
 
             write_to_outputfile("fileandcontributors.txt", str(r_files_data))
             write_to_outputfile("projectContributors.txt", str(projectContributors))
@@ -96,14 +97,15 @@ def main_loop():
 
     print(f"The size of the R list: {r_files_data}, {len(r_files_data)}")
 
-    for r_file in r_files_data:
-        print("PARA1")
-        outputFileAnalyzeString += f"\nAnalyze results for File: {FindRepoName(r_file.fullpath)}"
+    for r_file in r_files_data.values():
+        # print("PARA1")
+
+        outputFileAnalyzeString += f"\nAnalyze results for File: {r_file.filename}"
 
         total_findings, file_has_satd, textResult, loc, foundFile = analyze_file(repo_path=REPOURL, RFileInstance=r_file, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
         
         if foundFile:
-            print("PARA2")  
+            # print("PARA2")  
             churn_data_from_r_file = r_file.churndata
             churn_data_from_r_file["loc"] = loc
             r_file.churndata = churn_data_from_r_file
@@ -115,7 +117,7 @@ def main_loop():
             else:
                 churn_per_loc = 0
 
-            print("PARA3")
+            # print("PARA3")
 
             if churn_per_loc >= 5:
                 risk = "High"
@@ -127,7 +129,7 @@ def main_loop():
             text_with_details = SingleFileSatdText(r_file, file_has_satd, total_churn, loc, churn_per_loc, risk)
 
         
-            print("PARA4")
+            # print("PARA4")
 
             fullText = textResult + "\n" + text_with_details
 
@@ -162,8 +164,6 @@ def main_loop():
 
     if rFilesNotFound > 0:
         outputFileAnalyzeString += f"\n\nFiles not found during analyzation: {rFilesNotFound}📄"
-
-    outputfilefolder = "File_Reports" #name of the folder where individual file reports are stored
 
     # create main report
     MainReport(getProjectRoot(), "Main", outputFileAnalyzeString)
