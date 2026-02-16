@@ -4,35 +4,15 @@ from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoTo
 
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, choose_separator
 
-from dataClasses import RepoDetails, FileContributors, FileData
-# filter readmes? example data folder? (.rdata, .rds, r-markdown, .Rmnd)
+from dataClasses import RepoDetails, FileData, RFileData
 
-# opt-in: ask users  what folders to loook throguh ( like R folder) - pydriller clones a whole repo, can we only download R-folder?
+from typing import Dict
 
-#Idea for these values: Create an interface or Dictionary containing them, so its easier to refer to them, and it gives them a title like: "ReturnData.files" ...
-
-
-
-
-
-#TODO: include a filter on the period you want to recieve commits for. You can choose to view them all or just a period of commits
-# useDateFilter = input("Do you want to filter commits based on dates? ('yes/1' or 'no/0'):")
-
-# if (useDateFilter == "yes" or useDateFilter == "0"):
-#     print("TEST")
-#     dateToUse = input("Write the date to filter from ('DD:MM:YYYY' format): ")
-#     dates = dateToUse.split(":")
-
-
-# continue using date or not
-
-#File should be called RepoHandler? Since Main will call on functions from other classes or tools, this "repoFetcher" class acts more
-# as the manager for handling and fetching from a repository
+import time
 
 def findRepo (repoUrl, cancelcommand=False):
     
     if cancelcommand == True:
-        # CancelProgramDTF("Canceled at RepoCheck.")
         return {"text": "Canceled at RepoCheck.", "status": False}
     
     repoOK = False
@@ -43,184 +23,136 @@ def findRepo (repoUrl, cancelcommand=False):
         printFeedback = 'Link URL is OK'
     else:
         printFeedback = 'Link is NOT a URL. Trying to access as a local path.'
-        # Her kan du også implementere logikk for validering av lokal sti hvis nødvendig.
 
     try:
         for commit in Repository(repoUrl).traverse_commits():
-            # Gjør noe med commit, for eksempel: print(commit)
-
             repoName = commit.project_name
             printFeedback += "\nThis is the repo name###: " + repoName
-            # print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
             repoOK = True
             printFeedback += f"\nFound repo \"{repoName}\": {str(repoUrl)}"
             break
     except Exception as e:
         print(f'Error accessing repository:')
-        # CancelProgramDTF("Error accessing local repository. e: ")
         return {"text": "Error accessing local repository. e: ", "status": False}
         repoOK = False
 
-        # cancelProgram = True
-        # return
-        # remove the return for now, just make sure that a local repo can be picked up
-
     return repoOK
 
-
-# TODO: Implement this folder opt-in system to the program
-# def includeFolders ():
-#     endSection = False
-#     print("Write what folders and files you would like to include. \nWrite a name of a folder in the repo and hit 'enter' to add it. Type +f and a name to add single files. Type -r to remove an item from the view.")
-    
-#     while endSection == False and cancelProgram == False:
-#         print("Current selection: " + foldersToInclude)
-#         folderInput = input("Write what folders and files you would like to include")
-
-#         if (folderInput.lower() == "cancel"):
-#             # CancelProgramDTF("User canceled at file inclusion section.")
-#             return {"text": "User canceled at file inclusion section.", "status": False}
-
-#         elif (folderInput.lower() == "done"):
-#             endSection = True
-
-#         elif (folderInput.lower().__contains__("+f")):
-#             foldersToInclude.append( "(F)" + folderInput.removeprefix("+f ") )
-#             #FIXME: her er det ikke implementert å bytte ut +f med denne (F) stringen i stedet. Dette bør legges til asap
-
-#         elif (folderInput.lower().__contains__("-r")):
-#             foldersToInclude.remove(folderInput)
-#             #TODO: implement feedback to user if folder/file isn't found
-
-#         else:
-#             foldersToInclude.append(folderInput)
-
-    # foldersToInclude
-
 def saveTheRepoUrlQuestion(repo, reposInStorage, path):
-    # print("sadukmos")
-    # print(reposInStorage)
-    # print(repo)
-    print("")
 
     if (repo == "" or repo == None):
         print("Error: repo name is empty")
-        # CancelProgramDTF("Error: Repo name is empty")
         return {"text": "Error: Repo name is empty", "status": False}
-    # if repo in reposInStorage:
-        # print("RepoURL from storage detected, continuing...")
-    # else:
     if repo not in reposInStorage:
         print("The Repo Url or Local path is valid, want to store the repo? (Yes / 1 or No / 0)")
         saveRepo = input("Command|: ")
 
         if (saveRepo.strip().lower() == "cancel"):
             print("Canceling program.")
-            # CancelProgramDTF("User canceled progam at saving stage")
             return {"text": "User canceled progam at saving stage", "status": False}
         elif (saveRepo.lower() == "yes" or saveRepo == "1"):
             print("Saving repo...")
             writeRepoToStorage(repo, path)
-            #TODO: Implement the file saving of the repository
         elif (saveRepo.lower() == "no" or saveRepo == "0"):
             print("Continuing without saving")
         else:
             print("Command not recognized. Continuing without saving")
 
 
-#TODO: find issues from github using Git API???
-
-# Main file fetch loop - isLocal tag not implemented yet, probably not a problem right?
 def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
+    #TODO: change of file return. We only need a metric for the amount of files + commits in the repo. 
+    # Otherwise, R files and creating a connection between an R file and its contributors and commits can be nice
+    # potentially we can also create a general connection from contributors to other files in the system, if a specific contributor is tied to alot of SATD already
+    repositoryName = FindRepoName(repoUrl)
     filesToReturn = {}
-    fileAndContributors = {}
-    projectContributors = []
-    rFilesToUse = [] #R only files
+    r_files_data_list: Dict[RFileData] = {} # Rfiles data
+    all_contributors = []
+
+    firstCommitHash = ""
+    lastCommitHash = ""
 
     listOfAbsolutePaths = []
 
-    repoName = "" # FIXME: Unnødvendig??
-
-    fileTagsToInclude = "R" #just a placeholder for now
- 
+    startAnalyzation = time.time()
 
     if (cancelcommand == True):
-        # CancelProgramDTF("Program already cancelled. Cancelcommand set true. Not running.")
         return {"text": "Program already cancelled. Cancelcommand set true. Not running.", "status": False}
 
-    print("START FETCH: fetching from \'" + repoUrl + "\'")
+    print("START FETCH: fetching from \'" + repositoryName + "\'")
 
-    comTraveresed = 0
-    filesTraversed = 0
+    commitsTraveresedCounter = 0
+    filesTraveresedCounter = 0 # remember, it can be old versions of files, now deleted files etc. counter of files traveresed during every commit
 
-    for commit in Repository( repoUrl ).traverse_commits(): # kan endres til traverse files?
-        if repoName == "":
-            repoName = commit.project_name
-        # print("This is the repo name###: " + repoName)
-        # print("Commit #" + commit.hash + "\nMessage: " + commit.msg)
-        # print("Author: " + commit.author.name)
-        # print(f"Is in Main branch?: {commit.in_main_branch}")
-        # print("Branch name: " + Repository.)
-        # print(f"Can we find total commits? {Repository.}")
+    print("Analyzing github ...")
+    
+    for commit in Repository( repoUrl ).traverse_commits(): # change / possible to change to traversing files?
+        if (firstCommitHash == ""):
+            firstCommitHash = commit.hash
+        lastCommitHash = commit.hash
 
-        comTraveresed += 1
-
-        print("Analyzing github ...")
+        commitsTraveresedCounter += 1
 
         for file in commit.modified_files: 
 
-            filesTraversed += 1
+            filesTraveresedCounter += 1
 
-            relative = file.new_path or file.old_path
+            relative_filepath = file.new_path or file.old_path
             symbol = choose_separator(repoUrl)
-            absolute = repoUrl + symbol + relative
-            fileObj = FileData(file.filename, absolute)
-            # print("Here are the absolutes lmao:")
-            # print(absolute)
-            # print("\nN\nN\nN")
-            if (absolute not in listOfAbsolutePaths): #check that the full path of a file is NOT already in this list
-                listOfAbsolutePaths.append(absolute)
-                filesToReturn[file.filename] = fileObj
+            absolute_path = repoUrl + symbol + relative_filepath
+            filename = file.filename
 
-                if file.filename.lower().endswith(".r"):
-                    # rFilesToUse.append(file.filename) # legger til .R filer til folder, fullpath
-                    rFilesToUse.append(absolute) # legger inn fullpath, sjekk at navn er riktig etc.
+            fileObj = FileData(filename, absolute_path) #creating a basic dataclass for the file
 
-                    
-            # if (file.filename not in filesToReturn) or (absolute not in rFilesToUse):
-                # print("*    Add unique file to list")
+            if (absolute_path not in listOfAbsolutePaths and filename.lower().endswith(".r")): #check that the full path of a file is NOT already in this list
+                # add the files to the "keeping count" list
+                listOfAbsolutePaths.append(absolute_path)
+                filesToReturn[filename] = fileObj
+
+                # Handle R file data and collect
+
+                churn_stats = {"added": 0, "deleted": 0, "commits": 0, "loc": 0}
+                churn_stats["added"] = file.added_lines
+                churn_stats["deleted"] = file.deleted_lines
+                churn_stats["commits"] = 1
+                churn_stats["loc"] = 1
                 
-                # filesToReturn - list looks like this:
-                # {
-                #   filename: {
-                #               filename: "filename.filetype",
-                #               fullpath: "path/path/filename.filetype"
-                #             },
-                #   ...
-                # }
-                    
+                r_file = RFileData(filename, 
+                                   absolute_path, 
+                                   churn_stats, 
+                                   commit.author.name, 
+                                   1, 
+                                   commit.hash)
+                
+                # adding the final object to the list
+                r_files_data_list[filename] = r_file
 
-            if file.filename not in fileAndContributors:
-                # print("*-   unique file will be added")
-                fileDictionary = FileContributors(file.filename, absolute, commit.author.name, 1)
-                # fileDictionary["contributors"].append(commit.author.name)
-                # fileDictionary["commits"] += 1
-                fileAndContributors[file.filename] = fileDictionary ## Fungerer CLASS???
-                if commit.author.name not in projectContributors:
-                    projectContributors.append(commit.author.name)
-            else:
-                existing = fileAndContributors[file.filename]
-                existing.commits += 1
-                if commit.author.name not in existing.contributors:
-                    existing.contributors.append(commit.author.name)
-                if commit.author.name not in projectContributors:
-                    projectContributors.append(commit.author.name)
-            # print(' \\' + file.filename, ' has changed')
+                if commit.author.name not in all_contributors: # add contributor to its own list
+                    all_contributors.append(commit.author.name)
 
-        print(f'Commits read: {comTraveresed}, files iterated: {filesTraversed}')
-    
-    # filesToReturn = []
-    # fileAndContributors = {}
-    # projectContributors = [] 
-    return {"files": filesToReturn, "fileAndContributors": fileAndContributors, "projectContributors": projectContributors, "rFilesToUse": rFilesToUse, "repoName": repoName}
+            else: # if the file has been logged, update data
+                if (filename.lower().endswith(".r")):
+
+                    existing_r_file: RFileData = r_files_data_list[filename]
+                    existing_r_file.addCommit()
+                    existing_r_file.addCommitHash(commit.hash)
+                    # add only unique contributor
+                    if commit.author.name not in existing_r_file.contributors:
+                        existing_r_file.addContributor(commit.author.name)
+                    # add unique contributor to the count list
+                    if commit.author.name not in all_contributors:
+                        all_contributors.append(commit.author.name)
+
+        # print(f'Commits read: {commitsTraveresedCounter}, total files iterated: {filesTraveresedCounter}')
+
+    endAnalyzation = time.time()
+    print(f"\nTime spent fetching: {endAnalyzation - startAnalyzation} seconds")
+
+    return {
+            "repositoryName": repositoryName, 
+            "files": filesToReturn, 
+            "r_files": r_files_data_list, 
+            "projectContributors": all_contributors, 
+            "firstCommitHash": firstCommitHash, 
+            "lastCommitHash": lastCommitHash
+            }

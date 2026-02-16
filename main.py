@@ -1,211 +1,168 @@
+import json
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
-from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName
+from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
 from fileAnalyzer import scan_repo_and_save_reports, analyze_file
+from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdText
+
+from pathlib import Path
+
+from typing import List, Dict
+from dataClasses import RFileData
 
 # Function that changes the variables that handles the program stopping functions
-def CancelProgramDTF(cancelMessage: str) -> None:
+def CancelProgram(cancelMessage: str) -> None:
     global cancelProgram, reasonForCancel
     cancelProgram = True
-    reasonForCancel = reasonForCancel + "\n" + cancelMessage  # safe now
+    reasonForCancel = reasonForCancel + "\n" + cancelMessage  # <-- has caused errors before, safe now
 
-#Output information to a output.txt file -- maybe change to report.txt for iteration1?
-def RepoOutputDisplay(files, fileAndContributors, projectContributors, rFiles, repoName): # FIXME: Her trengs det en refac, mye uleselig kode grunnet chatDGBGT
-    repoNameStr = str(repoName or "")
-    # print(f"\n\\#/ after program is ran, here are the resulting lists for the repo '{repoNameStr}':")
-
-    # ===== Files section =====
-    output_lines = []
-
-    # Normalize and print files info:
-    if files is None:
-        files = {}
-
-    files_repr = []
-    # Case A: files is a dict mapping filename -> FileData (or dict)
-    if isinstance(files, dict):
-        for fname, fobj in files.items():
-            # fobj may be FileData or dict; handle both
-            if fobj is None:
-                fullpath = None
-            elif hasattr(fobj, "fullpath"):
-                fullpath = fobj.fullpath
-            elif isinstance(fobj, dict):
-                fullpath = fobj.get("fullpath")
-            else:
-                fullpath = str(fobj)
-            files_repr.append(f"{fname} ({fullpath})" if fullpath else f"{fname}")
-    # Case B: files is a list/tuple of FileData or strings
-    elif isinstance(files, (list, tuple)):
-        for entry in files:
-            if isinstance(entry, str):
-                files_repr.append(entry)
-            elif hasattr(entry, "filename"):
-                name = entry.filename
-                fullpath = getattr(entry, "fullpath", None)
-                files_repr.append(f"{name} ({fullpath})" if fullpath else name)
-            elif isinstance(entry, dict):
-                name = entry.get("filename") or entry.get("name") or str(entry)
-                fullpath = entry.get("fullpath")
-                files_repr.append(f"{name} ({fullpath})" if fullpath else name)
-            else:
-                files_repr.append(str(entry))
-    else:
-        # fallback: any other type -> stringify
-        files_repr.append(str(files))
-
-    output_lines.append("Files: " + ", ".join(files_repr) if files_repr else "Files: (none)")
-    # print(output_lines[-1])
-
-    # ===== Files and contributors =====
-    output_lines.append("Files and their contributors:")
-    # print(output_lines[-1])
-
-    if not fileAndContributors:
-        output_lines.append("  (no files with contributor info)")
-        # print(output_lines[-1])
-    else:
-        for filename, obj in fileAndContributors.items():
-            output_lines.append(f"\nFile data: {filename}")
-            output_lines.append(f"\n - File Absolute Path: {obj.fullpath}")
-            # Support dict-style and object-style for obj
-            if isinstance(obj, dict):
-                contributors = obj.get("contributors", [])
-                commits = obj.get("commits")
-            else:
-                contributors = getattr(obj, "contributors", [])
-                commits = getattr(obj, "commits", None)
-
-            output_lines.append(f"  commits: {commits}")
-            # print(f"File data: {filename}  commits: {commits}")
-            for contributor in contributors or []:
-                output_lines.append(f"    contributor: {contributor}")
-                # print(f"    contributor: {contributor}")
-    if not rFiles:
-        output_lines.append("  (no R files with registered)")
-    else:
-        output_lines.append(f"\n **R files found:")
-
-        for ab_path in rFiles:
-            RfileName = FindRepoName(ab_path)
-            output_lines.append(f"\n - R File \"{RfileName}\" Absolute Path: {ab_path}")
-            
-    # ===== Project contributors =====
-    if projectContributors is None:
-        projectContributors = []
-    if isinstance(projectContributors, set):
-        proj_str = ", ".join(sorted(projectContributors))
-    elif isinstance(projectContributors, (list, tuple)):
-        proj_str = ", ".join(projectContributors)
-    else:
-        proj_str = str(projectContributors)
-
-    output_lines.append(f"\nAll contributors: {proj_str}")
-    # print("All contributors:", proj_str)
-
-    return "\n".join(output_lines)
+def getProjectRoot():
+    PROJECT_ROOT = Path(__file__).resolve().parent
+    return PROJECT_ROOT
 
 def main_loop():
-    # Define Variables to store information that is picked up
-    files = {}
-    fileAndContributors = {} # an object containing multiple "file" objects. File.contributors should contain every user that has channged that file. Also it should contain how many commits it has been part of, amount of times changed in commits.
-    projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
+    # files = {}
+    # fileAndContributors = {} # an object containing multiple "file" objects. File.contributors should contain every user that has channged that file. Also it should contain how many commits it has been part of, amount of times changed in commits.
+    # projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
     # issues = [] # list with amount of issues from the github. OBS: not implemented yet
-    foldersToInclude = []
+    
     repoName = ""
+    files = []
+    r_files_data: list[RFileData] = {}
+    projectContributors = []
+    outputfilefolder = "File_Reports" #name of the folder where individual file reports are stored
+
     print("#/3#/3 Welcome to the SATD Tool 3\\#3\\#")
 
     #stage 1
     print("What repository do you want to analyze?")
 
-    # HERE IS THE MAIN LOOP // MOVE TO MAIN LATER
-
-    path = 'repostorage.txt'
+    storage_path = 'repostorage.txt'
 
     cancelProgram = False
     reasonForCancel = ""
 
-    storageBucket = readRepoStorageFile(path)
+    storageBucket = readRepoStorageFile(storage_path)
 
-    REPOURL = WriteRepoName(storageBucket["repos"])
+    _url = WriteRepoName(storageBucket["repos"])
+    REPOURL = normalize_windows_path(_url)
 
-    repofound = findRepo( REPOURL, cancelProgram ) #check if the url is valid
+    repo_been_found_and_is_valid = findRepo( REPOURL, cancelProgram ) #check if the url is valid
 
-    if repofound == False:
-        CancelProgramDTF("Repo wasnt found")
+    if repo_been_found_and_is_valid == False:
+        CancelProgram("Repo couldn't be found or its not a valid git repository")
 
     if cancelProgram != True:
-        saveTheRepoUrlQuestion( REPOURL, storageBucket["repos"], path)
+        saveTheRepoUrlQuestion( REPOURL, storageBucket["repos"], storage_path)
 
-    # if cancelProgram != True:
-    #     includeFolders()
-
-    outputFilePlacement = "output.txt" # Fjern etterhvert, er kun for å teste at GitFetching gikk OK
-
-    # CancelProgramDTF("STAGED: set to cancel before fetching repository.") #REMOVE WHEN YOU WANT TO CONTINUE THE PROGRAM
-
+    # Simple pause before analyzation
     if (cancelProgram != True):
         print('System is ready to analyze the github \"' + FindRepoName(REPOURL) + '\". Type any key + ENTER to continue, or type "stop" or 0 to stop the program. ')
         readyToContinue = input("Command|: ")
         if (readyToContinue.lower() == "stop" or readyToContinue == "0"):
-            CancelProgramDTF("User stopped program before analyzation.")
+            CancelProgram("User stopped program before analyzation.")
     
-    # Loop where Fetch happens
+    # Fetching Data Phase:
     if (cancelProgram == False):
         print("Here the program should have started \__")
-        out = RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
-        if (out.get("status")):
-            CancelProgramDTF("Something went wrong:", out.get("text"))
-        else:
-            # ingen feil — hent feltene med .get for å unngå KeyError
-            files = out.get("files", [])
-            fileAndContributors = out.get("fileAndContributors", {})
-            projectContributors = out.get("projectContributors", [])
-            RFilesToAnalyze = out.get("rFilesToUse", [])
-            repoName = out.get("repoName")
-        outputFetchingString = RepoOutputDisplay(files, fileAndContributors, projectContributors, RFilesToAnalyze, repoName)
-        write_to_outputfile(outputFilePlacement, outputFetchingString) #outputer det fetcher mottar, fjern senere eller bruk i report.txt på et vis
+        data_fetched = RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
 
+        if (data_fetched.get("status")):
+            CancelProgram("Something went wrong:", data_fetched.get("text"))
+        else:
+            files = data_fetched.get("filesToReturn", [])
+            r_files_data = data_fetched.get("r_files", {})
+            projectContributors = data_fetched.get("projectContributors", [])
+            repoName = data_fetched.get("repositoryName")
     else:
         print("Task was canceled. \nThis is the full log")
         print(reasonForCancel)
 
-    # one check before analyzing files, to avoid a long loop :)
+    # Individual File Analyzation Program
     if (cancelProgram != True):
         print('Github analyzation complete! You can begin the file analyzation. Type any key + ENTER to continue, or type "stop" or 0 to stop the program. ')
         readyToContinue = input("Command|: ")
         if (readyToContinue.lower() == "stop" or readyToContinue == "0"):
-            CancelProgramDTF("User stopped program before analyzation.")
+            CancelProgram("User stopped program before analyzation.")
 
-
-
-
-
-    #Loop through files and analyze them:
-
-    # ---- TODO: Implementer FileAnalyzer her 👈👈👈👈
     print("Running file analyzer...")
 
-    #file analyzer code here:
-    
+    # Counters and list storage
     outputFileAnalyzeString = "Here is the rundown of the Total Findings:"
-    # for key, fobj in files.items():
-    for rF in RFilesToAnalyze:
-        # print("-empty for now-")
-        #return --> total_findings, files_with_satd, reports
-        outputFileAnalyzeString += f"\nAnalyze results for File: {FindRepoName(rF)}" # <-- her burde det egt het FindFILEName??
+    rFileOutputStrings = []
+    rFilesNotFound = 0
 
-        # total_findings, files_with_satd, reports = scan_repo_and_save_reports(repo_path=rF, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
-        total_findings, files_with_satd, reports = analyze_file(repo_path=REPOURL, file_path=rF, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
-        outputFileAnalyzeString += f"\nTotal findings: {total_findings}\nFiles that contain SATD: {files_with_satd}\nReports: {reports}\n"
+    print(f"The size of the R list: {r_files_data}, {len(r_files_data)}")
 
-    # total_findings, files_with_satd, reports = scan_repo_and_save_reports(repo_path=REPOURL, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
+    for r_file in r_files_data.values():
+        # print("PARA1")
 
-    write_to_outputfile("fileAnalyzetest.txt", outputFileAnalyzeString)
+        outputFileAnalyzeString += f"\nAnalyze results for File: {r_file.filename}"
 
+        total_findings, file_has_satd, textResult, loc, foundFile = analyze_file(repo_path=REPOURL, RFileInstance=r_file, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
+        
+        if foundFile:
+            # print("PARA2")  
+            churn_data_from_r_file = r_file.churndata
+            churn_data_from_r_file["loc"] = loc
+            r_file.churndata = churn_data_from_r_file
+            outputFileAnalyzeString += f"\nTotal findings: {total_findings}\nFile contains SATD: {file_has_satd}\n"
+            
+            total_churn = r_file.churndata["added"] + r_file.churndata["deleted"]
+            if loc > 0:
+                churn_per_loc = total_churn / loc
+            else:
+                churn_per_loc = 0
 
+            # print("PARA3")
 
-    print("If everything went well, the findings should have been printed to a file in dir \"dirTestFileAnalyze\"")
+            if churn_per_loc >= 5:
+                risk = "High"
+            elif churn_per_loc >= 1:
+                risk = "Medium"
+            else:
+                risk = "Low"
+
+            text_with_details = SingleFileSatdText(r_file, file_has_satd, total_churn, loc, churn_per_loc, risk)
+        
+            fullText = text_with_details + "\n\n" + textResult
+
+            datajson = {
+                "Text": fullText,
+                "filename": r_file.filename,
+                "file": r_file.fullpath,
+                "metrics": {
+                    "commits": r_file.commits,
+                    "lines_added": r_file.churndata["added"],
+                    "lines_deleted": r_file.churndata["deleted"],
+                    "total_churn": total_churn,
+                    "loc": loc,
+                    "churn_per_loc": round(churn_per_loc, 2)
+                },
+                "risk_level": risk
+            }
+            rFileOutputStrings.append(datajson)
+
+            # Create File and store result
+            print("Writing to file....")
+
+            CreateSingleFileReport(getProjectRoot(), outputfilefolder, datajson["filename"], fullText) #(json.dumps(datajson, indent=4))
+
+        else:
+            datajson = {
+                "filename": r_file.filename + "_(Not found)",
+                "file": r_file.fullpath,
+            }
+            rFilesNotFound += 1
+            rFileOutputStrings.append(datajson)
+
+    if rFilesNotFound > 0:
+        outputFileAnalyzeString += f"\n\nFiles not found during analyzation: {rFilesNotFound}📄"
+
+    # create main report
+    MainReport(getProjectRoot(), "Main", outputFileAnalyzeString)
+    
+    print("Analyzation process complete. Results have been stored.")
 
 # run main loop
 main_loop()
