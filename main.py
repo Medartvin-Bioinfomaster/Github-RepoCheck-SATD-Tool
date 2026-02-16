@@ -74,9 +74,6 @@ def main_loop():
             r_files_data = data_fetched.get("r_files", {})
             projectContributors = data_fetched.get("projectContributors", [])
             repoName = data_fetched.get("repositoryName")
-
-            write_to_outputfile("fileandcontributors.txt", str(r_files_data))
-            write_to_outputfile("projectContributors.txt", str(projectContributors))
     else:
         print("Task was canceled. \nThis is the full log")
         print(reasonForCancel)
@@ -127,11 +124,8 @@ def main_loop():
                 risk = "Low"
 
             text_with_details = SingleFileSatdText(r_file, file_has_satd, total_churn, loc, churn_per_loc, risk)
-
         
-            # print("PARA4")
-
-            fullText = textResult + "\n" + text_with_details
+            fullText = text_with_details + "\n\n" + textResult
 
             datajson = {
                 "Text": fullText,

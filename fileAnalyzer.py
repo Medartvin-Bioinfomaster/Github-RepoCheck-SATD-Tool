@@ -140,7 +140,7 @@ def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo
         with open(file_path, 'r', encoding='utf-8', errors='replace') as fh:
             print("Found content, file has been read")
             content = fh.read()
-            loc = sum(1 for line in fh)
+            loc = content.count("\n") + 1 if content else 0 # denne kodesnutten kan bli byttet ut med en mer "genuin" innhentingsmetode, hvis funksjonen går igjennom filer line for line i for-loop, så er dette bedre og mer robust
             foundFile = True
             print(f"File {FindRepoName(file_path)} has {loc} lines of code")
     except Exception as e:
