@@ -1,3 +1,5 @@
+from pathlib import Path
+
 def test():
     print("Testing")
 
@@ -6,7 +8,31 @@ def write_to_outputfile(outputFilePlacement, output_string):
         fil.write(output_string)
         print("Written to outputfile success.")
 
+def write_file_to_directory(projectroot, outputFileName, output_string, directory= ""):
+    output_dir = CreateResultsDirectory(projectroot, directory)
+    output_file_path = output_dir / outputFileName
+    with output_file_path.open("w", encoding="utf-8") as file:
+        file.write(output_string)
+        print("Written to outputfile success.")
+
+    # with open(outputFilePlacement, 'w') as fil:
+    #     fil.write(output_string)
+    #     print("Written to outputfile success.")
+
+
 # TODO: FIks repostorage
+
+def CreateResultsDirectory(projectroot, moreDir=""):
+
+    output_dir = ""
+    if moreDir != "":
+        output_dir = Path(projectroot) / "Results" / moreDir
+    else:
+        output_dir = Path(projectroot) / "Results"
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir
+
 
 def readRepoStorageFile(path):
     # print("Reading Storage..")
