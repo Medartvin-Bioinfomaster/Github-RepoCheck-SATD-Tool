@@ -5,6 +5,8 @@ import subprocess
 import shutil
 import tempfile
 
+from tools import FindRepoName
+from dataClasses import RFileData
 from datetime import datetime  
 
 
@@ -152,6 +154,20 @@ def detect_satd_in_code(content: str, file_path: str, context_lines=3, capture_f
     return results
 
 
+
+def generateTextResponseForFile(original_file_path, results):
+    fileTextString = ""
+    fileTextString += f"File: {original_file_path}\n"
+    fileTextString += f"Total SATD items found: {len(results)}\n"
+    fileTextString += "=" * 50 + "\n\n" # hva er dette??
+    for item in results:
+        # sørg for å fjerne eventuelle ledende mellomrom i output
+        fileTextString += f"Line {item['line']} [{item['type']}]:\n"
+        fileTextString += f"{item['text'].lstrip()}\n"
+        fileTextString += "-" * 50 + "\n"
+    return fileTextString
+
+
 def save_report_for_file(results, output_dir: str, original_file_path: str, repo_name: str) -> str:
     #better format for more user friendly output
     os.makedirs(output_dir, exist_ok=True)
@@ -226,38 +242,44 @@ def save_report_for_file(results, output_dir: str, original_file_path: str, repo
 
 
 
-def analyze_file(repo_path: str, file_path: str, output_dir: str, repo_name: str, 
+def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo_name: str, 
                 context_lines=3, capture_full_function=True, add_to_kb=True, repo_url=None, user_id=None):
-    """Analyze a single file for SATD with context."""
     total_findings = 0
-    files_with_satd = 0
-    reports = []
-    
+    file_has_satd = False
+    textResult = ""
+    content = ""
+    loc = 0
+    foundFile = False
+    file_path = RFileInstance.fullpath
+
     try:
         with open(file_path, 'r', encoding='utf-8', errors='replace') as fh:
-            print(f"Reading: {os.path.basename(file_path)}")
+            print("Found content, file has been read")
             content = fh.read()
+            loc = content.count("\n") + 1 if content else 0 # denne kodesnutten kan bli byttet ut med en mer "genuin" innhentingsmetode, hvis funksjonen går igjennom filer line for line i for-loop, så er dette bedre og mer robust
+            foundFile = True
+            print(f"File {FindRepoName(file_path)} has {loc} lines of code")
     except Exception as e:
         print(f"Error reading {file_path}: {e}")
-        return total_findings, files_with_satd, reports
-    
-    if not content:
-        return total_findings, files_with_satd, reports
+        foundFile = False
+        # continue
+    # if file has no content (could have been deleted or emptied), skip it
+    if content: #før var det if not content, men da blir det to like returns. Heller bedre å bare skippe ifen all together hvis fil ikke ble funnet
+        results = detect_satd_in_code(content, file_path)
+        if results:
+            total_findings += len(results)
+            file_has_satd = True
+            textResult = generateTextResponseForFile(file_path, results)
+            # rp = save_report_for_file(results, output_dir, file_path, repo_name)
+            # reports.append(rp)
+            # reports.append(textResult)
+            print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
 
-    results = detect_satd_in_code(content, file_path, context_lines=context_lines,
-                                  capture_full_function=capture_full_function)
-    
-    if results:
-        total_findings += len(results)
-        files_with_satd += 1
-        rp = save_report_for_file(results, output_dir, file_path, repo_name)
-        reports.append(rp)
-        print(f"  Found {len(results)} SATD items in: {os.path.basename(file_path)}")
+            if add_to_kb:
+                print(f"Adding {len(results)} SATD entries to knowledge base...")
+                add_to_knowledge_base(results, repo_name, repo_url=repo_url, user_id=user_id)
 
-        if add_to_kb:
-            print(f"Adding {len(results)} SATD entries to knowledge base...")
-            add_to_knowledge_base(results, repo_name, repo_url=repo_url, user_id=user_id)
-    return total_findings, files_with_satd, reports
+    return total_findings, file_has_satd, textResult, loc, foundFile
 
 
 
