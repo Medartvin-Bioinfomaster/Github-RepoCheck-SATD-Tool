@@ -4,9 +4,9 @@ from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoTo
 
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, choose_separator
 
-from dataClasses import RepoDetails, FileData, RFileData
+from dataClasses import RepoDetails, FileData, RFileData, Contributor
 
-from typing import Dict
+from typing import Dict, List
 
 import time
 
@@ -67,7 +67,7 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
     repositoryName = FindRepoName(repoUrl)
     filesToReturn = {}
     r_files_data_list: Dict[RFileData] = {} # Rfiles data
-    all_contributors = []
+    all_contributors: Dict[Contributor] = {} #list of contributors and each their commit
 
     firstCommitHash = ""
     lastCommitHash = ""
@@ -87,9 +87,13 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
     print("Analyzing github ...")
     
     for commit in Repository( repoUrl ).traverse_commits(): # change / possible to change to traversing files?
+        # variables to use
+        commitUser = commit.author.name
+        commitHash = commit.hash
+
         if (firstCommitHash == ""):
-            firstCommitHash = commit.hash
-        lastCommitHash = commit.hash
+            firstCommitHash = commitHash
+        lastCommitHash = commitHash
 
         commitsTraveresedCounter += 1
 
@@ -120,28 +124,38 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                 r_file = RFileData(filename, 
                                    absolute_path, 
                                    churn_stats, 
-                                   commit.author.name, 
+                                   commitUser, 
                                    1, 
-                                   commit.hash)
+                                   commitHash)
                 
                 # adding the final object to the list
                 r_files_data_list[filename] = r_file
 
-                if commit.author.name not in all_contributors: # add contributor to its own list
-                    all_contributors.append(commit.author.name)
+                if commitUser not in all_contributors: # add contributor to its own list
+                    # all_contributors.append(contr = Contributor(commitUser, 1, commit.hash))
+                    all_contributors[commitUser] = Contributor(commitUser, 1, commitHash)
+                else:
+                    existing_contributor: Contributor = all_contributors[commitUser]
+                    existing_contributor.addCommit()
+                    existing_contributor.addCommitHash(commitHash)
 
             else: # if the file has been logged, update data
                 if (filename.lower().endswith(".r")):
 
                     existing_r_file: RFileData = r_files_data_list[filename]
                     existing_r_file.addCommit()
-                    existing_r_file.addCommitHash(commit.hash)
+                    existing_r_file.addCommitHash(commitHash)
                     # add only unique contributor
-                    if commit.author.name not in existing_r_file.contributors:
-                        existing_r_file.addContributor(commit.author.name)
+                    if commitUser not in existing_r_file.contributors:
+                        existing_r_file.addContributor(commitUser)
                     # add unique contributor to the count list
-                    if commit.author.name not in all_contributors:
-                        all_contributors.append(commit.author.name)
+                    if commitUser not in all_contributors: # add contributor to its own list
+                        # all_contributors.append(contr = Contributor(commitUser, 1, commit.hash))
+                        all_contributors[commitUser] = Contributor(commitUser, 1, commitHash)
+                    else:
+                        existing_contributor: Contributor = all_contributors[commitUser]
+                        existing_contributor.addCommit()
+                        existing_contributor.addCommitHash(commitHash)
 
         # print(f'Commits read: {commitsTraveresedCounter}, total files iterated: {filesTraveresedCounter}')
 

@@ -8,7 +8,7 @@ from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdTe
 from pathlib import Path
 
 from typing import List, Dict
-from dataClasses import RFileData
+from dataClasses import RFileData, Contributor
 
 # Function that changes the variables that handles the program stopping functions
 def CancelProgram(cancelMessage: str) -> None:
@@ -28,8 +28,8 @@ def main_loop():
     
     repoName = ""
     files = []
-    r_files_data: list[RFileData] = {}
-    projectContributors = []
+    r_files_data: Dict[RFileData] = {}
+    projectContributors: Dict[Contributor] = {}
     outputfilefolder = "File_Reports" #name of the folder where individual file reports are stored
 
     print("#/3#/3 Welcome to the SATD Tool 3\\#3\\#")
@@ -72,7 +72,7 @@ def main_loop():
         else:
             files = data_fetched.get("filesToReturn", [])
             r_files_data = data_fetched.get("r_files", {})
-            projectContributors = data_fetched.get("projectContributors", [])
+            projectContributors = data_fetched.get("projectContributors", {})
             repoName = data_fetched.get("repositoryName")
     else:
         print("Task was canceled. \nThis is the full log")
@@ -95,14 +95,11 @@ def main_loop():
     print(f"The size of the R list: {r_files_data}, {len(r_files_data)}")
 
     for r_file in r_files_data.values():
-        # print("PARA1")
-
         outputFileAnalyzeString += f"\nAnalyze results for File: {r_file.filename}"
 
         total_findings, file_has_satd, textResult, loc, foundFile = analyze_file(repo_path=REPOURL, RFileInstance=r_file, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
         
         if foundFile:
-            # print("PARA2")  
             churn_data_from_r_file = r_file.churndata
             churn_data_from_r_file["loc"] = loc
             r_file.churndata = churn_data_from_r_file
@@ -155,6 +152,10 @@ def main_loop():
             }
             rFilesNotFound += 1
             rFileOutputStrings.append(datajson)
+    
+    outputFileAnalyzeString += f"\n\nCommits distribution among contributors:"
+    for contributor in projectContributors.values():
+        outputFileAnalyzeString += f"\n  {contributor.username} - {contributor.commits} commits"
 
     if rFilesNotFound > 0:
         outputFileAnalyzeString += f"\n\nFiles not found during analyzation: {rFilesNotFound}📄"
