@@ -1,0 +1,645 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2026-02-20T12:18:18.651024",
+    "total_entries": 26,
+    "last_updated": "2026-02-20T12:18:18.667198"
+  },
+  "entries": [
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_3_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 3,
+        "type": "SATD",
+        "text": "#FIX: Inefficient for large datasets SATD",
+        "comment": "FIX: Inefficient for large datasets SATD",
+        "context_after": [
+          "clean_data <- function(raw_data) {",
+          "  # Remove empty rows",
+          "  cleaned <- na.omit(raw_data)",
+          "  ",
+          "  # FIXME: This conversion fails for factor columns",
+          "  cleaned <- as.data.frame(lapply(cleaned, as.numeric))",
+          "  ",
+          "  return(cleaned)",
+          "}"
+        ],
+        "context_type": "function"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_5_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 5,
+        "type": "SATD",
+        "text": "# This is a test SATD someone need to fix this function SATD",
+        "comment": "This is a test SATD someone need to fix this function SATD",
+        "context_after": [
+          "clean_data <- function(raw_data) {",
+          "  # Remove empty rows",
+          "  cleaned <- na.omit(raw_data)",
+          "  ",
+          "  # FIXME: This conversion fails for factor columns",
+          "  cleaned <- as.data.frame(lapply(cleaned, as.numeric))",
+          "  ",
+          "  return(cleaned)",
+          "}"
+        ],
+        "context_type": "function"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_7_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 7,
+        "type": "TODO",
+        "text": "# TODO: Add support for missing value imputation here",
+        "comment": "TODO: Add support for missing value imputation here",
+        "context_after": [
+          "clean_data <- function(raw_data) {",
+          "  # Remove empty rows",
+          "  cleaned <- na.omit(raw_data)",
+          "  ",
+          "  # FIXME: This conversion fails for factor columns",
+          "  cleaned <- as.data.frame(lapply(cleaned, as.numeric))",
+          "  ",
+          "  return(cleaned)",
+          "}"
+        ],
+        "context_type": "function"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_12_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 12,
+        "type": "FIXME",
+        "text": "# FIXME: This conversion fails for factor columns",
+        "comment": "FIXME: This conversion fails for factor columns",
+        "context_after": [
+          "  cleaned <- as.data.frame(lapply(cleaned, as.numeric))",
+          "  return(cleaned)",
+          "}"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_18_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 18,
+        "type": "HACK",
+        "text": "# HACK: Temporary workaround for CRAN check",
+        "comment": "HACK: Temporary workaround for CRAN check",
+        "context_after": [
+          ".GlobalEnv$dummy_var <- function() NULL",
+          "calculate_stats <- function(data) {",
+          "  means <- colMeans(data)"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_28_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 28,
+        "type": "TODO",
+        "text": "# TODO: Implement robust statistics options\n# MAD would be better for outlier-prone data",
+        "comment": "TODO: Implement robust statistics options\nMAD would be better for outlier-prone data",
+        "context_after": [
+          "  cor_matrix <- cor(data)",
+          "  pca_result <- prcomp(data, scale. = TRUE)",
+          "  return(list("
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_34_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 34,
+        "type": "FIXME",
+        "text": "# FIXME: This is computationally expensive for large matrices",
+        "comment": "FIXME: This is computationally expensive for large matrices",
+        "context_after": [
+          "  pca_result <- prcomp(data, scale. = TRUE)",
+          "  return(list(",
+          "    means = means,"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_52_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 52,
+        "type": "NOTE",
+        "text": "#' NOTE: Needs better error handling for non-numeric data",
+        "comment": "' NOTE: Needs better error handling for non-numeric data",
+        "context_after": [
+          "generate_plots <- function(data) {",
+          "  library(ggplot2)",
+          "  ",
+          "  plots <- list()",
+          "  ",
+          "  # Distribution plots",
+          "  for (col in names(data)) {",
+          "    plots[[paste0(\"dist_\", col)]] <- ggplot(data, aes(x = .data[[col]])) +",
+          "      geom_histogram(bins = 30) +",
+          "      ggtitle(paste(\"Distribution of\", col))",
+          "  }",
+          "  ",
+          "  # HACK: Temporary fix for ggplot2 warning",
+          "  options(ggplot2.continuous.colour = \"viridis\")",
+          "  ",
+          "  # TODO: Add correlation plot matrix option",
+          "  # pairs() would work but needs customization",
+          "  ",
+          "  return(plots)",
+          "}"
+        ],
+        "context_type": "function"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_65_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 65,
+        "type": "WARNING",
+        "text": "# HACK: Temporary fix for ggplot2 warning",
+        "comment": "HACK: Temporary fix for ggplot2 warning",
+        "context_after": [
+          "  options(ggplot2.continuous.colour = \"viridis\")",
+          "  return(plots)",
+          "}"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_68_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 68,
+        "type": "TODO",
+        "text": "# TODO: Add correlation plot matrix option\n# pairs() would work but needs customization",
+        "comment": "TODO: Add correlation plot matrix option\npairs() would work but needs customization",
+        "context_after": [
+          "  return(plots)",
+          "}",
+          "train_model <- function(data, target) {"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_83_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 83,
+        "type": "FIXME",
+        "text": "# FIXME: This formula construction fails with special chars",
+        "comment": "FIXME: This formula construction fails with special chars",
+        "context_after": [
+          "  formula <- as.formula(paste(target, \"~ .\"))",
+          "  library(randomForest)",
+          "  model <- randomForest("
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_95_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 95,
+        "type": "XXX",
+        "text": "# XXX: Tune these hyperparameters properly\n# Current values are just placeholders",
+        "comment": "XXX: Tune these hyperparameters properly\nCurrent values are just placeholders",
+        "context_after": [
+          "  preds <- predict(model, test)",
+          "  mse <- mean((preds - test[[target]])^2)",
+          "  return(list("
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_110_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 110,
+        "type": "TODO",
+        "text": "# TODO: Replace this with proper memoization",
+        "comment": "TODO: Replace this with proper memoization",
+        "context_after": [
+          "cache <- new.env()",
+          "get_cached_result <- function(key) {",
+          "  if (exists(key, envir = cache)) {"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_120_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 120,
+        "type": "FIXME",
+        "text": "# FIXME: Not thread-safe!",
+        "comment": "FIXME: Not thread-safe!",
+        "context_after": [
+          "store_result <- function(key, value) {",
+          "  assign(key, value, envir = cache)",
+          "}"
+        ],
+        "context_type": "function"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_125_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 125,
+        "type": "WARNING",
+        "text": "# WARNING: This is experimental and may change",
+        "comment": "WARNING: This is experimental and may change",
+        "context_after": [
+          "experimental_feature <- function(x) {",
+          "  # HACK: Using eval here is dangerous",
+          "  result <- eval(parse(text = x))",
+          "  ",
+          "  # TODO: Implement proper parsing",
+          "  return(result)",
+          "}"
+        ],
+        "context_type": "function"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_127_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 127,
+        "type": "HACK",
+        "text": "# HACK: Using eval here is dangerous",
+        "comment": "HACK: Using eval here is dangerous",
+        "context_after": [
+          "  result <- eval(parse(text = x))",
+          "  return(result)",
+          "}"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_130_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 130,
+        "type": "TODO",
+        "text": "# TODO: Implement proper parsing",
+        "comment": "TODO: Implement proper parsing",
+        "context_after": [
+          "  return(result)",
+          "}",
+          "data <- read.csv(\"input_data.csv\")"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_139_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 139,
+        "type": "FIXME",
+        "text": "# FIXME: Handle empty/missing files",
+        "comment": "FIXME: Handle empty/missing files",
+        "context_after": [
+          "if (nrow(data) == 0) {",
+          "  stop(\"Empty dataset loaded\")",
+          "}"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_147_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 147,
+        "type": "NOTE",
+        "text": "# NOTE: These columns might need special treatment",
+        "comment": "NOTE: These columns might need special treatment",
+        "context_after": [
+          "special_cols <- c(\"patient_id\", \"treatment_group\")",
+          "stats <- calculate_stats(clean_data[, !names(clean_data) %in% special_cols])",
+          "plots <- generate_plots(clean_data)"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_156_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 156,
+        "type": "TODO",
+        "text": "# TODO: Add PDF report generation\n# Use rmarkdown or similar",
+        "comment": "TODO: Add PDF report generation\nUse rmarkdown or similar",
+        "context_after": [
+          "model_results <- train_model(",
+          "  clean_data[, !names(clean_data) %in% \"patient_id\"],",
+          "  \"outcome\""
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_165_1771586298",
+      "timestamp": "2026-02-20T12:18:18.651024",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 165,
+        "type": "XXX",
+        "text": "# XXX: Temporary debug output",
+        "comment": "XXX: Temporary debug output",
+        "context_after": [
+          "print(head(clean_data))",
+          "print(model_results$mse)",
+          "saveRDS(list("
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example.r_176_1771586298",
+      "timestamp": "2026-02-20T12:18:18.661602",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example.r",
+        "filename": "example.r",
+        "line": 176,
+        "type": "WARNING",
+        "text": "# Warning: This cleanup might remove needed objects",
+        "comment": "Warning: This cleanup might remove needed objects",
+        "context_after": [
+          "rm(list = ls())"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example2.r_1_1771586298",
+      "timestamp": "2026-02-20T12:18:18.667198",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example2.r",
+        "filename": "example2.r",
+        "line": 1,
+        "type": "TODO",
+        "text": "# TODO: refactor this function to improve performance",
+        "comment": "TODO: refactor this function to improve performance",
+        "context_after": [
+          "my_function <- function(x) {",
+          "  return(x^2) # HACK: temporary fix for NA values",
+          "}"
+        ],
+        "context_type": "function"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example2.r_3_1771586298",
+      "timestamp": "2026-02-20T12:18:18.667198",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example2.r",
+        "filename": "example2.r",
+        "line": 3,
+        "type": "FIX",
+        "text": "return(x^2) # HACK: temporary fix for NA values",
+        "comment": "return(x^2) # HACK: temporary fix for NA values",
+        "context_after": [
+          "}",
+          "calculate_stats <- function(x) {",
+          "  if (x < 0) stop(\"Negative value!\") # NOTE: might break later"
+        ],
+        "context_type": "lines"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example2.r_6_1771586298",
+      "timestamp": "2026-02-20T12:18:18.667198",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example2.r",
+        "filename": "example2.r",
+        "line": 6,
+        "type": "FIXME",
+        "text": "# FIXME: handle edge cases when x is negative\n# comment about the case above",
+        "comment": "FIXME: handle edge cases when x is negative\ncomment about the case above",
+        "context_after": [
+          "calculate_stats <- function(x) {",
+          "  if (x < 0) stop(\"Negative value!\") # NOTE: might break later",
+          "  return(mean(x))",
+          "}"
+        ],
+        "context_type": "function"
+      }
+    },
+    {
+      "id": "Technicaldebt_in_bioinforamtics_example2.r_13_1771586298",
+      "timestamp": "2026-02-20T12:18:18.667198",
+      "repository": {
+        "name": "Technicaldebt_in_bioinforamtics",
+        "url": null
+      },
+      "user_id": null,
+      "satd": {
+        "file": "C:\\Users\\marte\\Masters\\Technicaldebt_in_bioinforamtics\\SATD_detection\\example2.r",
+        "filename": "example2.r",
+        "line": 13,
+        "type": "NOTE",
+        "text": "if (x < 0) stop(\"Negative value!\") # NOTE: might break later",
+        "comment": "if (x < 0) stop(\"Negative value!\") # NOTE: might break later",
+        "context_after": [
+          "  return(mean(x))",
+          "}"
+        ],
+        "context_type": "lines"
+      }
+    }
+  ]
+}
