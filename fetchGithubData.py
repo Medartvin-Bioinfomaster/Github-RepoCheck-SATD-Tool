@@ -168,5 +168,6 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             "r_files": r_files_data_list, 
             "projectContributors": all_contributors, 
             "firstCommitHash": firstCommitHash, 
-            "lastCommitHash": lastCommitHash
+            "lastCommitHash": lastCommitHash,
+            "totalCommits": commitsTraveresedCounter
             }

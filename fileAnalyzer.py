@@ -28,23 +28,66 @@ def clone_repository(url: str, dest: str) -> str:
 
 
 def detect_satd_in_code(content: str, file_path: str):
-    """Return list of detected SATD items from content."""
+    """Return list of detected SATD items from content
+       + SATD count
+       + number of compromised lines
+    """
+
     results = []
-    for lineno, line in enumerate(content.splitlines(), 1):
+    compromised_lines = set()
+    satd_count = 0
+
+    lines = content.splitlines()
+
+    # ---------- SINGLE LINE COMMENTS ----------
+    for lineno, line in enumerate(lines, 1):
         m = _SINGLE_RE.search(line)
         if m:
+            satd_count += 1
+
             comment = line.strip().lstrip('#').strip()
+
             results.append({
                 'file': file_path,
                 'line': lineno,
                 'type': m.group(1).upper(),
-                'text': line.strip(),   # strip both leading and trailing whitespace
+                'text': line.strip(),
                 'comment': comment
             })
+
+            # --------- Mark compromised area (max 5 lines) ---------
+            start_line = lineno
+            max_lines = 5
+
+            comment_indent = len(line) - len(line.lstrip())
+
+            end_line = lineno
+
+            for i in range(lineno, min(lineno + max_lines, len(lines))):
+                current_line = lines[i]
+
+                if current_line.strip() == "":
+                    continue
+
+                current_indent = len(current_line) - len(current_line.lstrip())
+
+                # Stop if indentation returns (block likely ended)
+                if current_indent <= comment_indent and not current_line.strip().startswith("#"):
+                    break
+
+                end_line = i + 1
+
+            for i in range(start_line, end_line + 1):
+                compromised_lines.add(i)
+
+    # ---------- MULTI LINE COMMENTS ----------
     for m in _MULTI_RE.finditer(content):
+        satd_count += 1
+
         start_line = content[:m.start()].count('\n') + 1
         comment_text = ' '.join(m.group().split())
         comment_type = re.search('|'.join(KEYWORDS), m.group(), re.IGNORECASE).group().upper()
+
         results.append({
             'file': file_path,
             'line': start_line,
@@ -52,7 +95,34 @@ def detect_satd_in_code(content: str, file_path: str):
             'text': comment_text.strip(),
             'comment': comment_text
         })
-    return results
+
+        # --------- Mark compromised area (max 5 lines) ---------
+        max_lines = 5
+        comment_indent = len(lines[start_line - 1]) - len(lines[start_line - 1].lstrip())
+
+        end_line = start_line
+
+        for i in range(start_line, min(start_line + max_lines, len(lines))):
+            current_line = lines[i]
+
+            if current_line.strip() == "":
+                continue
+
+            current_indent = len(current_line) - len(current_line.lstrip())
+
+            if current_indent <= comment_indent and not current_line.strip().startswith("#"):
+                break
+
+            end_line = i + 1
+
+        for i in range(start_line, end_line + 1):
+            compromised_lines.add(i)
+
+    return {
+        "results": results,
+        "satd_count": satd_count,
+        "linesCompromised": len(compromised_lines)
+    }
 
 def generateTextResponseForFile(original_file_path, results):
     fileTextString = ""
@@ -149,7 +219,12 @@ def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo
         # continue
     # if file has no content (could have been deleted or emptied), skip it
     if content: #før var det if not content, men da blir det to like returns. Heller bedre å bare skippe ifen all together hvis fil ikke ble funnet
-        results = detect_satd_in_code(content, file_path)
+        result = detect_satd_in_code(content, file_path)
+
+        results = result["results"]
+        satd_count = result["satd_count"]
+        lines_compromised = result["linesCompromised"]
+
         if results:
             total_findings += len(results)
             file_has_satd = True
@@ -159,7 +234,7 @@ def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo
             # reports.append(textResult)
             print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
 
-    return total_findings, file_has_satd, textResult, loc, foundFile
+    return total_findings, file_has_satd, textResult, loc, foundFile, satd_count, lines_compromised
 
 # def analyze_file(repo_path: str, output_dir: str, repo_name: str) {
 

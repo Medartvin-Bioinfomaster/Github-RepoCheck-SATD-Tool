@@ -3,12 +3,13 @@ from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoTo
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
 from fileAnalyzer import scan_repo_and_save_reports, analyze_file
-from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdText
+from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdText, generateDataJs, openHtmlReportFile
 
 from pathlib import Path
 
 from typing import List, Dict
 from dataClasses import RFileData, Contributor
+
 
 # Function that changes the variables that handles the program stopping functions
 def CancelProgram(cancelMessage: str) -> None:
@@ -31,19 +32,37 @@ def main_loop():
     r_files_data: Dict[RFileData] = {}
     projectContributors: Dict[Contributor] = {}
     outputfilefolder = "File_Reports" #name of the folder where individual file reports are stored
+    storage_path = 'repostorage.txt'
+    totalCommits = 0
+    cancelProgram = False
+    reasonForCancel = ""
+    
+    outputFileAnalyzeString = "Main report\n\n"
+    lateSatdText = "Here is the rundown of the Total Findings:\n"
+    rFileOutputStrings = []
+    rFilesNotFound = 0
+
+    totalSatdCounter = 0
+    linesWithSatdCounter = 0
+    totalLoc = 0
+    totalFilesSatd = 0
+    totalFiles = 0
+
+    report_data = {
+        "data": {
+            "repoName": "",
+            "commits": 0,
+        },
+        "files": {}
+    }
 
     print("#/3#/3 Welcome to the SATD Tool 3\\#3\\#")
 
     #stage 1
     print("What repository do you want to analyze?")
 
-    storage_path = 'repostorage.txt'
-
-    cancelProgram = False
-    reasonForCancel = ""
-
+    # Get repoURL
     storageBucket = readRepoStorageFile(storage_path)
-
     _url = WriteRepoName(storageBucket["repos"])
     REPOURL = normalize_windows_path(_url)
 
@@ -74,6 +93,7 @@ def main_loop():
             r_files_data = data_fetched.get("r_files", {})
             projectContributors = data_fetched.get("projectContributors", {})
             repoName = data_fetched.get("repositoryName")
+            totalCommits = data_fetched.get("totalCommits")
     else:
         print("Task was canceled. \nThis is the full log")
         print(reasonForCancel)
@@ -88,22 +108,29 @@ def main_loop():
     print("Running file analyzer...")
 
     # Counters and list storage
-    outputFileAnalyzeString = "Here is the rundown of the Total Findings:"
-    rFileOutputStrings = []
-    rFilesNotFound = 0
 
     print(f"The size of the R list: {r_files_data}, {len(r_files_data)}")
 
     for r_file in r_files_data.values():
-        outputFileAnalyzeString += f"\nAnalyze results for File: {r_file.filename}"
+        lateSatdText += f"\nAnalyze results for File: {r_file.filename}"
 
-        total_findings, file_has_satd, textResult, loc, foundFile = analyze_file(repo_path=REPOURL, RFileInstance=r_file, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
+        total_findings, file_has_satd, textResult, loc, foundFile, satd_count, lines_compromised = analyze_file(repo_path=REPOURL, RFileInstance=r_file, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
         
+        totalSatdCounter += satd_count
+        linesWithSatdCounter += lines_compromised
+        totalLoc += loc
+
         if foundFile:
             churn_data_from_r_file = r_file.churndata
             churn_data_from_r_file["loc"] = loc
             r_file.churndata = churn_data_from_r_file
-            outputFileAnalyzeString += f"\nTotal findings: {total_findings}\nFile contains SATD: {file_has_satd}\n"
+            fileHasSatdFormat = "Yes🔴" if file_has_satd else "No🟢"
+            if file_has_satd:
+                totalFilesSatd += 1
+            
+            totalFiles += 1
+
+            lateSatdText += f"\nTotal findings: {total_findings}\nFile contains SATD: {fileHasSatdFormat}\n"
             
             total_churn = r_file.churndata["added"] + r_file.churndata["deleted"]
             if loc > 0:
@@ -120,10 +147,11 @@ def main_loop():
             else:
                 risk = "Low"
 
-            text_with_details = SingleFileSatdText(r_file, file_has_satd, total_churn, loc, churn_per_loc, risk)
+            text_with_details = SingleFileSatdText(r_file, file_has_satd, total_churn, loc, 
+                                                   churn_per_loc, risk, satd_count, lines_compromised)
         
             fullText = text_with_details + "\n\n" + textResult
-
+            
             datajson = {
                 "Text": fullText,
                 "filename": r_file.filename,
@@ -139,12 +167,10 @@ def main_loop():
                 "risk_level": risk
             }
             rFileOutputStrings.append(datajson)
+            report_data["files"][r_file.filename] = datajson
 
             # Create File and store result
             print("Writing to file....")
-
-            CreateSingleFileReport(getProjectRoot(), outputfilefolder, datajson["filename"], fullText) #(json.dumps(datajson, indent=4))
-
         else:
             datajson = {
                 "filename": r_file.filename + "_(Not found)",
@@ -152,18 +178,62 @@ def main_loop():
             }
             rFilesNotFound += 1
             rFileOutputStrings.append(datajson)
+
     
+    satd_percentage = (linesWithSatdCounter / totalLoc * 100) if totalLoc > 0 else 0
+    
+    outputFileAnalyzeString += (
+        f"\nTotal amount of SATD comments found: {totalSatdCounter}"
+        f"\nRepo's total lines of code: {totalLoc}"
+        f"\nNumber of lines compromised: {linesWithSatdCounter}"
+        f"\nPercentage of code compromised by SATD: {satd_percentage}%\n"
+    )
+
+    # assign data -->
+    report_data["data"]["repoName"] = repoName
+    report_data["data"]["commits"] = totalCommits
+    report_data["data"]["satd_count"] = totalSatdCounter
+    report_data["data"]["loc"] = totalLoc
+    report_data["data"]["density"] = 0
+    report_data["data"]["locCompromised"] = linesWithSatdCounter
+    report_data["data"]["filessatd"] = totalFilesSatd
+    report_data["data"]["totalfiles"] = totalFiles
+    report_data["data"]["totalcontributors"] = len(projectContributors)
+
+
+    outputFileAnalyzeString += f"\nR-files with SATD: {totalFilesSatd} out of {totalFiles} total"
+
     outputFileAnalyzeString += f"\n\nCommits distribution among contributors:"
+    cont_datalist = {}
     for contributor in projectContributors.values():
         outputFileAnalyzeString += f"\n  {contributor.username} - {contributor.commits} commits"
+        cont_datalist[contributor.username] = {"username": contributor.username, "commits": contributor.commits}
+    report_data["data"]["contributorCommits"] = cont_datalist
 
     if rFilesNotFound > 0:
         outputFileAnalyzeString += f"\n\nFiles not found during analyzation: {rFilesNotFound}📄"
 
+    outputFileAnalyzeString += "\n" + lateSatdText
+
     # create main report
-    MainReport(getProjectRoot(), "Main", outputFileAnalyzeString)
+    repo_path, file_reports_path = MainReport(getProjectRoot(), repoName, "Main", outputFileAnalyzeString)
+
+    for out_data in rFileOutputStrings:
+        CreateSingleFileReport(file_reports_path, out_data["filename"], out_data["Text"]) #(json.dumps(datajson, indent=4))
+
+
+    # generateHtmlAndReturnUrl()
     
     print("Analyzation process complete. Results have been stored.")
+    htmlfilepath = generateDataJs(repo_path, report_data)
+
+    if (cancelProgram != True):
+            print('Do you wish to view the reports in the browser? Answer: (yes/1) (no/0)')
+            readyToContinue = input("Command|: ")
+            if (readyToContinue.lower() == "yes" or readyToContinue == "1"):
+                    openHtmlReportFile(htmlfilepath)
+
+    print("End of process.")
 
 # run main loop
 main_loop()
