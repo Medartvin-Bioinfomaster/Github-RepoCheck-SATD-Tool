@@ -111,6 +111,8 @@ def main_loop():
 
     print(f"The size of the R list: {r_files_data}, {len(r_files_data)}")
 
+    averageChurnPrLoc = 0
+
     for r_file in r_files_data.values():
         lateSatdText += f"\nAnalyze results for File: {r_file.filename}"
 
@@ -138,14 +140,14 @@ def main_loop():
             else:
                 churn_per_loc = 0
 
-            # print("PARA3")
-
             if churn_per_loc >= 5:
                 risk = "High"
             elif churn_per_loc >= 1:
                 risk = "Medium"
             else:
                 risk = "Low"
+
+            averageChurnPrLoc += churn_per_loc
 
             text_with_details = SingleFileSatdText(r_file, file_has_satd, total_churn, loc, 
                                                    churn_per_loc, risk, satd_count, lines_compromised)
@@ -157,11 +159,14 @@ def main_loop():
                 "filename": r_file.filename,
                 "file": r_file.fullpath,
                 "metrics": {
+                    "hasSatd": file_has_satd,
                     "commits": r_file.commits,
                     "lines_added": r_file.churndata["added"],
                     "lines_deleted": r_file.churndata["deleted"],
                     "total_churn": total_churn,
                     "loc": loc,
+                    "satd_count": satd_count,
+                    "lines_compromised": lines_compromised,
                     "churn_per_loc": round(churn_per_loc, 2)
                 },
                 "risk_level": risk
@@ -172,10 +177,10 @@ def main_loop():
             # Create File and store result
             print("Writing to file....")
         else:
-            datajson = {
-                "filename": r_file.filename + "_(Not found)",
-                "file": r_file.fullpath,
-            }
+            # datajson = {
+            #     "filename": r_file.filename + "_(Not found)",
+            #     "file": r_file.fullpath,
+            # }
             rFilesNotFound += 1
             rFileOutputStrings.append(datajson)
 

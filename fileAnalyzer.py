@@ -205,6 +205,8 @@ def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo
     loc = 0
     foundFile = False
     file_path = RFileInstance.fullpath
+    satd_count = -1
+    lines_compromised = -1
 
     try:
         with open(file_path, 'r', encoding='utf-8', errors='replace') as fh:
