@@ -1,0 +1,939 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SATD Knowledge Base</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        header {
+            background-color: #fff;
+            border-bottom: 2px solid #333;
+            padding: 30px 40px;
+        }
+        
+        header h1 {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        header p {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 30px;
+            padding: 25px 40px;
+            background: #fafafa;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .stat-item {
+            flex: 1;
+        }
+        
+        .stat-item .number {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .stat-item .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 2px;
+        }
+        
+        .controls {
+            padding: 20px 40px;
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #666;
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 6px 14px;
+            border: 1px solid #ccc;
+            background: white;
+            color: #333;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            background: #f5f5f5;
+            border-color: #999;
+        }
+        
+        .filter-btn.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+        
+        .entries {
+            padding: 25px 40px;
+        }
+        
+        .entry {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            background: #fff;
+        }
+        
+        .entry:hover {
+            border-color: #999;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .entry-type {
+            display: inline-block;
+            padding: 4px 10px;
+            border: 1px solid #666;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 0.8em;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .entry-meta {
+            color: #666;
+            font-size: 0.85em;
+            text-align: right;
+        }
+        
+        .entry-comment {
+            background: #fafafa;
+            padding: 12px;
+            border-left: 3px solid #666;
+            margin: 12px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            color: #333;
+        }
+        
+        .entry-context {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 3px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85em;
+            margin-top: 12px;
+        }
+        
+        .entry-context pre {
+            margin: 0;
+            white-space: pre-wrap;
+            color: #333;
+        }
+        
+        .context-label {
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 0.85em;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .no-results h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #fafafa;
+            color: #666;
+            font-size: 0.85em;
+            border-top: 1px solid #ddd;
+        }
+        
+        footer p {
+            margin: 3px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SATD Knowledge Base</h1>
+            <p>Self-Admitted Technical Debt in Bioinformatics R Packages</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="number">26</div>
+                <div class="label">Total Entries</div>
+            </div>
+            <div class="stat-item">
+                <div class="number">1</div>
+                <div class="label">Repositories</div>
+            </div>
+            <div class="stat-item">
+                <div class="number">8</div>
+                <div class="label">SATD Types</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search in comments, files, or repositories...">
+            
+            <div class="filter-group">
+                <button class="filter-btn active" onclick="filterByType('ALL')">All</button>
+                <button class="filter-btn" onclick="filterByType('FIX')">FIX (1)</button>
+                <button class="filter-btn" onclick="filterByType('FIXME')">FIXME (6)</button>
+                <button class="filter-btn" onclick="filterByType('HACK')">HACK (2)</button>
+                <button class="filter-btn" onclick="filterByType('NOTE')">NOTE (3)</button>
+                <button class="filter-btn" onclick="filterByType('SATD')">SATD (2)</button>
+                <button class="filter-btn" onclick="filterByType('TODO')">TODO (7)</button>
+                <button class="filter-btn" onclick="filterByType('WARNING')">WARNING (3)</button>
+                <button class="filter-btn" onclick="filterByType('XXX')">XXX (2)</button>
+
+            </div>
+        </div>
+        
+        <div class="entries" id="entriesContainer">
+
+            <div class="entry" data-type="SATD" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="FIX: Inefficient for large datasets SATD">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">SATD</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 3 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    FIX: Inefficient for large datasets SATD
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (function):</span>
+                    <pre>clean_data <- function(raw_data) {
+  # Remove empty rows
+  cleaned <- na.omit(raw_data)
+  
+  # FIXME: This conversion fails for factor columns
+  cleaned <- as.data.frame(lapply(cleaned, as.numeric))
+  
+  return(cleaned)
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="SATD" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="This is a test SATD someone need to fix this function SATD">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">SATD</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 5 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    This is a test SATD someone need to fix this function SATD
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (function):</span>
+                    <pre>clean_data <- function(raw_data) {
+  # Remove empty rows
+  cleaned <- na.omit(raw_data)
+  
+  # FIXME: This conversion fails for factor columns
+  cleaned <- as.data.frame(lapply(cleaned, as.numeric))
+  
+  return(cleaned)
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="TODO: Add support for missing value imputation here">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 7 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Add support for missing value imputation here
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (function):</span>
+                    <pre>clean_data <- function(raw_data) {
+  # Remove empty rows
+  cleaned <- na.omit(raw_data)
+  
+  # FIXME: This conversion fails for factor columns
+  cleaned <- as.data.frame(lapply(cleaned, as.numeric))
+  
+  return(cleaned)
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIXME" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="FIXME: This conversion fails for factor columns">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIXME</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 12 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    FIXME: This conversion fails for factor columns
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>  cleaned <- as.data.frame(lapply(cleaned, as.numeric))
+  return(cleaned)
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="HACK" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="HACK: Temporary workaround for CRAN check">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">HACK</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 18 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    HACK: Temporary workaround for CRAN check
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>.GlobalEnv$dummy_var <- function() NULL
+calculate_stats <- function(data) {
+  means <- colMeans(data)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="TODO: Implement robust statistics options
+MAD would be better for outlier-prone data">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 28 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Implement robust statistics options
+MAD would be better for outlier-prone data
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>  cor_matrix <- cor(data)
+  pca_result <- prcomp(data, scale. = TRUE)
+  return(list(</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIXME" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="FIXME: This is computationally expensive for large matrices">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIXME</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 34 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    FIXME: This is computationally expensive for large matrices
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>  pca_result <- prcomp(data, scale. = TRUE)
+  return(list(
+    means = means,</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="NOTE" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="' NOTE: Needs better error handling for non-numeric data">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">NOTE</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 52 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    ' NOTE: Needs better error handling for non-numeric data
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (function):</span>
+                    <pre>generate_plots <- function(data) {
+  library(ggplot2)
+  
+  plots <- list()
+  
+  # Distribution plots
+  for (col in names(data)) {
+    plots[[paste0("dist_", col)]] <- ggplot(data, aes(x = .data[[col]])) +
+      geom_histogram(bins = 30) +
+      ggtitle(paste("Distribution of", col))
+... (10 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="HACK: Temporary fix for ggplot2 warning">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 65 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    HACK: Temporary fix for ggplot2 warning
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>  options(ggplot2.continuous.colour = "viridis")
+  return(plots)
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="TODO: Add correlation plot matrix option
+pairs() would work but needs customization">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 68 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Add correlation plot matrix option
+pairs() would work but needs customization
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>  return(plots)
+}
+train_model <- function(data, target) {</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIXME" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="FIXME: This formula construction fails with special chars">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIXME</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 83 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    FIXME: This formula construction fails with special chars
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>  formula <- as.formula(paste(target, "~ ."))
+  library(randomForest)
+  model <- randomForest(</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="XXX" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="XXX: Tune these hyperparameters properly
+Current values are just placeholders">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">XXX</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 95 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    XXX: Tune these hyperparameters properly
+Current values are just placeholders
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>  preds <- predict(model, test)
+  mse <- mean((preds - test[[target]])^2)
+  return(list(</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="TODO: Replace this with proper memoization">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 110 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Replace this with proper memoization
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>cache <- new.env()
+get_cached_result <- function(key) {
+  if (exists(key, envir = cache)) {</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIXME" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="FIXME: Not thread-safe!">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIXME</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 120 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    FIXME: Not thread-safe!
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (function):</span>
+                    <pre>store_result <- function(key, value) {
+  assign(key, value, envir = cache)
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="WARNING: This is experimental and may change">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 125 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    WARNING: This is experimental and may change
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (function):</span>
+                    <pre>experimental_feature <- function(x) {
+  # HACK: Using eval here is dangerous
+  result <- eval(parse(text = x))
+  
+  # TODO: Implement proper parsing
+  return(result)
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="HACK" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="HACK: Using eval here is dangerous">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">HACK</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 127 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    HACK: Using eval here is dangerous
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>  result <- eval(parse(text = x))
+  return(result)
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="TODO: Implement proper parsing">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 130 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Implement proper parsing
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>  return(result)
+}
+data <- read.csv("input_data.csv")</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIXME" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="FIXME: Handle empty/missing files">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIXME</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 139 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    FIXME: Handle empty/missing files
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>if (nrow(data) == 0) {
+  stop("Empty dataset loaded")
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="NOTE" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="NOTE: These columns might need special treatment">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">NOTE</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 147 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NOTE: These columns might need special treatment
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>special_cols <- c("patient_id", "treatment_group")
+stats <- calculate_stats(clean_data[, !names(clean_data) %in% special_cols])
+plots <- generate_plots(clean_data)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="TODO: Add PDF report generation
+Use rmarkdown or similar">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 156 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Add PDF report generation
+Use rmarkdown or similar
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>model_results <- train_model(
+  clean_data[, !names(clean_data) %in% "patient_id"],
+  "outcome"</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="XXX" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="XXX: Temporary debug output">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">XXX</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 165 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    XXX: Temporary debug output
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>print(head(clean_data))
+print(model_results$mse)
+saveRDS(list(</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="Technicaldebt_in_bioinforamtics" data-file="example.r" data-comment="Warning: This cleanup might remove needed objects">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        example.r • Line 176 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Warning: This cleanup might remove needed objects
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>rm(list = ls())</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="Technicaldebt_in_bioinforamtics" data-file="example2.r" data-comment="TODO: refactor this function to improve performance">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        example2.r • Line 1 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: refactor this function to improve performance
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (function):</span>
+                    <pre>my_function <- function(x) {
+  return(x^2) # HACK: temporary fix for NA values
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIX" data-repo="Technicaldebt_in_bioinforamtics" data-file="example2.r" data-comment="return(x^2) # HACK: temporary fix for NA values">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIX</span>
+                    </div>
+                    <div class="entry-meta">
+                        example2.r • Line 3 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    return(x^2) # HACK: temporary fix for NA values
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>}
+calculate_stats <- function(x) {
+  if (x < 0) stop("Negative value!") # NOTE: might break later</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIXME" data-repo="Technicaldebt_in_bioinforamtics" data-file="example2.r" data-comment="FIXME: handle edge cases when x is negative
+comment about the case above">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIXME</span>
+                    </div>
+                    <div class="entry-meta">
+                        example2.r • Line 6 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    FIXME: handle edge cases when x is negative
+comment about the case above
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (function):</span>
+                    <pre>calculate_stats <- function(x) {
+  if (x < 0) stop("Negative value!") # NOTE: might break later
+  return(mean(x))
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="NOTE" data-repo="Technicaldebt_in_bioinforamtics" data-file="example2.r" data-comment="if (x < 0) stop("Negative value!") # NOTE: might break later">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">NOTE</span>
+                    </div>
+                    <div class="entry-meta">
+                        example2.r • Line 13 • Technicaldebt_in_bioinforamtics
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    if (x < 0) stop("Negative value!") # NOTE: might break later
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>  return(mean(x))
+}</pre>
+                </div>
+            </div>
+
+        </div>
+        
+        <div class="no-results" id="noResults" style="display: none;">
+            <h2>No results found</h2>
+            <p>Try adjusting your search or filter criteria.</p>
+        </div>
+        
+        <footer>
+            <p>Last updated: 2026-02-20T12:18:18.667198</p>
+        </footer>
+    </div>
+    
+    <script>
+        let currentFilter = 'ALL';
+        
+        // Search functionality
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            filterEntries();
+        });
+        
+        function filterByType(type) {
+            currentFilter = type;
+            
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            filterEntries();
+        }
+        
+        function filterEntries() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const entries = document.querySelectorAll('.entry');
+            let visibleCount = 0;
+            
+            entries.forEach(entry => {
+                const type = entry.getAttribute('data-type');
+                const repo = entry.getAttribute('data-repo').toLowerCase();
+                const file = entry.getAttribute('data-file').toLowerCase();
+                const comment = entry.getAttribute('data-comment').toLowerCase();
+                
+                const matchesType = currentFilter === 'ALL' || type === currentFilter;
+                const matchesSearch = searchTerm === '' || 
+                                     comment.includes(searchTerm) || 
+                                     repo.includes(searchTerm) || 
+                                     file.includes(searchTerm);
+                
+                if (matchesType && matchesSearch) {
+                    entry.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    entry.style.display = 'none';
+                }
+            });
+            
+            // Show/hide no results message
+            document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+            document.getElementById('entriesContainer').style.display = visibleCount === 0 ? 'none' : 'block';
+        }
+    </script>
+</body>
+</html>
