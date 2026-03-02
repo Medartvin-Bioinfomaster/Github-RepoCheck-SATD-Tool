@@ -238,8 +238,6 @@ def main_loop():
         CreateSingleFileReport(file_reports_path, out_data["filename"], out_data["Text"]) #(json.dumps(datajson, indent=4))
 
 
-    # generateHtmlAndReturnUrl()
-    
     print("Analyzation process complete. Results have been stored.")
     htmlfilepath = generateDataJs(repo_path, report_data)
 

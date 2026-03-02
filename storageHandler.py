@@ -6,14 +6,14 @@ def test():
 def write_to_outputfile(outputFilePlacement, output_string):
     with open(outputFilePlacement, 'w') as fil:
         fil.write(output_string)
-        print("Written to outputfile success.")
+        # print("Written to outputfile success.")
 
 def write_main_report(projectroot, repoName, outputFileName, output_string):
     repo_path, file_reports_path = create_repo_structure(projectroot, repoName)
     output_file_path = repo_path / outputFileName
     with output_file_path.open("w", encoding="utf-8") as file:
         file.write(output_string)
-        print("Written to outputfile success.")
+        # print("Written to outputfile success.")
     return repo_path, file_reports_path
 
 def write_file_to_directory(directories, outputFileName, output_string):
@@ -21,7 +21,7 @@ def write_file_to_directory(directories, outputFileName, output_string):
 
     with output_file_path.open("w", encoding="utf-8") as file:
         file.write(output_string)
-        print("Written to outputfile success.")
+        # print("Written to outputfile success.")
 
 def create_repo_structure(projectroot, repoName):
     """
