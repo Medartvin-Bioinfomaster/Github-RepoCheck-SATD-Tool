@@ -2,7 +2,7 @@ import json
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
-from fileAnalyzer import scan_repo_and_save_reports, analyze_file
+from fileAnalyzer import analyze_file
 from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdText, generateDataJs, openHtmlReportFile
 
 from pathlib import Path
@@ -34,12 +34,12 @@ def main_loop():
     # projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
     # issues = [] # list with amount of issues from the github. OBS: not implemented yet
     
-    repoName = ""
+    REPONAME = ""
     files = []
     r_files_data: Dict[RFileData] = {}
     projectContributors: Dict[Contributor] = {}
     outputfilefolder = "File_Reports" #name of the folder where individual file reports are stored
-    storage_path = 'repostorage.txt'
+    storage_path = 'local/repostorage.txt'
     totalCommits = 0
     cancelProgram = False
     reasonForCancel = ""
@@ -102,7 +102,7 @@ def main_loop():
             files = data_fetched.get("filesToReturn", [])
             r_files_data = data_fetched.get("r_files", {})
             projectContributors = data_fetched.get("projectContributors", {})
-            repoName = data_fetched.get("repositoryName")
+            REPONAME = data_fetched.get("repositoryName")
             totalCommits = data_fetched.get("totalCommits")
     else:
         print("Task was canceled. \nThis is the full log")
@@ -127,8 +127,8 @@ def main_loop():
     for r_file in r_files_data.values():
         lateSatdText += f"\nAnalyze results for File: {r_file.filename}"
 
-        total_findings, file_has_satd, textResult, loc, foundFile, satd_count, lines_compromised = analyze_file(repo_path=REPOURL, RFileInstance=r_file, output_dir="dirTestFileAnalyze", repo_name=repoName) # <-- forsøker å analysere Filene
-        
+        total_findings, file_has_satd, textResult, loc, foundFile, satd_count, lines_compromised = analyze_file(RFileInstance=r_file, repo_name = REPONAME) # <-- forsøker å analysere Filene
+    
         totalSatdCounter += satd_count
         linesWithSatdCounter += lines_compromised
         totalLoc += loc
@@ -164,11 +164,33 @@ def main_loop():
                                                    churn_per_loc, risk, satd_count, lines_compromised)
         
             fullText = text_with_details + "\n\n" + textResult
+
+            #contributor & endringer:
+            contributor_stats = []
+            total_file_hashes = len(r_file.commitHashes) #tbh we dont need this, but its more "safe"
+
+            if total_file_hashes > 0:
+                for contributor in projectContributors.values():
+                    shared_hashes = set(r_file.commitHashes).intersection(set(contributor.commitHashes))
+                    user_file_commits = len(shared_hashes)
+                    
+                    if user_file_commits > 0:
+                        percentage = (user_file_commits / total_file_hashes) * 100
+                        
+                        contributor_stats.append({
+                            "username": contributor.username,
+                            "contribution_percent": f"{round(percentage, 1)}%",
+                            "commits_to_file": user_file_commits
+                        })
+
+            # sorted so that the biggest contributors are first in list
+            contributor_stats.sort(key=lambda x: float(x["contribution_percent"].strip('%')), reverse=True)
             
             datajson = {
                 "Text": fullText,
                 "filename": r_file.filename,
                 "file": r_file.fullpath,
+                "contributor_data": contributor_stats,
                 "metrics": {
                     "hasSatd": file_has_satd,
                     "commits": r_file.commits,
@@ -193,7 +215,7 @@ def main_loop():
             #     "file": r_file.fullpath,
             # }
             rFilesNotFound += 1
-            rFileOutputStrings.append(datajson)
+            # rFileOutputStrings.append(datajson)
 
     
     satd_percentage = (linesWithSatdCounter / totalLoc * 100) if totalLoc > 0 else 0
@@ -206,7 +228,7 @@ def main_loop():
     )
 
     # assign data -->
-    report_data["data"]["repoName"] = repoName
+    report_data["data"]["repoName"] = REPONAME
     report_data["data"]["commits"] = totalCommits
     report_data["data"]["satd_count"] = totalSatdCounter
     report_data["data"]["loc"] = totalLoc
@@ -232,7 +254,7 @@ def main_loop():
     outputFileAnalyzeString += "\n" + lateSatdText
 
     # create main report
-    repo_path, file_reports_path = MainReport(getProjectRoot(), repoName, "Main", outputFileAnalyzeString)
+    repo_path, file_reports_path = MainReport(getProjectRoot(), REPONAME, "Main", outputFileAnalyzeString)
 
     for out_data in rFileOutputStrings:
         CreateSingleFileReport(file_reports_path, out_data["filename"], out_data["Text"]) #(json.dumps(datajson, indent=4))
