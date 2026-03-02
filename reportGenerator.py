@@ -7,16 +7,16 @@ import webbrowser, json, os, urllib.request, urllib.parse
 def MainReport(projectroot, repoName, reportName, content):
     # write_to_outputfile(f"{outputfolder}/{reportName}.txt", content)
     repo_path, file_reports_path = write_main_report(projectroot, repoName, f"{reportName}.txt", content)
-    print("Main report generated.")
+    # print("Main report generated.")
     return repo_path, file_reports_path
 
 def CreateSingleFileReport(directory, reportName, content):
     # write_to_outputfile(f"{outputfolder}/{fileFolderName}/{reportName}.txt", content)
     write_file_to_directory(directory, f"{reportName}.txt", content)
-    print("single file report generated.")
+    # print("single file report generated.")
 
 def SingleFileSatdText(r_file, satd_status, total_churn, loc, churn_per_loc, risk, satd_count, lines_compromised):
-    print("hegw")
+    # print("hegw")
     contributorsvisual = ""
     for cont in r_file.contributors:
         contributorsvisual += cont + ", "

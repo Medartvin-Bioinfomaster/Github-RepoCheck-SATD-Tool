@@ -39,6 +39,13 @@ def generate_full_report(repo_path, report_data, stats):
             .satd-badge.true {{ background: #d4edda; color: #155724; }}
             .placeholder-text {{ color: #999; text-align: center; margin-top: 50px; font-style: italic; }}
             footer {{ text-align: center; padding: 20px; color: #666; font-size: 0.85em; border-top: 1px solid #ddd; }}
+
+            .contrib-bar-container {{ display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }}
+            .contrib-mini-avatar {{ width: 24px; height: 24px; background: #333; color: white; border-radius: 50%;  display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold; flex-shrink: 0;            }}
+            .progress-bg {{ background: #eee; border-radius: 4px; flex-grow: 1; height: 12px; overflow: hidden; position: relative; }}
+            .progress-fill {{ background: #2196f3; height: 100%; border-radius: 4px; transition: width 0.5s ease-out; }}
+            .contrib-label {{ min-width: 120px; font-size: 0.85em; color: #444; }}
+            .contrib-percent {{ min-width: 45px; font-size: 0.8em; font-weight: bold; text-align: right; }}
         </style>
     </head>
     <body>
@@ -158,6 +165,25 @@ def generate_full_report(repo_path, report_data, stats):
 
                 const view = document.getElementById('analysisView');
                 const percentage = ((file.metrics.lines_compromised / file.metrics.loc) * 100).toFixed(1);
+
+                let contributorHtml = '';
+                if (file.contributor_data && file.contributor_data.length > 0) {{
+                    contributorHtml = '<div style="margin: 20px 0;"><h3>Ownership Distribution:</h3>';
+                    file.contributor_data.forEach(c => {{
+                        const initials = c.username ? c.username.substring(0, 2).toUpperCase() : '??';
+                        contributorHtml += `
+                            <div class="contrib-bar-container">
+                                <div class="contrib-mini-avatar">${{initials}}</div>
+                                <div class="contrib-label">${{c.username}}</div>
+                                <div class="progress-bg">
+                                    <div class="progress-fill" style="width: ${{c.contribution_percent}};"></div>
+                                </div>
+                                <div class="contrib-percent">${{c.contribution_percent}}</div>
+                            </div>
+                        `;
+                    }});
+                    contributorHtml += '</div>';
+                }}
                 
                 view.innerHTML = `
                     <h2>📄${{file.filename}}</h2>
@@ -167,6 +193,7 @@ def generate_full_report(repo_path, report_data, stats):
                     <p><strong>Lines of Code:</strong> ${{file.metrics.loc}}</p>
                     <p><strong>Lines affected by TD:</strong> ${{file.metrics.lines_compromised}}</p>
                     <p><strong>Percentage:</strong> <span style="color: ${{StatusDebtPercent(parseFloat(percentage))}};">${{percentage}}%</span></p>
+                    ${{contributorHtml}} <hr style="margin: 20px 0;">
                     <hr style="margin: 20px 0;">
                     <h3>Report:</h3>
                     <pre style="background: #eee; padding: 15px; border-radius: 4px; white-space: pre-wrap;">${{file.Text}}</pre>

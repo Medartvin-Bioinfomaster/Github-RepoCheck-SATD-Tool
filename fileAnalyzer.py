@@ -81,7 +81,9 @@ def detect_satd_in_code(content: str, file_path: str, context_lines=3, capture_f
     """
     results = []
     lines = content.splitlines()
-    
+    total_satd_in_file = 0 
+    unique_compromised_lines = set()
+
     i = 0
     while i < len(lines):
         line = lines[i]
@@ -90,6 +92,7 @@ def detect_satd_in_code(content: str, file_path: str, context_lines=3, capture_f
         
         if m:
             # Found a SATD keyword - collect consecutive comment lines
+            total_satd_in_file += 1
             comment_lines = [line.strip()]
             original_line = lineno
             
@@ -135,6 +138,8 @@ def detect_satd_in_code(content: str, file_path: str, context_lines=3, capture_f
             
             full_text = '\n'.join(comment_lines)
             comment_text = '\n'.join([cl.lstrip('#').strip() for cl in comment_lines])
+
+            compromised_lines = len(context_after) if context_type == 'function' else 0
             
             results.append({
                 'file': file_path,
@@ -143,7 +148,9 @@ def detect_satd_in_code(content: str, file_path: str, context_lines=3, capture_f
                 'text': full_text,
                 'comment': comment_text,
                 'context_after': context_after,
-                'context_type': context_type  # 'lines' or 'function'
+                'context_type': context_type,  # 'lines' or 'function'
+                'total_satd_count': total_satd_in_file, #total amount of satd comments in file
+                'compromised_lines': compromised_lines # total amount of lines compromised in file
             })
             
             # Skip the lines we've already processed
@@ -152,31 +159,6 @@ def detect_satd_in_code(content: str, file_path: str, context_lines=3, capture_f
             i += 1
     
     return results
-
-def generateTextResponseForFile(original_file_path, results):
-    fileTextString = ""
-    fileTextString += f"File: {original_file_path}\n"
-    fileTextString += f"Total SATD items found: {len(results)}\n"
-    fileTextString += "=" * 50 + "\n\n" # hva er dette??
-    for item in results:
-        # sørg for å fjerne eventuelle ledende mellomrom i output
-        fileTextString += f"Line {item['line']} [{item['type']}]:\n"
-        fileTextString += f"{item['text'].lstrip()}\n"
-        fileTextString += "-" * 50 + "\n"
-    return fileTextString
-
-def generateTextResponseForFile(original_file_path, results):
-    fileTextString = ""
-    fileTextString += f"File: {original_file_path}\n"
-    fileTextString += f"Total SATD items found: {len(results)}\n"
-    fileTextString += "=" * 50 + "\n\n" # hva er dette??
-    for item in results:
-        # sørg for å fjerne eventuelle ledende mellomrom i output
-        fileTextString += f"Line {item['line']} [{item['type']}]:\n"
-        fileTextString += f"{item['text'].lstrip()}\n"
-        fileTextString += "-" * 50 + "\n"
-    return fileTextString
-
 
 def save_report_for_file(results, output_dir: str, original_file_path: str, repo_name: str) -> str:
     #better format for more user friendly output
@@ -245,118 +227,11 @@ def save_report_for_file(results, output_dir: str, original_file_path: str, repo
     return report_path
 
 
-
-
-
-
-
-
-
-def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo_name: str, 
-                context_lines=3, capture_full_function=True, add_to_kb=True, repo_url=None, user_id=None):
+def analyze_file(RFileInstance: RFileData, repo_name: str, context_lines=3, capture_full_function=True, add_to_kb=True, repo_url=None, user_id=None):
     total_findings = 0
     file_has_satd = False
     textResult = ""
-    content = ""
-    loc = 0
-    foundFile = False
-    file_path = RFileInstance.fullpath
-
-    try:
-        with open(file_path, 'r', encoding='utf-8', errors='replace') as fh:
-            print("Found content, file has been read")
-            content = fh.read()
-            loc = content.count("\n") + 1 if content else 0 # denne kodesnutten kan bli byttet ut med en mer "genuin" innhentingsmetode, hvis funksjonen går igjennom filer line for line i for-loop, så er dette bedre og mer robust
-            foundFile = True
-            print(f"File {FindRepoName(file_path)} has {loc} lines of code")
-    except Exception as e:
-        print(f"Error reading {file_path}: {e}")
-        foundFile = False
-        # continue
-    # if file has no content (could have been deleted or emptied), skip it
-    if content: #før var det if not content, men da blir det to like returns. Heller bedre å bare skippe ifen all together hvis fil ikke ble funnet
-        results = detect_satd_in_code(content, file_path)
-        if results:
-            total_findings += len(results)
-            file_has_satd = True
-            textResult = generateTextResponseForFile(file_path, results)
-            # rp = save_report_for_file(results, output_dir, file_path, repo_name)
-            # reports.append(rp)
-            # reports.append(textResult)
-            print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
-
-            if add_to_kb:
-                print(f"Adding {len(results)} SATD entries to knowledge base...")
-                add_to_knowledge_base(results, repo_name, repo_url=repo_url, user_id=user_id)
-
-    return total_findings, file_has_satd, textResult, loc, foundFile
-
-
-
-
-
-
-
-
-
-
-# function not used , may delete later
-
-
-
-
-
-def scan_repo_and_save_reports(repo_path: str, output_dir: str, repo_name: str, 
-                               context_lines=3, capture_full_function=True):
-    """
-    Scan repository for SATD and save reports with context.
-    
-    Args:
-        repo_path: Path to repository
-        output_dir: Where to save reports
-        repo_name: Name of repository
-        context_lines: Number of code lines to capture after SATD (default 5)
-        capture_full_function: If True, capture entire function when found after SATD
-    """
-    total_findings = 0
-    files_with_satd = 0
-    reports = []
-    content = ""
-    for root, dirs, files in os.walk(repo_path):
-        if '.git' in root:
-            continue
-        for fname in files:
-            if not fname.lower().endswith('.r'):
-                continue
-            path = os.path.join(root, fname)
-            try:
-                with open(path, 'r', encoding='utf-8', errors='replace') as fh:
-                    print(f"Reading: {os.path.basename(path)}")
-                    content = fh.read()
-            except Exception as e:
-                print(f"Error reading {path}: {e}")
-                continue
-            
-            results = detect_satd_in_code(content, path, context_lines=context_lines, 
-                                         capture_full_function=capture_full_function)
-            
-            if results:
-                total_findings += len(results)
-                files_with_satd += 1
-                rp = save_report_for_file(results, output_dir, path, repo_name)
-                reports.append(rp)
-                print(f"  Found {len(results)} SATD items in: {os.path.basename(path)}")
-    
-                return total_findings, files_with_satd, reports
-                print(f"Found {len(results)} SATD items in: {os.path.basename(path)}")
-    return total_findings, files_with_satd, reports
-
-
-def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo_name: str): # remove repopath? <--
-    total_findings = 0
-    file_has_satd = False
-    textResult = ""
-    content = ""
+    content = "" # this has to be here, must declare the variable before its use
     loc = 0
     foundFile = False
     file_path = RFileInstance.fullpath
@@ -364,136 +239,70 @@ def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo
     lines_compromised = -1
 
     try:
-        with open(file_path, 'r', encoding='utf-8', errors='replace') as fh:
-            print("Found content, file has been read")
-            content = fh.read()
+        with open(file_path, 'r', encoding='utf-8', errors='replace') as fh: #opens the file
+            content = fh.read() #reads the file, stores the script in "content" variable
             loc = content.count("\n") + 1 if content else 0 # denne kodesnutten kan bli byttet ut med en mer "genuin" innhentingsmetode, hvis funksjonen går igjennom filer line for line i for-loop, så er dette bedre og mer robust
             foundFile = True
             print(f"File {FindRepoName(file_path)} has {loc} lines of code")
     except Exception as e:
         print(f"Error reading {file_path}: {e}")
         foundFile = False
-        # continue
-    # if file has no content (could have been deleted or emptied), skip it
-    if content: #før var det if not content, men da blir det to like returns. Heller bedre å bare skippe ifen all together hvis fil ikke ble funnet
-        results = detect_satd_in_code(content, file_path)
+        # if file has no content (could have been deleted or emptied), skip it
+
+    if content:
+        results = detect_satd_in_code(content, file_path, context_lines=context_lines, capture_full_function=capture_full_function)
+
         if results:
             total_findings += len(results)
+            lines_compromised
             file_has_satd = True
-            textResult = generateTextResponseForFile(file_path, results)
-            # rp = save_report_for_file(results, output_dir, file_path, repo_name)
-            # reports.append(rp)
-            # reports.append(textResult)
-            print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
+            textResult = generate_report_string(file_path, results)
+            unique_compromised_lines = set()
+            for item in results:
+                start_linje = item['line']
+                for i, code_line in enumerate(item['context_after']):
+                    line_id = f"{item['file']}:{start_linje + i}"
+                    unique_compromised_lines.add(line_id)
 
+            lines_compromised = len(unique_compromised_lines)
+            print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
             if add_to_kb:
                 print(f"Adding {len(results)} SATD entries to knowledge base...")
                 add_to_knowledge_base(results, repo_name, repo_url=repo_url, user_id=user_id)
-
-    return total_findings, file_has_satd, textResult, loc, foundFile
-
-
-
-
-
-
-
-
-
-
-# function not used , may delete later
-
-
-
-
-
-def scan_repo_and_save_reports(repo_path: str, output_dir: str, repo_name: str, 
-                               context_lines=3, capture_full_function=True):
-    """
-    Scan repository for SATD and save reports with context.
-    
-    Args:
-        repo_path: Path to repository
-        output_dir: Where to save reports
-        repo_name: Name of repository
-        context_lines: Number of code lines to capture after SATD (default 5)
-        capture_full_function: If True, capture entire function when found after SATD
-    """
-    total_findings = 0
-    files_with_satd = 0
-    reports = []
-    
-    for root, dirs, files in os.walk(repo_path):
-        if '.git' in root:
-            continue
-        for fname in files:
-            if not fname.lower().endswith('.r'):
-                continue
-            path = os.path.join(root, fname)
-            try:
-                with open(path, 'r', encoding='utf-8', errors='replace') as fh:
-                    print(f"Reading: {os.path.basename(path)}")
-                    content = fh.read()
-            except Exception as e:
-                print(f"Error reading {path}: {e}")
-                continue
-            
-            results = detect_satd_in_code(content, path, context_lines=context_lines, 
-                                         capture_full_function=capture_full_function)
-            
-            if results:
-                total_findings += len(results)
-                files_with_satd += 1
-                rp = save_report_for_file(results, output_dir, path, repo_name)
-                reports.append(rp)
-                print(f"  Found {len(results)} SATD items in: {os.path.basename(path)}")
-    
-    return total_findings, files_with_satd, reports
-                print(f"Found {len(results)} SATD items in: {os.path.basename(path)}")
-    return total_findings, files_with_satd, reports
-
-
-def analyze_file(repo_path: str, RFileInstance: RFileData, output_dir: str, repo_name: str): # remove repopath? <--
-    total_findings = 0
-    file_has_satd = False
-    textResult = ""
-    content = ""
-    loc = 0
-    foundFile = False
-    file_path = RFileInstance.fullpath
-    satd_count = -1
-    lines_compromised = -1
-
-    try:
-        with open(file_path, 'r', encoding='utf-8', errors='replace') as fh:
-            print("Found content, file has been read")
-            content = fh.read()
-            loc = content.count("\n") + 1 if content else 0 # denne kodesnutten kan bli byttet ut med en mer "genuin" innhentingsmetode, hvis funksjonen går igjennom filer line for line i for-loop, så er dette bedre og mer robust
-            foundFile = True
-            print(f"File {FindRepoName(file_path)} has {loc} lines of code")
-    except Exception as e:
-        print(f"Error reading {file_path}: {e}")
-        foundFile = False
-        # continue
-    # if file has no content (could have been deleted or emptied), skip it
-    if content: #før var det if not content, men da blir det to like returns. Heller bedre å bare skippe ifen all together hvis fil ikke ble funnet
-        result = detect_satd_in_code(content, file_path)
-
-        results = result["results"]
-        satd_count = result["satd_count"]
-        lines_compromised = result["linesCompromised"]
-
-        if results:
-            total_findings += len(results)
-            file_has_satd = True
-            textResult = generateTextResponseForFile(file_path, results)
-            # rp = save_report_for_file(results, output_dir, file_path, repo_name)
-            # reports.append(rp)
-            # reports.append(textResult)
-            print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
 
     return total_findings, file_has_satd, textResult, loc, foundFile, satd_count, lines_compromised
 
-# def analyze_file(repo_path: str, output_dir: str, repo_name: str) {
 
-# }
+def generate_report_string(original_file_path, results):
+    res = ""
+    res += "╔" + "═" * 78 + "╗\n"
+    res += "║" + " " * 78 + "║\n"
+    res += "║" + "SATD ANALYSIS REPORT".center(78) + "║\n"
+    res += "║" + " " * 78 + "║\n"
+    res += "╚" + "═" * 78 + "╝\n\n"
+    res += f" File: {original_file_path}\n"
+    res += f" Total SATD items found: {len(results)}\n"
+    res += "\n" + "─" * 80 + "\n\n"
+    
+    for idx, item in enumerate(results, 1):
+        header_text = f"┌─ SATD Item #{idx} "
+        res += header_text + "─" * (80 - len(header_text)) + "\n"
+        res += "│\n"
+        res += f"│  Type: {item['type']}\n"
+        res += f"│  Location: Line {item['line']}\n"
+        res += "│\n"
+        res += "├─  SATD Comment:\n"
+        res += "│\n"
+        for text_line in item['text'].split('\n'):
+            res += f"│   {text_line.lstrip()}\n"
+        res += "│\n"
+        if item.get('context_after'):
+            title = "Related Function (Complete)" if item.get('context_type') == 'function' else "Code Context"
+            res += f"├─  {title}:\n"
+            res += "│\n"
+            for ctx_line in item['context_after']:
+                res += f"│   {ctx_line.rstrip()}\n"
+            res += "│\n"
+        res += "└" + "─" * 79 + "\n\n"
+        
+    return res
