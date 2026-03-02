@@ -36,7 +36,7 @@ def findRepo (repoUrl, cancelcommand=False):
         return {"text": "Error accessing local repository. e: ", "status": False}
         repoOK = False
 
-    return repoOK
+    return {"text": "Ok ", "status": repoOK}
 
 def saveTheRepoUrlQuestion(repo, reposInStorage, path):
 

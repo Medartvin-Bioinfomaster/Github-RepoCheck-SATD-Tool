@@ -15,7 +15,14 @@ from dataClasses import RFileData, Contributor
 def CancelProgram(cancelMessage: str) -> None:
     global cancelProgram, reasonForCancel
     cancelProgram = True
-    reasonForCancel = reasonForCancel + "\n" + cancelMessage  # <-- has caused errors before, safe now
+    print("Progam was cancelled or met an error.")
+    try:
+        if not reasonForCancel:
+            reasonForCancel = ""
+        reasonForCancel += ". " + cancelMessage  # <-- has caused errors before, safe now
+    except NameError as Ne:
+        op = 0
+    return True
 
 def getProjectRoot():
     PROJECT_ROOT = Path(__file__).resolve().parent
@@ -67,9 +74,10 @@ def main_loop():
     REPOURL = normalize_windows_path(_url)
 
     repo_been_found_and_is_valid = findRepo( REPOURL, cancelProgram ) #check if the url is valid
-
-    if repo_been_found_and_is_valid == False:
-        CancelProgram("Repo couldn't be found or its not a valid git repository")
+    wasValid = (repo_been_found_and_is_valid.get("status"))
+    if wasValid == False:
+        cancelProgram = CancelProgram("Repo couldn't be found or its not a valid git repository. " + repo_been_found_and_is_valid.get("text"))
+        return
 
     if cancelProgram != True:
         saveTheRepoUrlQuestion( REPOURL, storageBucket["repos"], storage_path)
@@ -79,7 +87,8 @@ def main_loop():
         print('System is ready to analyze the github \"' + FindRepoName(REPOURL) + '\". Type any key + ENTER to continue, or type "stop" or 0 to stop the program. ')
         readyToContinue = input("Command|: ")
         if (readyToContinue.lower() == "stop" or readyToContinue == "0"):
-            CancelProgram("User stopped program before analyzation.")
+            cancelProgram = CancelProgram("User stopped program before analyzation.")
+            return
     
     # Fetching Data Phase:
     if (cancelProgram == False):
@@ -87,7 +96,8 @@ def main_loop():
         data_fetched = RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
 
         if (data_fetched.get("status")):
-            CancelProgram("Something went wrong:", data_fetched.get("text"))
+            cancelProgram = CancelProgram("Something went wrong:", data_fetched.get("text"))
+            return
         else:
             files = data_fetched.get("filesToReturn", [])
             r_files_data = data_fetched.get("r_files", {})
@@ -103,7 +113,8 @@ def main_loop():
         print('Github analyzation complete! You can begin the file analyzation. Type any key + ENTER to continue, or type "stop" or 0 to stop the program. ')
         readyToContinue = input("Command|: ")
         if (readyToContinue.lower() == "stop" or readyToContinue == "0"):
-            CancelProgram("User stopped program before analyzation.")
+            cancelProgram = CancelProgram("User stopped program before analyzation.")
+            return
 
     print("Running file analyzer...")
 

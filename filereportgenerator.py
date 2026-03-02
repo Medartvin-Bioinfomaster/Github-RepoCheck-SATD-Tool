@@ -74,8 +74,8 @@ def generate_full_report(repo_path, report_data, stats):
                         <input type="text" class="search-box" id="fileSearch" placeholder="Search files..." onkeyup="filterFiles()">
                         <div class="filter-group">
                             <button class="filter-btn active" onclick="setSatdFilter('BOTH', this)">Both</button>
-                            <button class="filter-btn" onclick="setSatdFilter('WITH', this)">WithSatd</button>
-                            <button class="filter-btn" onclick="setSatdFilter('NO', this)">NoSatd</button>
+                            <button class="filter-btn" onclick="setSatdFilter('HasSATD', this)">Satd</button>
+                            <button class="filter-btn" onclick="setSatdFilter('Clean', this)">Clean</button>
                         </div>
                     </div>
                     <div class="file-entries-scroll" id="fileList"></div>
@@ -93,7 +93,7 @@ def generate_full_report(repo_path, report_data, stats):
         
         <script>
             const allFiles = {json_data};
-            let currentSatdFilter = 'BOTH'; // 'BOTH', 'WITH', 'NO'
+            let currentSatdFilter = 'BOTH'; // 'BOTH', 'HasSATD', 'Clean'
             let currentSearchTerm = '';
 
             function renderFiles() {{
@@ -103,16 +103,14 @@ def generate_full_report(repo_path, report_data, stats):
                 Object.values(allFiles).forEach(file => {{
                     const hasSatd = file.Text.includes("Contains SATD: True");
                     
-                    // --- Filtreringslogikk ---
                     const matchesSearch = file.filename.toLowerCase().includes(currentSearchTerm.toLowerCase());
                     let matchesSatd = true;
-                    if (currentSatdFilter === 'WITH') matchesSatd = hasSatd;
-                    if (currentSatdFilter === 'NO') matchesSatd = !hasSatd;
+                    if (currentSatdFilter === 'HasSATD') matchesSatd = hasSatd;
+                    if (currentSatdFilter === 'Clean') matchesSatd = !hasSatd;
 
                     if (matchesSearch && matchesSatd) {{
                         const div = document.createElement('div');
                         div.className = 'file-item';
-                        // Vi bruker 'dataset' for å enkelt kunne finne tilbake til SATD-status om nødvendig
                         div.dataset.hasSatd = hasSatd; 
                         
                         div.innerHTML = `
@@ -132,17 +130,14 @@ def generate_full_report(repo_path, report_data, stats):
                 }});
             }}
 
-            // Funksjon for søkefeltet
             function filterFiles() {{
                 currentSearchTerm = document.getElementById('fileSearch').value;
                 renderFiles();
             }}
 
-            // Funksjon for knappene
             function setSatdFilter(type, btn) {{
                 currentSatdFilter = type;
                 
-                // Oppdater UI på knappene
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 
@@ -178,26 +173,19 @@ def generate_full_report(repo_path, report_data, stats):
                 `;
             }}
 
-            // Hent ut bidragsyter-data fra JSON-objektet ditt
-            // (Sørg for at report_data["data"]["contributorCommits"] er inkludert i json_data i Python-scriptet)
-            const contributorData = {json_contributors}; // Du kan også sende dette som en separat variabel
-
+            const contributorData = {json_contributors};
 
             function renderContributors() {{
                 const container = document.getElementById('contributorList');
                 
-                // Sjekk at containeren finnes og at vi faktisk har data
                 if (!container || !contributorData) return;
 
-                // Tøm containeren først (i tilfelle re-render)
                 container.innerHTML = '';
 
-                // Object.values henter ut alle objektene uavhengig av hvor mange det er
                 Object.values(contributorData).forEach(c => {{
                     const card = document.createElement('div');
                     card.classList.add("contributor-card");
 
-                    // Lag en enkel avatar fra første bokstav
                     const firstLetter = c.username ? c.username.charAt(0).toUpperCase() : '?';
                     const secondLetter = c.username ? c.username.charAt(1).toUpperCase() : '?';
 
@@ -224,7 +212,6 @@ def generate_full_report(repo_path, report_data, stats):
                 return risk === "High" ? "⚠️" : risk === "Medium" ? "🟠" : "🟢";
             }}
 
-            //window.onload = renderFiles;
     </script>
 
 
