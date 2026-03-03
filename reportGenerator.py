@@ -51,6 +51,5 @@ def generateDataJs(repo_path, report_data):
     return final_url
 
 def openHtmlReportFile(url):
-    """Åpner URL-en i standard nettleser."""
-    print(f"Åpner rapport: {url}")
+    print(f"Opening File: {url}")
     webbrowser.open(url)
