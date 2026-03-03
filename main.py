@@ -4,6 +4,7 @@ from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoO
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
 from fileAnalyzer import analyze_file
 from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdText, generateDataJs, openHtmlReportFile
+from view_knowledgebase import start_db_interaction
 
 from pathlib import Path
 
@@ -47,7 +48,7 @@ def main_loop():
     action = 0
 
     while cancelProgram == False:
-        print('Select an option below by typing in its number. \n (1) Start Github Analyzation\n (2) Open Earlier Report\n (3) Open Knowledgebase\n type "STOP", "0" or "X" to exit program.')
+        print('Select an option below by typing in its number. \n (1) Start Github Analyzation\n (2) Open Earlier Report\n (3) Open Knowledgebase\n (4) Open Semantic Similarity Search\n type "STOP", "0" or "X" to exit program.')
         readyToContinue = input("Command|: ")
         if (readyToContinue.lower() == "stop" or readyToContinue == "0" or readyToContinue == "x"):
             cancelProgram = CancelProgram("User stopped program at first menu")
@@ -58,6 +59,8 @@ def main_loop():
             action = 2
         elif readyToContinue == "3":
             action = 3
+        elif readyToContinue == "4":
+            action = 4
         else:
             print("Sorry, command not recognized. \n")
 
@@ -71,6 +74,8 @@ def main_loop():
                 openHtmlReportFile('satd_knowledge_base.html')
             except FileNotFoundError as fn:
                 print("The Knowledgebase wasn't found, please try again. Action can have faield due to the knowledgebase being moved or deleted.")
+        elif (action == 4):
+            start_db_interaction()
 
 
 def OpenReportRoutine():
