@@ -8,6 +8,21 @@ class FileData:
         self.filename = filename
         self.fullpath = fullpath
 
+class Contributor:
+    def __init__(self, username, commits, commitHash):
+        self.username = username
+        self.commits = commits
+        self.commitHashes = []
+        if commitHash is not None:
+            self.commitHashes.append(commitHash)
+    
+    def addCommit(self):
+        self.commits += 1
+
+    def addCommitHash(self, commitHash):
+        if commitHash not in self.commitHashes:
+            self.commitHashes.append(commitHash)
+
 class RFileData:
     def __init__(self, filename, fullpath, churndata, contributor, commits, commitHash):
         self.filename = filename

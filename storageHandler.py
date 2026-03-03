@@ -6,18 +6,53 @@ def test():
 def write_to_outputfile(outputFilePlacement, output_string):
     with open(outputFilePlacement, 'w') as fil:
         fil.write(output_string)
-        print("Written to outputfile success.")
+        # print("Written to outputfile success.")
 
-def write_file_to_directory(projectroot, outputFileName, output_string, directory= ""):
-    output_dir = CreateResultsDirectory(projectroot, directory)
-    output_file_path = output_dir / outputFileName
+def write_main_report(projectroot, repoName, outputFileName, output_string):
+    repo_path, file_reports_path = create_repo_structure(projectroot, repoName)
+    output_file_path = repo_path / outputFileName
     with output_file_path.open("w", encoding="utf-8") as file:
         file.write(output_string)
-        print("Written to outputfile success.")
+        # print("Written to outputfile success.")
+    return repo_path, file_reports_path
 
-    # with open(outputFilePlacement, 'w') as fil:
-    #     fil.write(output_string)
-    #     print("Written to outputfile success.")
+def write_file_to_directory(directories, outputFileName, output_string):
+    output_file_path = directories / outputFileName
+
+    with output_file_path.open("w", encoding="utf-8") as file:
+        file.write(output_string)
+        # print("Written to outputfile success.")
+
+def create_repo_structure(projectroot, repoName):
+    """
+    Creates:
+    Results/
+        reponame_1/
+            File_Reports/
+    """
+
+    repo_name_clean = repoName.lower()
+
+    base_results_path = CreateResultsDirectory(projectroot)
+
+    counter = 1
+    while True:
+        repo_folder_name = f"{repo_name_clean}_{counter}"
+        repo_path = base_results_path / repo_folder_name
+
+        if not repo_path.exists():
+            break
+
+        counter += 1
+
+    # Create reponame_X folder
+    repo_path.mkdir()
+
+    # Create File_Reports inside it
+    file_reports_path = repo_path / "File_Reports"
+    file_reports_path.mkdir()
+
+    return repo_path, file_reports_path
 
 
 # TODO: FIks repostorage
