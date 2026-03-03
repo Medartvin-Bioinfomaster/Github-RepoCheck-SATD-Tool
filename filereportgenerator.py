@@ -42,10 +42,12 @@ def generate_full_report(repo_path, report_data, stats):
 
             .contrib-bar-container {{ display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }}
             .contrib-mini-avatar {{ width: 24px; height: 24px; background: #333; color: white; border-radius: 50%;  display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold; flex-shrink: 0;            }}
-            .progress-bg {{ background: #eee; border-radius: 4px; flex-grow: 1; height: 12px; overflow: hidden; position: relative; }}
-            .progress-fill {{ background: #2196f3; height: 100%; border-radius: 4px; transition: width 0.5s ease-out; }}
+            .progress-bg {{ background: #eee; border-radius: 15px; flex-grow: 1; height: 15px; overflow: hidden; position: relative; }}
+            .progress-fill {{ background: #4c4c4c; height: 100%; border-radius: 4px; transition: width 0.5s ease-out; }} /*##97b0ff*/
             .contrib-label {{ min-width: 120px; font-size: 0.85em; color: #444; }}
             .contrib-percent {{ min-width: 45px; font-size: 0.8em; font-weight: bold; text-align: right; }}
+            .file-divide {{display: flex; flex-direction: row-reverse; align-items: center;}}
+            .file-notific {{background: #ff0000; color: white; border-radius: 50%; width: 20px; aspect-ratio: 1 / 1; display: flex; justify-content: center; align-items: center; font-size: 11px; font-weight: bold; flex-shrink: 0; margin-left: 10px;}}
         </style>
     </head>
     <body>
@@ -59,10 +61,10 @@ def generate_full_report(repo_path, report_data, stats):
                 <div class="stat-item"><div class="number">{stats['satd_count']}</div><div class="label">SATD comments</div></div>
                 <div style="display: flex; gap: 10px; background-color: #ededed; padding: 4px 15px; border-radius: 10px;">
                     <div class="stat-item"><div class="number">{stats['loc']}</div><div class="label">Lines of code (Loc)</div></div>
-                    <div class="stat-item"><div class="number">{stats['locCompromised']}</div><div class="label">Loc affected</div></div>
-                    <div class="stat-item"><div class="number" style="color: {StatusDebtPercent(percentCompromised)};">{percentCompromised}%</div><div class="label">Percentage</div></div>
+                    <div class="stat-item"><div class="number">{stats['locCompromised']}</div><div class="label">Loc affected by SATD</div></div>
+                    <div class="stat-item"><div class="number" style="color: {StatusDebtPercent(percentCompromised)};">{percentCompromised}%</div><div class="label">Percentage affected</div></div>
                 </div>
-                <div class="stat-item"><div class="number">{stats['density']}</div><div class="label">SATD Density</div></div>
+                <div class="stat-item"><div class="number">{stats['density']}</div><div class="label">Technical Debt Density (pr 1000 loc)</div></div>
                 <div class="stat-item"><div class="number">{stats['commits']}</div><div class="label">Total Commits</div></div>
                 <div class="stat-item"><div class="number">{stats['totalfiles']}</div><div class="label">Files</div></div>
                 <div class="stat-item"><div class="number">{stats['filessatd']}/{stats['totalfiles']}</div><div class="label">Files affected</div></div>
@@ -126,7 +128,10 @@ def generate_full_report(repo_path, report_data, stats):
                                     ${{hasSatd ? 'SATD' : 'Clean'}}
                                 </span>
                                 <div>
-                                    <strong>📄${{file.filename}}</strong><br>
+                                    <div class="file-divide">
+                                        ${{hasSatd ? `<span class="file-notific">${{file.metrics.satd_count}}</span>` : ''}}
+                                        <strong>📄${{file.filename}}</strong><br>
+                                    </div>
                                     <small>Risk: ${{file.risk_level}}</small>
                                 </div>
                             </div>
@@ -152,7 +157,7 @@ def generate_full_report(repo_path, report_data, stats):
             }}
 
             function StatusDebt(status) {{
-                return status ? "#ff8282" : "#63c97e";
+                return status ? "#ff8282" : "#99d1ff";
             }}
             
             function StatusDebtPercent(percent) {{
@@ -189,11 +194,13 @@ def generate_full_report(repo_path, report_data, stats):
                     <h2>📄${{file.filename}}</h2>
                     <p><strong>File path:</strong> ${{file.file}}</p>
                     <p><strong>Contains SATD:</strong> <span style="color: ${{StatusDebt(file.metrics.hasSatd)}};">${{file.metrics.hasSatd ? "Yes" : "No"}}</span></p>
-                    <p><strong>Risk Level:</strong> ${{riskState(file.risk_level)}} ${{file.risk_level}}</p>
+                    <p><strong>Total SATD Occurrences:</strong> <span style="font-weight: 700; color: red;"> ${{file.metrics.satd_count}}</span></p>
                     <p><strong>Lines of Code:</strong> ${{file.metrics.loc}}</p>
-                    <p><strong>Lines affected by TD:</strong> ${{file.metrics.lines_compromised}}</p>
+                    <p><strong>Lines affected by TD:</strong> ${{file.metrics.lines_compromised}}/${{file.metrics.loc}}</p>
                     <p><strong>Percentage:</strong> <span style="color: ${{StatusDebtPercent(parseFloat(percentage))}};">${{percentage}}%</span></p>
-                    ${{contributorHtml}} <hr style="margin: 20px 0;">
+                    <p><strong>Risk Level:</strong> ${{riskState(file.risk_level)}} ${{file.risk_level}}</p>
+                    <p><strong>Total commits:</strong><span style="font-weight: 700;color:#319fec;"> ${{file.metrics.commits}}</span></p>
+                    ${{contributorHtml}}
                     <hr style="margin: 20px 0;">
                     <h3>Report:</h3>
                     <pre style="background: #eee; padding: 15px; border-radius: 4px; white-space: pre-wrap;">${{file.Text}}</pre>
@@ -252,7 +259,7 @@ def generate_full_report(repo_path, report_data, stats):
     return 'file:///' + urllib.request.pathname2url(os.path.abspath(report_file))
 
 def StatusDebt(status): # status is bool
-    return "#ff8282" if status else "#63c97e"
+    return "#ff8282" if status else "#99d1ff"
 
 def StatusDebtPercent(percent): # status is bool
     return "#ff3e3e" if percent > 30 else "#ff9600" if percent > 10 else "#31a524"

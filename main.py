@@ -108,13 +108,28 @@ def main_loop():
         print("Task was canceled. \nThis is the full log")
         print(reasonForCancel)
 
+    database_contribution = False
+
     # Individual File Analyzation Program
     if (cancelProgram != True):
-        print('Github analyzation complete! You can begin the file analyzation. Type any key + ENTER to continue, or type "stop" or 0 to stop the program. ')
+        print('\nGithub analyzation complete! You can begin the file analyzation. ')
+
+        print('\nDo you wish to store any SATD findings to our database?. Answer: (yes/1) or (no/0), then press "ENTER" to continue, or type "STOP" or "X" to stop the program. ')
         readyToContinue = input("Command|: ")
-        if (readyToContinue.lower() == "stop" or readyToContinue == "0"):
+        if (readyToContinue.lower() == "stop" or readyToContinue == "x"):
             cancelProgram = CancelProgram("User stopped program before analyzation.")
             return
+        elif (readyToContinue.lower() == "yes" or readyToContinue == "1"):
+            database_contribution = True
+        else:
+            database_contribution = False
+        yesnot = "not" if database_contribution == False else ""
+        print(f"Database contribution was {yesnot} agreed to. Will {yesnot} save to database.")
+        
+        print('\nPress "ENTER" to continue, or type "STOP", "X" or 0 to stop the program. ')
+        readyToContinue = input("Command|: ")
+        if (readyToContinue.lower() == "stop" or readyToContinue == "0" or readyToContinue == "x"):
+            cancelProgram = CancelProgram("User stopped program before analyzation.")
 
     print("Running file analyzer...")
 
@@ -127,10 +142,15 @@ def main_loop():
     for r_file in r_files_data.values():
         lateSatdText += f"\nAnalyze results for File: {r_file.filename}"
 
-        total_findings, file_has_satd, textResult, loc, foundFile, satd_count, lines_compromised = analyze_file(RFileInstance=r_file, repo_name = REPONAME) # <-- forsøker å analysere Filene
+        file_has_satd, textResult, loc, foundFile, satd_count, lines_compromised = analyze_file(RFileInstance=r_file, repo_name = REPONAME, add_to_kb=database_contribution) # <-- forsøker å analysere Filene
     
-        totalSatdCounter += satd_count
-        linesWithSatdCounter += lines_compromised
+        # counters update
+        if satd_count > 0:
+            totalSatdCounter += satd_count
+        
+        if lines_compromised > 0:
+            linesWithSatdCounter += lines_compromised
+        
         totalLoc += loc
 
         if foundFile:
@@ -139,12 +159,13 @@ def main_loop():
             r_file.churndata = churn_data_from_r_file
             fileHasSatdFormat = "Yes🔴" if file_has_satd else "No🟢"
             if file_has_satd:
-                totalFilesSatd += 1
+                totalFilesSatd += 1 # metric that counts out of X total files, how many do indeed have satd
             
             totalFiles += 1
 
-            lateSatdText += f"\nTotal findings: {total_findings}\nFile contains SATD: {fileHasSatdFormat}\n"
+            lateSatdText += f"\nTotal findings: {satd_count}\nFile contains SATD: {fileHasSatdFormat}\n"
             
+            # churn calculation
             total_churn = r_file.churndata["added"] + r_file.churndata["deleted"]
             if loc > 0:
                 churn_per_loc = total_churn / loc
@@ -186,6 +207,8 @@ def main_loop():
             # sorted so that the biggest contributors are first in list
             contributor_stats.sort(key=lambda x: float(x["contribution_percent"].strip('%')), reverse=True)
             
+            density = round((satd_count / loc) * 1000, 2)
+
             datajson = {
                 "Text": fullText,
                 "filename": r_file.filename,
@@ -199,6 +222,7 @@ def main_loop():
                     "total_churn": total_churn,
                     "loc": loc,
                     "satd_count": satd_count,
+                    "file_td_density": density,
                     "lines_compromised": lines_compromised,
                     "churn_per_loc": round(churn_per_loc, 2)
                 },
@@ -219,6 +243,8 @@ def main_loop():
 
     
     satd_percentage = (linesWithSatdCounter / totalLoc * 100) if totalLoc > 0 else 0
+    total_td_density = round((totalSatdCounter / totalLoc) * 1000, 2)
+
     
     outputFileAnalyzeString += (
         f"\nTotal amount of SATD comments found: {totalSatdCounter}"
@@ -232,7 +258,7 @@ def main_loop():
     report_data["data"]["commits"] = totalCommits
     report_data["data"]["satd_count"] = totalSatdCounter
     report_data["data"]["loc"] = totalLoc
-    report_data["data"]["density"] = 0
+    report_data["data"]["density"] = total_td_density
     report_data["data"]["locCompromised"] = linesWithSatdCounter
     report_data["data"]["filessatd"] = totalFilesSatd
     report_data["data"]["totalfiles"] = totalFiles

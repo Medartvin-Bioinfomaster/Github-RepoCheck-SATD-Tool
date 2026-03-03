@@ -18,21 +18,6 @@ _SINGLE_RE = re.compile(r'#.*(' + '|'.join(KEYWORDS) + ').*', re.IGNORECASE)
 # R function pattern: matches function definitions
 R_FUNCTION_PATTERN = re.compile(r'^\s*[\w\.\[\]<-]+\s*(<-|=)\s*function\s*\(', re.IGNORECASE)
 
-
-def clone_repository(url: str, dest: str) -> str:
-    """Clone repository into dest. Exits on failure."""
-    try:
-        subprocess.run(['git', 'clone', '--depth', '1', url, dest],
-                       check=True, capture_output=True, text=True)
-    except subprocess.CalledProcessError as e:
-        print("Error cloning repository:", e.stderr.strip())
-        sys.exit(1)
-    except FileNotFoundError:
-        print("Git not found. Install Git and ensure it's on PATH.")
-        sys.exit(1)
-    return dest
-
-
 def find_function_end(lines, start_idx):
     """
     Find the end of an R function starting at start_idx.
@@ -82,6 +67,7 @@ def detect_satd_in_code(content: str, file_path: str, context_lines=3, capture_f
     results = []
     lines = content.splitlines()
     total_satd_in_file = 0 
+    total_compromised_lines = 0
     unique_compromised_lines = set()
 
     i = 0
@@ -139,8 +125,10 @@ def detect_satd_in_code(content: str, file_path: str, context_lines=3, capture_f
             full_text = '\n'.join(comment_lines)
             comment_text = '\n'.join([cl.lstrip('#').strip() for cl in comment_lines])
 
+            # complines = len(context_after) if context_type == 'function' else 0
             compromised_lines = len(context_after) if context_type == 'function' else 0
-            
+
+
             results.append({
                 'file': file_path,
                 'line': original_line,
@@ -149,8 +137,7 @@ def detect_satd_in_code(content: str, file_path: str, context_lines=3, capture_f
                 'comment': comment_text,
                 'context_after': context_after,
                 'context_type': context_type,  # 'lines' or 'function'
-                'total_satd_count': total_satd_in_file, #total amount of satd comments in file
-                'compromised_lines': compromised_lines # total amount of lines compromised in file
+                'compromised_lines': compromised_lines  # total amount of lines compromised in file
             })
             
             # Skip the lines we've already processed
@@ -158,85 +145,25 @@ def detect_satd_in_code(content: str, file_path: str, context_lines=3, capture_f
         else:
             i += 1
     
-    return results
+    for item in results:
+        start_linje = item['line']
+        for i, code_line in enumerate(item['context_after']):
+            line_id = f"{item['file']}:{start_linje + i}"
+            unique_compromised_lines.add(line_id)
+    total_compromised_lines = len(unique_compromised_lines)
 
-def save_report_for_file(results, output_dir: str, original_file_path: str, repo_name: str) -> str:
-    #better format for more user friendly output
-    os.makedirs(output_dir, exist_ok=True)
-
-    # create .gitignore to avoid tracking findings in any repo
-    gitignore_path = os.path.join(output_dir, ".gitignore")
-    if not os.path.exists(gitignore_path):
-        with open(gitignore_path, "w", encoding="utf-8") as gi:
-            gi.write("*\n!.gitignore\n")
-
-    base = os.path.splitext(os.path.basename(original_file_path))[0]
-    filename = f"{base}.txt"
-    report_path = os.path.join(output_dir, filename)
-
-    counter = 1
-    name_without_ext = os.path.join(output_dir, base)
-    while os.path.exists(report_path):
-        report_path = f"{name_without_ext}_{counter}.txt"
-        counter += 1
-
-        # Ouput format is based on AI code from claude code
-
-    with open(report_path, 'w', encoding='utf-8') as f:
-        # Header
-        f.write("╔" + "═" * 78 + "╗\n")
-        f.write("║" + " " * 78 + "║\n")
-        f.write("║" + "SATD ANALYSIS REPORT".center(78) + "║\n")
-        f.write("║" + " " * 78 + "║\n")
-        f.write("╚" + "═" * 78 + "╝\n\n")
-        
-        f.write(f" File: {original_file_path}\n")
-        f.write(f" Total SATD items found: {len(results)}\n")
-        f.write("\n" + "─" * 80 + "\n\n")
-        
-        for idx, item in enumerate(results, 1):
-            
-            
-            f.write(f"┌─ SATD Item #{idx} " + "─" * (80 - len(f"┌─ SATD Item #{idx} ")) + "\n")
-            f.write(f"│\n")
-            f.write(f"│  Type: {item['type']}\n")
-            f.write(f"│  Location: Line {item['line']}\n")
-            f.write(f"│\n")
-            
-            # SATD Comment section
-            f.write(f"├─  SATD Comment:\n")
-            f.write(f"│\n")
-            for text_line in item['text'].split('\n'):
-                f.write(f"│   {text_line.lstrip()}\n")
-            f.write(f"│\n")
-            
-            # Context section
-            if item.get('context_after'):
-                if item.get('context_type') == 'function':
-                    f.write(f"├─  Related Function (Complete):\n")
-                else:
-                    f.write(f"├─  Code Context:\n")
-                f.write(f"│\n")
-                
-                for ctx_line in item['context_after']:
-                    f.write(f"│   {ctx_line.rstrip()}\n")
-                f.write(f"│\n")
-            
-            f.write(f"└" + "─" * 79 + "\n\n")
-    
-    return report_path
+    return results, total_satd_in_file, total_compromised_lines
 
 
 def analyze_file(RFileInstance: RFileData, repo_name: str, context_lines=3, capture_full_function=True, add_to_kb=True, repo_url=None, user_id=None):
-    total_findings = 0
     file_has_satd = False
     textResult = ""
     content = "" # this has to be here, must declare the variable before its use
     loc = 0
     foundFile = False
     file_path = RFileInstance.fullpath
-    satd_count = -1
-    lines_compromised = -1
+    satd_count = 0 #changed to 0 instead -1
+    lines_compromised = 0
 
     try:
         with open(file_path, 'r', encoding='utf-8', errors='replace') as fh: #opens the file
@@ -250,27 +177,27 @@ def analyze_file(RFileInstance: RFileData, repo_name: str, context_lines=3, capt
         # if file has no content (could have been deleted or emptied), skip it
 
     if content:
-        results = detect_satd_in_code(content, file_path, context_lines=context_lines, capture_full_function=capture_full_function)
+        results, total_satd_in_file, total_compromised_lines = detect_satd_in_code(content, file_path, context_lines=context_lines, capture_full_function=capture_full_function)
 
         if results:
-            total_findings += len(results)
-            lines_compromised
+            satd_count = total_satd_in_file
+            lines_compromised = total_compromised_lines
             file_has_satd = True
             textResult = generate_report_string(file_path, results)
-            unique_compromised_lines = set()
-            for item in results:
-                start_linje = item['line']
-                for i, code_line in enumerate(item['context_after']):
-                    line_id = f"{item['file']}:{start_linje + i}"
-                    unique_compromised_lines.add(line_id)
+            # unique_compromised_lines = set()
+            # for item in results:
+            #     start_linje = item['line']
+            #     for i, code_line in enumerate(item['context_after']):
+            #         line_id = f"{item['file']}:{start_linje + i}"
+            #         unique_compromised_lines.add(line_id)
 
-            lines_compromised = len(unique_compromised_lines)
+            # lines_compromised = len(unique_compromised_lines)
             print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
             if add_to_kb:
                 print(f"Adding {len(results)} SATD entries to knowledge base...")
                 add_to_knowledge_base(results, repo_name, repo_url=repo_url, user_id=user_id)
 
-    return total_findings, file_has_satd, textResult, loc, foundFile, satd_count, lines_compromised
+    return file_has_satd, textResult, loc, foundFile, satd_count, lines_compromised
 
 
 def generate_report_string(original_file_path, results):
