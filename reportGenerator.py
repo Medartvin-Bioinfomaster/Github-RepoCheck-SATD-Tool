@@ -1,6 +1,6 @@
 from storageHandler import write_to_outputfile, write_file_to_directory, write_main_report
 
-from filereportgenerator import generate_full_report
+from report_to_html_generator import generate_full_report
 
 import webbrowser, json, os, urllib.request, urllib.parse
 
