@@ -45,29 +45,11 @@ def generateDataJs(repo_path, report_data):
     if not os.path.exists(repo_path_str):
         os.makedirs(repo_path_str)
     
-    # js_filepath = os.path.join(repo_path_str, 'data.js')
-    # with open(js_filepath, 'w', encoding='utf-8') as f:
-    #     f.write(f"const externalData = {json.dumps(report_data)};")
-
-    # 2. Finn test.html
-    # html_file_path = os.path.abspath('test.html')
-    
-    # 3. Lag URL-er
-    # Vi bruker quote() på mappen for å håndtere mellomrom og norske tegn
-    # html_url = 'file:' + urllib.request.pathname2url(html_file_path)
-    # data_dir_param = urllib.parse.quote(repo_path_str)
-    
-    # final_url = f"{html_url}?dir={data_dir_param}"
-    
-    # PRINT denne i terminalen så du kan kopiere den manuelt hvis den feiler!
-    # print(f"DEBUG: Forsøker å åpne: {final_url}")
-
     # Generer rapporten
     final_url = generate_full_report(repo_path_str, report_data, report_data["data"])
 
     return final_url
 
 def openHtmlReportFile(url):
-    """Åpner URL-en i standard nettleser."""
-    print(f"Åpner rapport: {url}")
+    print(f"Opening File: {url}")
     webbrowser.open(url)

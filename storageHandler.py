@@ -70,7 +70,6 @@ def CreateResultsDirectory(projectroot, moreDir=""):
 
 
 def readRepoStorageFile(path):
-    # print("Reading Storage..")
     storedList = []
     itemnumber = 1
     terminateLoop = False
@@ -87,19 +86,6 @@ def readRepoStorageFile(path):
     with open(path, 'r') as storage:
         storedList = [line.rstrip('\n') for line in storage]
         itemnumber = len(storedList)
-        # spot = storage.readline()
-
-        # while (spot != "" and terminateLoop == False):
-        #     storedList.append(spot.strip())
-        #     # spot = storage.readline
-        #     itemnumber += 1
-        #     spot = storage.readline()
-        #     if (itemnumber > 99): #loop shouldnt loop over 99 items anyway, cancels automatically if there is a bug or something. Avoids infinite loop
-        #         terminateLoop = True
-
-    # print(storedList)
-    # print(f"Amount of items read: {itemnumber}")
-    
     #Returns data as a dictionary
     return {"repos": storedList, "count": itemnumber}
 #_

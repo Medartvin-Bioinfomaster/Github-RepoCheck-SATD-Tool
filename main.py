@@ -1,15 +1,20 @@
 import json
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
-from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path
+from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path, WriteListOfReportsStored
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
 from fileAnalyzer import analyze_file
 from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdText, generateDataJs, openHtmlReportFile
+from view_knowledgebase import start_db_interaction
 
 from pathlib import Path
 
 from typing import List, Dict
 from dataClasses import RFileData, Contributor
 
+reportssaved_path = 'local/reportstorage.txt'
+storage_path = 'local/repostorage.txt'
+cancelProgram = False
+reasonForCancel = ""
 
 # Function that changes the variables that handles the program stopping functions
 def CancelProgram(cancelMessage: str) -> None:
@@ -28,21 +33,71 @@ def getProjectRoot():
     PROJECT_ROOT = Path(__file__).resolve().parent
     return PROJECT_ROOT
 
+
 def main_loop():
     # files = {}
     # fileAndContributors = {} # an object containing multiple "file" objects. File.contributors should contain every user that has channged that file. Also it should contain how many commits it has been part of, amount of times changed in commits.
     # projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
     # issues = [] # list with amount of issues from the github. OBS: not implemented yet
     
+
+    cancelProgram = False
+    reasonForCancel = ""
+
+    print("\n#/3#/3 Welcome to the SATD Tool 3\\#3\\#")
+    action = 0
+
+    while cancelProgram == False:
+        print('Select an option below by typing in its number. \n (1) Start Github Analyzation\n (2) Open Earlier Report\n (3) Open Knowledgebase\n (4) Open Semantic Similarity Search\n type "STOP", "0" or "X" to exit program.')
+        readyToContinue = input("Command|: ")
+        if (readyToContinue.lower() == "stop" or readyToContinue == "0" or readyToContinue == "x"):
+            cancelProgram = CancelProgram("User stopped program at first menu")
+            return
+        elif readyToContinue == "1":
+            action = 1
+        elif readyToContinue == "2":
+            action = 2
+        elif readyToContinue == "3":
+            action = 3
+        elif readyToContinue == "4":
+            action = 4
+        else:
+            print("Sorry, command not recognized. \n")
+
+        if (action == 1):
+            RepositoryAnalyzation()
+        elif (action == 2):
+            OpenReportRoutine()
+        elif (action == 3):
+            try:
+                print('\nOpening Knowledge base...\n')
+                openHtmlReportFile('satd_knowledge_base.html')
+            except FileNotFoundError as fn:
+                print("The Knowledgebase wasn't found, please try again. Action can have faield due to the knowledgebase being moved or deleted.")
+        elif (action == 4):
+            start_db_interaction()
+
+
+def OpenReportRoutine():
+    reportssaved_bucket = readRepoStorageFile(reportssaved_path)
+    report_url = WriteListOfReportsStored(reportssaved_bucket["repos"])
+    if (report_url == ""):
+        print()
+    else:
+        openHtmlReportFile(report_url)
+
+    
+def RepositoryAnalyzation():
+    # define variables to use
+    global cancelProgram 
+    global reasonForCancel 
+
     REPONAME = ""
     files = []
     r_files_data: Dict[RFileData] = {}
     projectContributors: Dict[Contributor] = {}
     outputfilefolder = "File_Reports" #name of the folder where individual file reports are stored
-    storage_path = 'local/repostorage.txt'
     totalCommits = 0
-    cancelProgram = False
-    reasonForCancel = ""
     
     outputFileAnalyzeString = "Main report\n\n"
     lateSatdText = "Here is the rundown of the Total Findings:\n"
@@ -62,9 +117,6 @@ def main_loop():
         },
         "files": {}
     }
-
-    print("#/3#/3 Welcome to the SATD Tool 3\\#3\\#")
-
     #stage 1
     print("What repository do you want to analyze?")
 
@@ -288,6 +340,7 @@ def main_loop():
 
     print("Analyzation process complete. Results have been stored.")
     htmlfilepath = generateDataJs(repo_path, report_data)
+    writeRepoToStorage(htmlfilepath, reportssaved_path)
 
     if (cancelProgram != True):
             print('Do you wish to view the reports in the browser? Answer: (yes/1) (no/0)')

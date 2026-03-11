@@ -160,7 +160,7 @@ def similarity_search():
         print(f"\nError during similarity search: {e}")
 
 
-def main():
+def start_db_interaction():
     """Main menu loop."""
     print("=" * 80)
     print("SATD KNOWLEDGE BASE VIEWER")
@@ -278,4 +278,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    start_db_interaction()
