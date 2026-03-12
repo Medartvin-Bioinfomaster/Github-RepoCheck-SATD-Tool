@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import os
+
 def test():
     print("Testing")
 
@@ -101,3 +103,32 @@ def writeRepoToStorage(repo, path):
     print("Should have stored the repo in storeage now")
     return True
 #_
+
+def lagre_til_csv(data_liste, filnavn):
+    mappe_sti = os.path.join("local", "csv")
+    if not os.path.exists(mappe_sti):
+        os.makedirs(mappe_sti)
+        print(f"Opprettet mappe: {mappe_sti}")
+
+    fil_sti = os.path.join(mappe_sti, filnavn)
+    
+    filen_eksisterer = os.path.exists(fil_sti) and os.path.getsize(fil_sti) > 0
+
+    with open(fil_sti, mode="a", encoding="utf-8", newline="") as f:
+        for i, linje in enumerate(data_liste):
+            if not filen_eksisterer and i == 0:
+                f.write(linje)
+                filen_eksisterer = True
+            else:
+                f.write("\n" + linje)
+
+    print(f"Lagret {len(data_liste)} rader til {fil_sti}")
+
+# --- EKSEMPEL PÅ BRUK ---
+# Her kan du selv bestemme hvor mange attributter du vil ha
+# eksempel_data = [
+#     "2026-03-12;commit_123;Oleg;150;40",
+#     "2026-03-13;commit_456;Gemini;200;10"
+# ]
+
+# lagre_til_csv(eksempel_data, "churn_data.csv")

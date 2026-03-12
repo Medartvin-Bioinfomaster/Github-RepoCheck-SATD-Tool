@@ -1,6 +1,8 @@
 from pydriller.metrics.process.code_churn import CodeChurn
 from pathlib import Path
 
+import plotly.graph_objects as go
+import pandas as pd
 
 def FindRepoName(repourl):
     lastlinkname = None
@@ -251,6 +253,44 @@ def getChurnForAFile(repopath, firstCommit, lastCommit):
     
     files_count = metric.count()
     return files_count
+
+def calculate_selfadmitted_technical_debt_density(satd_counts, compromised_lines, loc):
+    return (compromised_lines / loc) * 1000
+
+def getHtmlGraph(data):
+    df = pd.DataFrame(data)
+
+    # 2. Lag grafen med Plotly
+    fig = go.Figure()
+
+    # Legg til Total Churn som en linje
+    fig.add_trace(go.Scatter(
+        x=df['Date'], 
+        y=df['Total Churn'],
+        mode='lines+markers',
+        name='Total Churn (Volatility)',
+        text=df['Message'], # Vises når du hovrer over punktet
+        line=dict(color='firebrick', width=2)
+    ))
+
+    # Legg til barer for Added og Deleted for mer detaljer
+    fig.add_trace(go.Bar(x=df['Date'], y=df['Added'], name='Lines Added', marker_color='forestgreen', opacity=0.5))
+    fig.add_trace(go.Bar(x=df['Date'], y=df['Deleted'], name='Lines Deleted', marker_color='royalblue', opacity=0.5))
+
+    # 3. Styling for et "Research Paper" utseende
+    fig.update_layout(
+        title='Code Churn Timeline: Identifying Technical Debt Hotspots',
+        xaxis_title='Tidslinje',
+        yaxis_title='Antall linjer endret',
+        template='plotly_white',
+        hovermode='x unified',
+        barmode='stack'
+    )
+
+    # 4. EKSPORT TIL HTML
+    fig.write_html("churn_analysis.html")
+
+    print("Grafen er ferdig! Åpne churn_analysis.html i nettleseren din.")
 
 def normalize_windows_path(REPOURL: str) -> str:
     return str(Path(REPOURL).resolve())

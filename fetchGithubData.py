@@ -2,11 +2,13 @@ from pydriller import Repository
 
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
 
-from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, choose_separator
+from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, choose_separator, getHtmlGraph
 
 from dataClasses import RepoDetails, FileData, RFileData, Contributor
 
 from typing import Dict, List
+
+import pandas as pd
 
 import time
 
@@ -74,6 +76,8 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
     listOfAbsolutePaths = []
 
+    churn_data = {"commits": {}, "files": {}} #includes
+
     startAnalyzation = time.time()
 
     if (cancelcommand == True):
@@ -91,13 +95,25 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
         commitUser = commit.author.name
         commitHash = commit.hash
 
+        commit_churndatapoint = {"added": commit.insertions , "deleted": commit.deletions , "commitdate": commit.committer_date}
+        churn_data["commits"] = commit_churndatapoint
+
         if (firstCommitHash == ""):
             firstCommitHash = commitHash
         lastCommitHash = commitHash
 
         commitsTraveresedCounter += 1
 
+        added = 0
+        deleted = 0
         for file in commit.modified_files: 
+            added += file.added_lines
+            deleted += file.deleted_lines
+
+            file_churndatapoint = {"added": added, "deleted": deleted, "commitdate": commit.committer_date}
+            churn_data["files"] = file_churndatapoint
+
+            print(f"Added: {added}, Deleted: {deleted}")
 
             filesTraveresedCounter += 1
 
@@ -115,11 +131,14 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
                 # Handle R file data and collect
 
+                # old churn handeling?
                 churn_stats = {"added": 0, "deleted": 0, "commits": 0, "loc": 0}
-                churn_stats["added"] = file.added_lines
-                churn_stats["deleted"] = file.deleted_lines
+                churn_stats["added"] += file.added_lines
+                churn_stats["deleted"] += file.deleted_lines
                 churn_stats["commits"] = 1
                 churn_stats["loc"] = 1
+
+                
                 
                 r_file = RFileData(filename, 
                                    absolute_path, 
@@ -127,7 +146,7 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                                    commitUser, 
                                    1, 
                                    commitHash)
-                
+                r_file.addChurnDataPoint(file_churndatapoint) #adds churndata to the log
                 # adding the final object to the list
                 r_files_data_list[filename] = r_file
 
@@ -156,11 +175,20 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                         existing_contributor: Contributor = all_contributors[commitUser]
                         existing_contributor.addCommit()
                         existing_contributor.addCommitHash(commitHash)
-
-        # print(f'Commits read: {commitsTraveresedCounter}, total files iterated: {filesTraveresedCounter}')
-
+            #_
+        churn_data.append({
+            'Date': commit.committer_date,
+            'Added': added,
+            'Deleted': deleted,
+            'Total Churn': added + deleted,
+            'Message': commit.msg[:50]
+        })
+        #_
+    #_
     endAnalyzation = time.time()
     print(f"\nTime spent fetching: {endAnalyzation - startAnalyzation} seconds")
+
+    getHtmlGraph(churn_data)
 
     return {
             "repositoryName": repositoryName, 
@@ -169,5 +197,6 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             "projectContributors": all_contributors, 
             "firstCommitHash": firstCommitHash, 
             "lastCommitHash": lastCommitHash,
-            "totalCommits": commitsTraveresedCounter
+            "totalCommits": commitsTraveresedCounter,
+            "commits_churndata": churn_data["commits"]
             }

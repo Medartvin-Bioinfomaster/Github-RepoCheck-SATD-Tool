@@ -96,6 +96,7 @@ def RepositoryAnalyzation():
     files = []
     r_files_data: Dict[RFileData] = {}
     projectContributors: Dict[Contributor] = {}
+    commits_churndata = {}
     outputfilefolder = "File_Reports" #name of the folder where individual file reports are stored
     totalCommits = 0
     
@@ -156,6 +157,7 @@ def RepositoryAnalyzation():
             projectContributors = data_fetched.get("projectContributors", {})
             REPONAME = data_fetched.get("repositoryName")
             totalCommits = data_fetched.get("totalCommits")
+            commits_churndata = data_fetched.get("commits_churndata")
     else:
         print("Task was canceled. \nThis is the full log")
         print(reasonForCancel)
@@ -218,23 +220,55 @@ def RepositoryAnalyzation():
             lateSatdText += f"\nTotal findings: {satd_count}\nFile contains SATD: {fileHasSatdFormat}\n"
             
             # churn calculation
-            total_churn = r_file.churndata["added"] + r_file.churndata["deleted"]
-            if loc > 0:
-                churn_per_loc = total_churn / loc
-            else:
-                churn_per_loc = 0
+            # total_churn = r_file.churndata["added"] + r_file.churndata["deleted"]
+            addedlines = 0
+            deletedlines = 0
+            init_commit_addL = 0
+            init_commit_delL = 0
+            iteration = 0
+            for log in r_file.churnlogs.values():
+                #we can skip the initial commit and base the other churn types of this as a "proportional" churn value
+                addL = log.added
+                delL = log.deleted
+                if (delL < 0):
+                    delL * (-1)
+                addedlines = addL
+                deletedlines = delL
+                if (iteration == 0):
+                    init_commit_addL = addedlines
+                    init_commit_delL = deletedlines
+                iteration += 1
+            #_
 
-            if churn_per_loc >= 5:
-                risk = "High"
-            elif churn_per_loc >= 1:
-                risk = "Medium"
-            else:
-                risk = "Low"
+            total_churn_add = addedlines + deletedlines
+            total_churn_sub = addedlines - deletedlines
+            # code decay, the initial commit should have added lines and deleted = 0, therefore we remove them from both sides:
+            code_decay_add = (addedlines - init_commit_addL) + (deletedlines - init_commit_delL)
+            code_decay_sub = (addedlines - init_commit_addL) - (deletedlines - init_commit_delL)
 
-            averageChurnPrLoc += churn_per_loc
+
+
+            # if loc > 0:
+            #     churn_per_loc = total_churn / loc
+            # else:
+            #     churn_per_loc = 0
+
+            # # these tags might be unneccessary
+            # if churn_per_loc >= 5:
+            #     risk = "High"
+            # elif churn_per_loc >= 1:
+            #     risk = "Medium"
+            # else:
+            #     risk = "Low"
+
+            # averageChurnPrLoc += churn_per_loc
+            averageChurnPrLoc += 0
+
+            
+            
 
             text_with_details = SingleFileSatdText(r_file, file_has_satd, total_churn, loc, 
-                                                   churn_per_loc, risk, satd_count, lines_compromised)
+                                                   404, "not-measured rn", total_churn_add, total_churn_sub, code_decay_add, code_decay_sub, satd_count, lines_compromised)
         
             fullText = text_with_details + "\n\n" + textResult
 
@@ -269,8 +303,8 @@ def RepositoryAnalyzation():
                 "metrics": {
                     "hasSatd": file_has_satd,
                     "commits": r_file.commits,
-                    "lines_added": r_file.churndata["added"],
-                    "lines_deleted": r_file.churndata["deleted"],
+                    "lines_added": addedlines,
+                    "lines_deleted": deletedlines,
                     "total_churn": total_churn,
                     "loc": loc,
                     "satd_count": satd_count,
