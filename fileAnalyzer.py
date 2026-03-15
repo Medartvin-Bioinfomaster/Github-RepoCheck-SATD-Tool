@@ -112,7 +112,7 @@ def detect_satd_in_code(content: str, file_path: str, context_lines=3, capture_f
                     # Extract the ENTIRE function
                     context_after = extract_full_function(lines, first_code_idx)
                     context_type = "function"
-                    print(f"  Captured entire function at line {first_code_idx + 1} (SATD at line {lineno})")
+                    # print(f"  Captured entire function at line {first_code_idx + 1} (SATD at line {lineno})")
                 else:
                     # Just capture N lines of code
                     for k in range(comment_end_idx, min(len(lines), comment_end_idx + context_lines + 10)):
@@ -168,11 +168,11 @@ def analyze_file(RFileInstance: RFileData, repo_name: str, context_lines=3, capt
     try:
         with open(file_path, 'r', encoding='utf-8', errors='replace') as fh: #opens the file
             content = fh.read() #reads the file, stores the script in "content" variable
-            loc = content.count("\n") + 1 if content else 0 # denne kodesnutten kan bli byttet ut med en mer "genuin" innhentingsmetode, hvis funksjonen går igjennom filer line for line i for-loop, så er dette bedre og mer robust
+            loc = content.count("\n") if content else 0 # denne kodesnutten kan bli byttet ut med en mer "genuin" innhentingsmetode, hvis funksjonen går igjennom filer line for line i for-loop, så er dette bedre og mer robust
             foundFile = True
-            print(f"File {FindRepoName(file_path)} has {loc} lines of code")
+            # print(f"File {FindRepoName(file_path)} has {loc} lines of code")
     except Exception as e:
-        print(f"Error reading {file_path}: {e}")
+        print(f"Error reading {FindRepoName(file_path)}. It may be an old path that no longer exists.")
         foundFile = False
         # if file has no content (could have been deleted or emptied), skip it
 
@@ -192,7 +192,7 @@ def analyze_file(RFileInstance: RFileData, repo_name: str, context_lines=3, capt
             #         unique_compromised_lines.add(line_id)
 
             # lines_compromised = len(unique_compromised_lines)
-            print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
+            # print(f"Found {len(results)} SATD items in: {os.path.basename(file_path)}")
             if add_to_kb:
                 print(f"Adding {len(results)} SATD entries to knowledge base...")
                 add_to_knowledge_base(results, repo_name, repo_url=repo_url, user_id=user_id)
