@@ -1,5 +1,6 @@
 from pydriller.metrics.process.code_churn import CodeChurn
 from pathlib import Path
+import unicodedata
 
 
 def FindRepoName(repourl):
@@ -254,3 +255,15 @@ def getChurnForAFile(repopath, firstCommit, lastCommit):
 
 def normalize_windows_path(REPOURL: str) -> str:
     return str(Path(REPOURL).resolve())
+
+def clean_name(name):
+    """
+    'ê', 'é', 'ö' to 'e', 'e', 'o'.
+    """
+    if not name:
+        return ""
+    
+    nfd_form = unicodedata.normalize('NFD', name)
+    new_cleaned_name = "".join([c for c in nfd_form if not unicodedata.combining(c)])
+    
+    return new_cleaned_name
