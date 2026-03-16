@@ -2,7 +2,7 @@ from pydriller import Repository
 
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
 
-from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, choose_separator, getHtmlGraph
+from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, choose_separator, clean_name, getHtmlGraph
 
 from dataClasses import RepoDetails, FileData, RFileData, Contributor
 
@@ -92,7 +92,8 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
     
     for commit in Repository( repoUrl ).traverse_commits(): # change / possible to change to traversing files?
         # variables to use
-        commitUser = commit.author.name
+        uncleaned_username = commit.author.name
+        commitUser = clean_name(uncleaned_username)
         commitHash = commit.hash
 
         commit_churndatapoint = {"added": commit.insertions , "deleted": commit.deletions , "commitdate": commit.committer_date}

@@ -318,7 +318,6 @@ def RepositoryAnalyzation():
             report_data["files"][r_file.filename] = datajson
 
             # Create File and store result
-            print("Writing to file....")
         else:
             # datajson = {
             #     "filename": r_file.filename + "_(Not found)",
