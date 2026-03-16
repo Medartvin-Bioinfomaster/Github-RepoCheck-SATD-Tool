@@ -258,17 +258,12 @@ def normalize_windows_path(REPOURL: str) -> str:
 
 def clean_name(name):
     """
-    Konverterer spesialtegn som 'ê', 'é', 'ö' til 'e', 'e', 'o'.
-    Fungerer for franske, tyske, svenske og andre europeiske tegn.
+    'ê', 'é', 'ö' to 'e', 'e', 'o'.
     """
     if not name:
         return ""
     
-    # Normaliserer teksten til "Decomposition" form (NFD)
-    # Dette skiller bokstaven fra symbolet (f.eks. 'é' blir 'e' + '´')
     nfd_form = unicodedata.normalize('NFD', name)
-    
-    # Filtrer ut alle tegn som er kategorisert som "Non-spacing Mark" (aksenter)
     new_cleaned_name = "".join([c for c in nfd_form if not unicodedata.combining(c)])
     
     return new_cleaned_name
