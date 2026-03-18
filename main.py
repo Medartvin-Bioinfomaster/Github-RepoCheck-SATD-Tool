@@ -1,6 +1,6 @@
 import json
-from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
-from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path, WriteListOfReportsStored
+from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage, lagre_til_csv, write_to_churnlog_to_outputfile
+from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path, WriteListOfReportsStored, churn_stats_from_logs
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
 from fileAnalyzer import analyze_file
 from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdText, generateDataJs, openHtmlReportFile
@@ -73,7 +73,7 @@ def main_loop():
                 print('\nOpening Knowledge base...\n')
                 openHtmlReportFile('satd_knowledge_base.html')
             except FileNotFoundError as fn:
-                print("The Knowledgebase wasn't found, please try again. Action can have faield due to the knowledgebase being moved or deleted.")
+                print("The Knowledgebase wasn't found, please try again. Action can have failed due to the knowledgebase being moved or deleted.")
         elif (action == 4):
             start_db_interaction()
 
@@ -82,7 +82,7 @@ def OpenReportRoutine():
     reportssaved_bucket = readRepoStorageFile(reportssaved_path)
     report_url = WriteListOfReportsStored(reportssaved_bucket["repos"])
     if (report_url == ""):
-        print()
+        print("empty url, can't open.")
     else:
         openHtmlReportFile(report_url)
 
@@ -157,7 +157,7 @@ def RepositoryAnalyzation():
             projectContributors = data_fetched.get("projectContributors", {})
             REPONAME = data_fetched.get("repositoryName")
             totalCommits = data_fetched.get("totalCommits")
-            commits_churndata = data_fetched.get("commits_churndata")
+            # commits_churndata = data_fetched.get("commits_churndata")
     else:
         print("Task was canceled. \nThis is the full log")
         print(reasonForCancel)
@@ -189,9 +189,10 @@ def RepositoryAnalyzation():
 
     # Counters and list storage
 
-    print(f"The size of the R list: {r_files_data}, {len(r_files_data)}")
+    # print(f"The size of the R list: {r_files_data}, {len(r_files_data)}")
 
     averageChurnPrLoc = 0
+    csvList = []
 
     for r_file in r_files_data.values():
         lateSatdText += f"\nAnalyze results for File: {r_file.filename}"
@@ -225,28 +226,47 @@ def RepositoryAnalyzation():
             deletedlines = 0
             init_commit_addL = 0
             init_commit_delL = 0
-            iteration = 0
-            for log in r_file.churnlogs.values():
+            # iteration = 0
+
+            for iteration, log in enumerate(r_file.churnlogs):
                 #we can skip the initial commit and base the other churn types of this as a "proportional" churn value
-                addL = log.added
-                delL = log.deleted
-                if (delL < 0):
-                    delL * (-1)
-                addedlines = addL
-                deletedlines = delL
+                # print(iteration)
+                # print(log)
+
+                addL = log["added"]
+                delL = log["deleted"]
+                comDate = log["commitdate"]
+
+                # print(comDate)
+                
+                delL = abs(delL) #normalizing the deleted lines to be a positive number
+
+                addedlines += addL
+                deletedlines += delL
+
                 if (iteration == 0):
-                    init_commit_addL = addedlines
-                    init_commit_delL = deletedlines
+                    init_commit_addL = addL
+                    init_commit_delL = delL
                 iteration += 1
             #_
 
+            a2, t2, p2, a4, t4, p4, a6, t6, p6, ya, yt, yp = churn_stats_from_logs(r_file.churnlogs)
+            # ^^ this includes the past yearly activity, this is also interesting information if you have it, send to html!
+            
             total_churn_add = addedlines + deletedlines
             total_churn_sub = addedlines - deletedlines
             # code decay, the initial commit should have added lines and deleted = 0, therefore we remove them from both sides:
             code_decay_add = (addedlines - init_commit_addL) + (deletedlines - init_commit_delL)
             code_decay_sub = (addedlines - init_commit_addL) - (deletedlines - init_commit_delL)
 
+            # if (r_file.filename == "calculator.R"):
+            #     # write_to_outputfile(r_file.churnlogs, "calculator_churnlog.txt")
+            #     write_to_churnlog_to_outputfile(r_file.churnlogs, "calculator_churnlog.txt")
 
+            # Set to 0 NOW so then later we switch out with an actual Churn Formula
+            total_churn = 0
+            risk = "Not implemented"
+            churn_per_loc = -1
 
             # if loc > 0:
             #     churn_per_loc = total_churn / loc
@@ -294,6 +314,20 @@ def RepositoryAnalyzation():
             contributor_stats.sort(key=lambda x: float(x["contribution_percent"].strip('%')), reverse=True)
             
             density = round((satd_count / loc) * 1000, 2)
+            hasStatd = "SATD" if file_has_satd == True else "Clean"
+
+            """
+            total_churn_add, total_churn_sub, code_decay_add, code_decay_sub
+            
+            avg_2 = avg_4 = avg_6 = 0
+            peak_2 = peak_4 = peak_6 = 0
+            total_2 = total_4 = total_6 = 0
+            """
+
+            # if len(csvList):
+            #     csvList.append(f"r_file.filename;loc;r_file.commits;hasStatd;REPONAME;len(contributor_stats);satd_count;lines_compromised;total_churn_add;total_churn_sub;code_decay_add;code_decay_sub;avg_2;peak_2;total_2;avg_4;peak_4;total_4;avg_6;peak_6;total_6")
+            file_csv_format = f"{r_file.filename};{loc};{r_file.commits};{hasStatd};{REPONAME};{len(contributor_stats)};{satd_count};{lines_compromised};{total_churn_add};{total_churn_sub};{addedlines};{deletedlines};{a2};{t2};{p2};{a4};{t4};{p4};{a6};{t6};{p6};{ya};{yt};{yp}"
+            csvList.append(file_csv_format)
 
             datajson = {
                 "Text": fullText,
@@ -305,12 +339,23 @@ def RepositoryAnalyzation():
                     "commits": r_file.commits,
                     "lines_added": addedlines,
                     "lines_deleted": deletedlines,
-                    "total_churn": total_churn,
+                    "churn_total": total_churn_add,
+                    "churn_activity": total_churn_sub,
                     "loc": loc,
                     "satd_count": satd_count,
-                    "file_td_density": density,
+                    "file_td_density": (satd_count / loc) * 1000,  #SATD density <---
+                    "td_density_percentage": (((satd_count / loc) * 1000) / 1000)*100,  #SATD density <---
                     "lines_compromised": lines_compromised,
-                    "churn_per_loc": round(churn_per_loc, 2)
+                    "churn_per_loc": round(churn_per_loc, 2),
+                    "past_year_activity": {
+                        "average": ya,
+                        "total": yt,
+                        "peak": yp,
+                        "average_normalized": (ya / loc) * 1000,
+                        "total_normalized": (yt / loc) * 1000,
+                        "peak_normalized": (yp / loc) * 1000,
+                        "dev_status": "No current Development" if yt == 0 else "Inactive" if yt > 0 and yt < 120 else "Active development"
+                    }
                 },
                 "risk_level": risk
             }
@@ -330,6 +375,7 @@ def RepositoryAnalyzation():
     satd_percentage = (linesWithSatdCounter / totalLoc * 100) if totalLoc > 0 else 0
     total_td_density = round((totalSatdCounter / totalLoc) * 1000, 2)
 
+    lagre_til_csv(csvList, REPONAME + ".csv")
     
     outputFileAnalyzeString += (
         f"\nTotal amount of SATD comments found: {totalSatdCounter}"

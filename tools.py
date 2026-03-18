@@ -1,9 +1,12 @@
 from pydriller.metrics.process.code_churn import CodeChurn
 from pathlib import Path
 import unicodedata
+from dateutil.relativedelta import relativedelta
 
 import plotly.graph_objects as go
 import pandas as pd
+
+from datetime import timedelta
 
 def FindRepoName(repourl):
     lastlinkname = None
@@ -307,3 +310,189 @@ def clean_name(name):
     new_cleaned_name = "".join([c for c in nfd_form if not unicodedata.combining(c)])
     
     return new_cleaned_name
+
+def churn_stats_from_logs(churnlogs, filename=""):
+    # if not churnlogs:
+    #     raise ValueError("Ingen churnlogs funnet! Kan ikke beregne statistikk.")
+
+    # # 1. Finn ankerpunktet (nyeste commit)
+    # sorted_logs = sorted(churnlogs, key=lambda x: x['commitdate'], reverse=True)
+    # latest_date = sorted_logs[0]['commitdate']
+
+    # # 2. Opprett listene for de ulike tidsepokene
+    # twoMonthList = []   # 0-60 dager
+    # fourMonthList = []  # 61-120 dager
+    # sixMonthList = []   # 121-180 dager
+
+    # # 3. Fordel objektene (Viktig: Vi bruker >= og < for å unngå overlapp)
+    # limit60 = latest_date - timedelta(days=60)
+    # limit120 = latest_date - timedelta(days=120)
+    # limit180 = latest_date - timedelta(days=180)
+
+    # for log in sorted_logs:
+    #     c_date = log['commitdate']
+        
+    #     if c_date >= limit60:
+    #         twoMonthList.append(log)
+    #     elif c_date >= limit120:
+    #         fourMonthList.append(log)
+    #     elif c_date >= limit180:
+    #         sixMonthList.append(log)
+    #     else:
+    #         continue # Utenfor 6 måneder - ignoreres
+
+    # # Funksjon for å regne ut matte per liste
+    # def process_period_list(period_list):
+    #     try:
+    #         total_churn = 0
+    #         daily_map = {}
+
+    #         for log in period_list:
+    #             # Churn Addition: added + abs(deleted)
+    #             churn = log['added'] + abs(log['deleted'])
+    #             total_churn += churn
+                
+    #             # Grupper på dato for å finne unike dager
+    #             d = log['commitdate'].date()
+    #             daily_map[d] = daily_map.get(d, 0) + churn
+
+    #         # Matematikken
+    #         active_days = len(daily_map)
+    #         avg_per_day = total_churn / active_days
+    #         highest_day = max(daily_map.values())
+
+    #         return round(avg_per_day, 1), total_churn, highest_day
+    #     except ZeroDivisionError:
+    #         print("No ")
+    #         return 0,0,0
+
+    # # 4. Kjør beregningen på de ferdig-sorterte listene
+    # a2, t2, p2 = process_period_list(twoMonthList)
+    # a4, t4, p4 = process_period_list(fourMonthList)
+    # a6, t6, p6 = process_period_list(sixMonthList)
+
+    showlogs = False
+
+    if (filename == "MulticoreParam-class.R"):
+        showlogs = True
+
+
+    # sort to make it reveal most recent commitdate first
+    churnlogs.sort(key=lambda x: x["commitdate"], reverse=True)
+    merged_data = {}
+
+    if showlogs:
+        print("Churnlog before merging")
+        print(churnlogs)
+        print()
+
+    for entry in churnlogs:
+        # Vi bruker bare .date() delen som nøkkel
+        d_key = entry["commitdate"].date()
+        
+        if d_key in merged_data:
+            # Hvis datoen finnes, oppdater eksisterende objekt
+            merged_data[d_key]["added"] += entry["added"]
+            merged_data[d_key]["deleted"] += entry["deleted"]
+            # Vi legger til ID-en i en liste bare for å ha kontroll
+            # if isinstance(merged_data[d_key]["id"], list):
+            #     merged_data[d_key]["id"].append(entry["id"])
+            # else:
+            #     merged_data[d_key]["id"] = [merged_data[d_key]["id"], entry["id"]]
+        else:
+            # Hvis ny dato, lagre en kopi av objektet
+            merged_data[d_key] = entry.copy()
+            merged_data[d_key]["commitdate"] = d_key
+
+    # after merging the same dates, use "datapoints" list from now on 
+    datapoints = sorted(merged_data.values(), key=lambda x: x["commitdate"], reverse=True)
+
+    most_recent_date = datapoints[0]["commitdate"] 
+
+    if showlogs:
+        print("Churnlog after merging")
+        print(datapoints)
+        print(most_recent_date)
+        print()
+
+    p1_limit = most_recent_date - relativedelta(months=2)
+    # Periode 2: 3-4 måneder siden
+    p2_limit = most_recent_date - relativedelta(months=4)
+    # Periode 3: 5-6 måneder siden
+    p3_limit = most_recent_date - relativedelta(months=6)
+    year_limit = most_recent_date - relativedelta(months=12)
+
+    stringos = ""
+    period_0_2 = []
+    period_3_4 = []
+    period_5_6 = []
+    year_cs = []
+    trash_pile = []
+
+    
+    if showlogs:
+        print("Year and period piles")
+        print(period_0_2)
+        print(period_3_4)
+        print(period_5_6)
+        print(year_cs)
+        print()
+
+    for entry in datapoints:
+        dt = entry["commitdate"]
+        
+        if dt >= p1_limit:
+            period_0_2.append(entry)
+        elif dt >= p2_limit:
+            period_3_4.append(entry)
+        elif dt >= p3_limit:
+            period_5_6.append(entry)
+        elif dt >= year_limit:
+            year_cs.append(entry)
+        # else:
+        #     trash_pile.append(entry)
+    #_
+    a2=t2=p2=a4=t4=p4=a6=t6=p6=0
+    ya=yt=yp=0
+
+    if len(period_0_2) > 0:
+        for item in period_0_2:
+            tiny_churn = item["added"] + item["deleted"]
+            t2 += tiny_churn
+            if (p2 == 0 or tiny_churn > p2):
+                p2 = tiny_churn
+        a2 = t2 / len(period_0_2) #so here, the average is equal to the total churn divided by activitites, activities are a combination of all commits (adds and deletes) on the same day, no duplicate days. This measures the activity and not just add/delete average for each commit
+    if len(period_3_4) > 0:
+        for item in period_3_4:
+            tiny_churn = item["added"] + item["deleted"]
+            t4 += tiny_churn
+            if (p4 == 0 or tiny_churn > p4):
+                p4 = tiny_churn
+        a4 = t4 / len(period_3_4) #so here, the average is equal to the total churn divided by activitites, activities are a combination of all commits (adds and deletes) on the same day, no duplicate days. This measures the activity and not just add/delete average for each commit
+    if len(period_5_6) > 0:
+        for item in period_5_6:
+            tiny_churn = item["added"] + item["deleted"]
+            t6 += tiny_churn
+            if (p6 == 0 or tiny_churn > p6):
+                p6 = tiny_churn
+        a6 = t6 / len(period_5_6) #so here, the average is equal to the total churn divided by activitites, activities are a combination of all commits (adds and deletes) on the same day, no duplicate days. This measures the activity and not just add/delete average for each commit
+    if len(year_cs) > 0:
+        for item in year_cs:
+            tiny_churn = item["added"] + item["deleted"]
+            yt += tiny_churn
+            if (yp == 0 or tiny_churn > yp):
+                yp = tiny_churn
+        ya = yt / len(year_cs)
+        
+
+    return a2, t2, p2, a4, t4, p4, a6, t6, p6, ya, yt, yp
+"""
+Hva er "Total" og "Average"?
+Siden du var usikker på logikken, her er en rask forklaring:
+
+Total Churn Addition: Hvis du legger til 10 linjer og sletter 5 linjer, har du "rørt" 15 linjer totalt. Dette tallet (15) er Total. Det viser hvor mye aktivitet som faktisk har skjedd i fila.
+
+Average: Dette er Total / antall datapunkt med "aktivitet for en dag" i tidsperioden. Det forteller deg om endringene gjort i denne perioden og den sier litt om størrelsen deres, i stedet for å sjekke commits
+
+Peak: Den dagen i perioden hvor det ble gjort aller mest (f.eks. hvis én dag hadde 500 i churn, mens resten hadde 10).
+"""

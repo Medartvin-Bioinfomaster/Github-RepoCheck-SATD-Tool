@@ -196,7 +196,15 @@ def generate_full_report(repo_path, report_data, stats):
                     <p><strong>Contains SATD:</strong> <span style="color: ${{StatusDebt(file.metrics.hasSatd)}};">${{file.metrics.hasSatd ? "Yes" : "No"}}</span></p>
                     <p><strong>Total SATD Occurrences:</strong> <span style="font-weight: 700; color: red;"> ${{file.metrics.satd_count}}</span></p>
                     <p><strong>Lines of Code:</strong> ${{file.metrics.loc}}</p>
-                    <p><strong>Lines affected by TD:</strong> ${{file.metrics.lines_compromised}}/${{file.metrics.loc}}</p>
+                    <p><strong>Total Churn:</strong> ${{file.metrics.churn_total}}</p>
+                    <p><strong>Churn Activity:</strong> ${{file.metrics.churn_activity}}</p>
+                    <p><strong>SATD density (pr 1000 loc):</strong> ${{file.metrics.file_td_density}} (${{file.metrics.td_density_percentage}}%)</p>
+                    <p><strong>Past yearly activity:
+                        Average Churn: </strong> ${{file.metrics.past_year_activity.average}} (Normalized: ${{file.metrics.past_year_activity.average_normalized}})
+                        Total Churn: </strong> ${{file.metrics.past_year_activity.total}} (Normalized: ${{file.metrics.past_year_activity.total_normalized}})
+                        Biggest Churn: </strong> ${{file.metrics.past_year_activity.peak}} (Normalized: ${{file.metrics.past_year_activity.peak_normalized}})
+                    </p>
+                    <p><strong>Development status (Past year):</strong> ${{file.metrics.past_year_activity.dev_status}} </p>
                     <p><strong>Percentage:</strong> <span style="color: ${{StatusDebtPercent(parseFloat(percentage))}};">${{percentage}}%</span></p>
                     <p><strong>Risk Level:</strong> ${{riskState(file.risk_level)}} ${{file.risk_level}}</p>
                     <p><strong>Total commits:</strong><span style="font-weight: 700;color:#319fec;"> ${{file.metrics.commits}}</span></p>

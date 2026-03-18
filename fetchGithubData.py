@@ -108,20 +108,35 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
         added = 0
         deleted = 0
         for file in commit.modified_files: 
-            added += file.added_lines
-            deleted += file.deleted_lines
-
-            file_churndatapoint = {"added": added, "deleted": deleted, "commitdate": commit.committer_date}
-            churn_data["files"] = file_churndatapoint
-
-            print(f"Added: {added}, Deleted: {deleted}")
-
-            filesTraveresedCounter += 1
-
+            
             relative_filepath = file.new_path or file.old_path
             symbol = choose_separator(repoUrl)
             absolute_path = repoUrl + symbol + relative_filepath
             filename = file.filename
+
+            showlogs = False
+
+            if (filename == "MulticoreParam-class.R"):
+                showlogs = True
+
+            added += file.added_lines
+            deleted += file.deleted_lines
+
+            if showlogs:
+                print("Churnlogs in GitFetch")
+                print(added)
+                print(deleted)
+                print()
+
+            file_churndatapoint = {"added": file.added_lines, "deleted": file.deleted_lines, "commitdate": commit.committer_date}
+            churn_data["files"] = file_churndatapoint
+
+            print(f"(File) Added: {added}, Deleted: {deleted}")
+            print(f"(commit) Added: {commit.insertions}, Deleted: {commit.deletions}")
+            print(f"(File) Added: {file.added_lines}, Deleted: {file.deleted_lines}\n")
+
+            filesTraveresedCounter += 1
+
 
             fileObj = FileData(filename, absolute_path) #creating a basic dataclass for the file
 
@@ -177,19 +192,19 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                         existing_contributor.addCommit()
                         existing_contributor.addCommitHash(commitHash)
             #_
-        churn_data.append({
-            'Date': commit.committer_date,
-            'Added': added,
-            'Deleted': deleted,
-            'Total Churn': added + deleted,
-            'Message': commit.msg[:50]
-        })
+        # churn_data.append({
+        #     'Date': commit.committer_date,
+        #     'Added': added,
+        #     'Deleted': deleted,
+        #     'Total Churn': added + deleted,
+        #     'Message': commit.msg[:50]
+        # })
         #_
     #_
     endAnalyzation = time.time()
     print(f"\nTime spent fetching: {endAnalyzation - startAnalyzation} seconds")
 
-    getHtmlGraph(churn_data)
+    # getHtmlGraph(churn_data)
 
     return {
             "repositoryName": repositoryName, 
@@ -198,6 +213,6 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             "projectContributors": all_contributors, 
             "firstCommitHash": firstCommitHash, 
             "lastCommitHash": lastCommitHash,
-            "totalCommits": commitsTraveresedCounter,
-            "commits_churndata": churn_data["commits"]
+            "totalCommits": commitsTraveresedCounter #,
+            # "commits_churndata": churn_data["commits"]
             }

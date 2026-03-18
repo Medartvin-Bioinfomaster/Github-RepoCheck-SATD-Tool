@@ -16,7 +16,6 @@ def CreateSingleFileReport(directory, reportName, content):
     # print("single file report generated.")
 
 def SingleFileSatdText(r_file, satd_status, total_churn, loc, churn_per_loc, risk, total_churn_add, total_churn_sub, code_decay_add, code_decay_sub, satd_count, lines_compromised):
-    # print("hegw")
     contributorsvisual = ""
     for cont in r_file.contributors:
         contributorsvisual += cont + ", "

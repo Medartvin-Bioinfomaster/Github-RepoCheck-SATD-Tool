@@ -10,6 +10,24 @@ def write_to_outputfile(outputFilePlacement, output_string):
         fil.write(output_string)
         # print("Written to outputfile success.")
 
+
+def write_to_churnlog_to_outputfile(churn_list, filename):
+    """
+    Writes a list of churn data dictionaries to a text file.
+    """
+    try:
+        with open(filename, 'w') as f:
+            for entry in churn_list:
+                # Formatting the dictionary into a readable line
+                line = (f"Date: {entry['commitdate']} | "
+                        f"Added: {entry['added']} | "
+                        f"Deleted: {entry['deleted']}\n")
+                f.write(line)
+        print(f"Successfully wrote logs to {filename}")
+    except Exception as e:
+        print(f"An error occurred while writing to file: {e}")
+
+
 def write_main_report(projectroot, repoName, outputFileName, output_string):
     repo_path, file_reports_path = create_repo_structure(projectroot, repoName)
     output_file_path = repo_path / outputFileName
