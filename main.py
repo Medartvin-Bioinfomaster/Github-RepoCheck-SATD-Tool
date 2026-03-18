@@ -335,6 +335,20 @@ def RepositoryAnalyzation():
             file_csv_format = f"{r_file.filename};{loc};{r_file.commits};{hasStatd};{REPONAME};{len(contributor_stats)};{satd_count};{lines_compromised};{total_churn_add};{total_churn_sub};{addedlines};{deletedlines};{a2};{t2};{p2};{a4};{t4};{p4};{a6};{t6};{p6};{ya};{yt};{yp}"
             csvList.append(file_csv_format)
 
+            satd_density = round((satd_count / loc) * 1000, 2)
+            satd_density_percentage = round((((satd_count / loc) * 1000) / 1000)*100, 2)
+            lines_compromised_density = round((lines_compromised / loc) * 1000, 2)
+            lines_compromised_density_percentage = round((((lines_compromised / loc) * 1000) / 1000)*100, 2)
+            
+            #danger levels, 1 is ok risk, 2 is bad, 3 is warning
+            satd_density_score = (0 if satd_density < 2.5 else 1 if satd_density > 2.5 and satd_density < 40 
+                                  else 2 if satd_density > 40 and satd_density < 180 else 3)
+            # lc_density_score = (0 if satd_density < 2.5 else 1 if satd_density > 2.5 and satd_density < 40 
+            #                       else 2 if satd_density > 40 and satd_density < 180 else 3)
+            # ^^ this hasn't been calculated average, max etc from yet
+            # calculate size of commits?
+            # calculate activity level? Any other way?
+
             datajson = {
                 "Text": fullText,
                 "filename": r_file.filename,
@@ -349,17 +363,19 @@ def RepositoryAnalyzation():
                     "churn_activity": total_churn_sub,
                     "loc": loc,
                     "satd_count": satd_count,
-                    "file_td_density": (satd_count / loc) * 1000,  #SATD density <---
-                    "td_density_percentage": (((satd_count / loc) * 1000) / 1000)*100,  #SATD density <---
+                    "file_td_density": satd_density,  #SATD density <---
+                    "td_density_percentage": satd_density_percentage,  #SATD density <---
                     "lines_compromised": lines_compromised,
+                    "lines_compromised_density": lines_compromised_density,
+                    "lines_compromised_density_percentage": lines_compromised_density_percentage,
                     "churn_per_loc": round(churn_per_loc, 2),
-                    "past_year_activity": {
+                    "past_year_activity": { #This section down here should not be shown in the final report if it doesn't work, as a general rule, don't include stuff that doesn't work
                         "average": ya,
                         "total": yt,
                         "peak": yp,
-                        "average_normalized": (ya / loc) * 1000,
-                        "total_normalized": (yt / loc) * 1000,
-                        "peak_normalized": (yp / loc) * 1000,
+                        "average_normalized": round((ya / loc) * 1000, 2),
+                        "total_normalized": round((yt / loc) * 1000, 2),
+                        "peak_normalized": round((yp / loc) * 1000, 2),
                         "dev_status": "No current Development" if yt == 0 else "Inactive" if yt > 0 and yt < 120 else "Active development"
                     }
                 },
