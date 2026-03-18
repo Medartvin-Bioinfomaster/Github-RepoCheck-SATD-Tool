@@ -250,14 +250,20 @@ def RepositoryAnalyzation():
                 iteration += 1
             #_
 
-            a2, t2, p2, a4, t4, p4, a6, t6, p6, ya, yt, yp = churn_stats_from_logs(r_file.churnlogs)
+            a2, t2, p2, a4, t4, p4, a6, t6, p6, ya, yt, yp = churn_stats_from_logs(r_file.churnlogs, r_file.filename)
             # ^^ this includes the past yearly activity, this is also interesting information if you have it, send to html!
             
             total_churn_add = addedlines + deletedlines
             total_churn_sub = addedlines - deletedlines
             # code decay, the initial commit should have added lines and deleted = 0, therefore we remove them from both sides:
-            code_decay_add = (addedlines - init_commit_addL) + (deletedlines - init_commit_delL)
-            code_decay_sub = (addedlines - init_commit_addL) - (deletedlines - init_commit_delL)
+            code_decay_add = (addedlines - init_commit_addL) + (deletedlines - init_commit_delL) # always 0?
+            code_decay_sub = (addedlines - init_commit_addL) - (deletedlines - init_commit_delL) # always 0?
+
+            ## dette er de ulike vektene for RISK faktor
+            # activity_score = min(yt / 20, 1)
+            # churn_score = min(avg_churn / 500, 1)
+            # satd_score = min(satd_density / 0.1, 1)
+            # contributor_score = min(recent_contributors / 5, 1)
 
             # if (r_file.filename == "calculator.R"):
             #     # write_to_outputfile(r_file.churnlogs, "calculator_churnlog.txt")

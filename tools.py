@@ -316,16 +316,22 @@ def churn_stats_from_logs(churnlogs, filename=""):
 
     if (filename == "MulticoreParam-class.R"):
         showlogs = True
+    if (filename == "BiocParallelParam-class.R"):
+        showlogs = True
+    if (filename == "bpvec-methods.R"):
+        showlogs = True
 
 
     # sort to make it reveal most recent commitdate first
     churnlogs.sort(key=lambda x: x["commitdate"], reverse=True)
     merged_data = {}
 
-    if showlogs:
-        print("Churnlog before merging")
-        print(churnlogs)
-        print()
+    # if showlogs:
+    # #     print("Churnlog before merging")
+    # #     print(churnlogs)
+    #     print(f"For {filename}:")
+    #     print(most_recent_date)
+    #     print()
 
     for entry in churnlogs:
         # Vi bruker bare .date() delen som nøkkel
@@ -350,11 +356,11 @@ def churn_stats_from_logs(churnlogs, filename=""):
 
     most_recent_date = datapoints[0]["commitdate"] 
 
-    if showlogs:
-        print("Churnlog after merging")
-        print(datapoints)
-        print(most_recent_date)
-        print()
+    # if showlogs:
+    #     print("Churnlog after merging")
+    #     print(datapoints)
+    #     print(most_recent_date)
+    #     print()
 
     p1_limit = most_recent_date - relativedelta(months=2)
     # Periode 2: 3-4 måneder siden
@@ -371,13 +377,13 @@ def churn_stats_from_logs(churnlogs, filename=""):
     trash_pile = []
 
     
-    if showlogs:
-        print("Year and period piles")
-        print(period_0_2)
-        print(period_3_4)
-        print(period_5_6)
-        print(year_cs)
-        print()
+    # if showlogs:
+    #     print("Year and period piles")
+    #     print(period_0_2)
+    #     print(period_3_4)
+    #     print(period_5_6)
+    #     print(year_cs)
+    #     print()
 
     for entry in datapoints:
         dt = entry["commitdate"]
@@ -396,6 +402,7 @@ def churn_stats_from_logs(churnlogs, filename=""):
     a2=t2=p2=a4=t4=p4=a6=t6=p6=0
     ya=yt=yp=0
 
+    tiny_churn = 0
     if len(period_0_2) > 0:
         for item in period_0_2:
             tiny_churn = item["added"] + item["deleted"]
@@ -403,6 +410,7 @@ def churn_stats_from_logs(churnlogs, filename=""):
             if (p2 == 0 or tiny_churn > p2):
                 p2 = tiny_churn
         a2 = t2 / len(period_0_2) #so here, the average is equal to the total churn divided by activitites, activities are a combination of all commits (adds and deletes) on the same day, no duplicate days. This measures the activity and not just add/delete average for each commit
+    tiny_churn = 0
     if len(period_3_4) > 0:
         for item in period_3_4:
             tiny_churn = item["added"] + item["deleted"]
@@ -410,6 +418,7 @@ def churn_stats_from_logs(churnlogs, filename=""):
             if (p4 == 0 or tiny_churn > p4):
                 p4 = tiny_churn
         a4 = t4 / len(period_3_4) #so here, the average is equal to the total churn divided by activitites, activities are a combination of all commits (adds and deletes) on the same day, no duplicate days. This measures the activity and not just add/delete average for each commit
+    tiny_churn = 0
     if len(period_5_6) > 0:
         for item in period_5_6:
             tiny_churn = item["added"] + item["deleted"]
@@ -417,6 +426,7 @@ def churn_stats_from_logs(churnlogs, filename=""):
             if (p6 == 0 or tiny_churn > p6):
                 p6 = tiny_churn
         a6 = t6 / len(period_5_6) #so here, the average is equal to the total churn divided by activitites, activities are a combination of all commits (adds and deletes) on the same day, no duplicate days. This measures the activity and not just add/delete average for each commit
+    tiny_churn = 0
     if len(year_cs) > 0:
         for item in year_cs:
             tiny_churn = item["added"] + item["deleted"]
@@ -424,7 +434,14 @@ def churn_stats_from_logs(churnlogs, filename=""):
             if (yp == 0 or tiny_churn > yp):
                 yp = tiny_churn
         ya = yt / len(year_cs)
-        
+    
+    if (showlogs):
+        print(f"For {filename}:")
+        print("Period 0-2:", period_0_2)
+        print("Period 3-4:", period_3_4)
+        print("Period 5-6:", period_5_6)
+        print(most_recent_date)
+        print()
 
     return a2, t2, p2, a4, t4, p4, a6, t6, p6, ya, yt, yp
 """

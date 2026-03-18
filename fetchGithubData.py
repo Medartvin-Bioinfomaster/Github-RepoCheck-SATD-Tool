@@ -131,9 +131,9 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             file_churndatapoint = {"added": file.added_lines, "deleted": file.deleted_lines, "commitdate": commit.committer_date}
             churn_data["files"] = file_churndatapoint
 
-            print(f"(File) Added: {added}, Deleted: {deleted}")
-            print(f"(commit) Added: {commit.insertions}, Deleted: {commit.deletions}")
-            print(f"(File) Added: {file.added_lines}, Deleted: {file.deleted_lines}\n")
+            # print(f"(File) Added: {added}, Deleted: {deleted}")
+            # print(f"(commit) Added: {commit.insertions}, Deleted: {commit.deletions}")
+            # print(f"(File) Added: {file.added_lines}, Deleted: {file.deleted_lines}\n") #<--- this one is correct
 
             filesTraveresedCounter += 1
 
@@ -162,9 +162,10 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                                    commitUser, 
                                    1, 
                                    commitHash)
+                
                 r_file.addChurnDataPoint(file_churndatapoint) #adds churndata to the log
                 # adding the final object to the list
-                r_files_data_list[filename] = r_file
+                r_files_data_list[absolute_path] = r_file
 
                 if commitUser not in all_contributors: # add contributor to its own list
                     # all_contributors.append(contr = Contributor(commitUser, 1, commit.hash))
@@ -177,9 +178,10 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             else: # if the file has been logged, update data
                 if (filename.lower().endswith(".r")):
 
-                    existing_r_file: RFileData = r_files_data_list[filename]
+                    existing_r_file: RFileData = r_files_data_list[absolute_path]
                     existing_r_file.addCommit()
                     existing_r_file.addCommitHash(commitHash)
+                    existing_r_file.addChurnDataPoint(file_churndatapoint)
                     # add only unique contributor
                     if commitUser not in existing_r_file.contributors:
                         existing_r_file.addContributor(commitUser)
@@ -191,6 +193,7 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                         existing_contributor: Contributor = all_contributors[commitUser]
                         existing_contributor.addCommit()
                         existing_contributor.addCommitHash(commitHash)
+
             #_
         # churn_data.append({
         #     'Date': commit.committer_date,
