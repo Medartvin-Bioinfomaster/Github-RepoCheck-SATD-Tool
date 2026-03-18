@@ -312,65 +312,6 @@ def clean_name(name):
     return new_cleaned_name
 
 def churn_stats_from_logs(churnlogs, filename=""):
-    # if not churnlogs:
-    #     raise ValueError("Ingen churnlogs funnet! Kan ikke beregne statistikk.")
-
-    # # 1. Finn ankerpunktet (nyeste commit)
-    # sorted_logs = sorted(churnlogs, key=lambda x: x['commitdate'], reverse=True)
-    # latest_date = sorted_logs[0]['commitdate']
-
-    # # 2. Opprett listene for de ulike tidsepokene
-    # twoMonthList = []   # 0-60 dager
-    # fourMonthList = []  # 61-120 dager
-    # sixMonthList = []   # 121-180 dager
-
-    # # 3. Fordel objektene (Viktig: Vi bruker >= og < for å unngå overlapp)
-    # limit60 = latest_date - timedelta(days=60)
-    # limit120 = latest_date - timedelta(days=120)
-    # limit180 = latest_date - timedelta(days=180)
-
-    # for log in sorted_logs:
-    #     c_date = log['commitdate']
-        
-    #     if c_date >= limit60:
-    #         twoMonthList.append(log)
-    #     elif c_date >= limit120:
-    #         fourMonthList.append(log)
-    #     elif c_date >= limit180:
-    #         sixMonthList.append(log)
-    #     else:
-    #         continue # Utenfor 6 måneder - ignoreres
-
-    # # Funksjon for å regne ut matte per liste
-    # def process_period_list(period_list):
-    #     try:
-    #         total_churn = 0
-    #         daily_map = {}
-
-    #         for log in period_list:
-    #             # Churn Addition: added + abs(deleted)
-    #             churn = log['added'] + abs(log['deleted'])
-    #             total_churn += churn
-                
-    #             # Grupper på dato for å finne unike dager
-    #             d = log['commitdate'].date()
-    #             daily_map[d] = daily_map.get(d, 0) + churn
-
-    #         # Matematikken
-    #         active_days = len(daily_map)
-    #         avg_per_day = total_churn / active_days
-    #         highest_day = max(daily_map.values())
-
-    #         return round(avg_per_day, 1), total_churn, highest_day
-    #     except ZeroDivisionError:
-    #         print("No ")
-    #         return 0,0,0
-
-    # # 4. Kjør beregningen på de ferdig-sorterte listene
-    # a2, t2, p2 = process_period_list(twoMonthList)
-    # a4, t4, p4 = process_period_list(fourMonthList)
-    # a6, t6, p6 = process_period_list(sixMonthList)
-
     showlogs = False
 
     if (filename == "MulticoreParam-class.R"):
