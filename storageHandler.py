@@ -122,6 +122,7 @@ def writeRepoToStorage(repo, path):
     return True
 #_
 
+# non used function, only used during research and manual analyzation
 def lagre_til_csv(data_liste, filnavn):
     mappe_sti = os.path.join("local", "csv")
     if not os.path.exists(mappe_sti):

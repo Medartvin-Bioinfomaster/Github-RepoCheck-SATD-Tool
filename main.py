@@ -333,7 +333,7 @@ def RepositoryAnalyzation():
             # if len(csvList):
             #     csvList.append(f"r_file.filename;loc;r_file.commits;hasStatd;REPONAME;len(contributor_stats);satd_count;lines_compromised;total_churn_add;total_churn_sub;code_decay_add;code_decay_sub;avg_2;peak_2;total_2;avg_4;peak_4;total_4;avg_6;peak_6;total_6")
             file_csv_format = f"{r_file.filename};{loc};{r_file.commits};{hasStatd};{REPONAME};{len(contributor_stats)};{satd_count};{lines_compromised};{total_churn_add};{total_churn_sub};{addedlines};{deletedlines};{a2};{t2};{p2};{a4};{t4};{p4};{a6};{t6};{p6};{ya};{yt};{yp}"
-            csvList.append(file_csv_format)
+            # csvList.append(file_csv_format)
 
             satd_density = round((satd_count / loc) * 1000, 2)
             satd_density_percentage = round((((satd_count / loc) * 1000) / 1000)*100, 2)
@@ -354,6 +354,12 @@ def RepositoryAnalyzation():
                 "filename": r_file.filename,
                 "file": r_file.fullpath,
                 "contributor_data": contributor_stats,
+                "thresholds": {
+                    "satd_density_average": 17.82503192,
+                    "satd_density_max": 181.818,
+                    "compromised_density_average": 83.807,
+                    "compromised_density_max": 454.550,
+                },
                 "metrics": {
                     "hasSatd": file_has_satd,
                     "commits": r_file.commits,
@@ -384,6 +390,11 @@ def RepositoryAnalyzation():
             rFileOutputStrings.append(datajson)
             report_data["files"][r_file.filename] = datajson
 
+            if (file_has_satd): #only add to list if the file actually has SATD; otherwise there is no point lol
+                density_to_csv = f'{datajson["filename"]};{datajson["metrics"]["satd_count"]};{datajson["metrics"]["file_td_density"]};{datajson["metrics"]["lines_compromised_density"]}\n'
+                # csvList.append(density_to_csv)
+
+
             # Create File and store result
         else:
             # datajson = {
@@ -397,7 +408,7 @@ def RepositoryAnalyzation():
     satd_percentage = (linesWithSatdCounter / totalLoc * 100) if totalLoc > 0 else 0
     total_td_density = round((totalSatdCounter / totalLoc) * 1000, 2)
 
-    lagre_til_csv(csvList, REPONAME + ".csv")
+    # lagre_til_csv(csvList, REPONAME + ".csv") # VIKTIG <--- husk å fjern før merge
     
     outputFileAnalyzeString += (
         f"\nTotal amount of SATD comments found: {totalSatdCounter}"
