@@ -40,7 +40,7 @@ def compute_similarity(code1, code2):
     return float(similarity)
 
 
-def find_similar_satd_in_kb(user_code, threshold=0.70):
+def find_similar_satd_in_kb(user_code, threshold):
     """
 
     Compares only against code context (not SATD comments) to find 

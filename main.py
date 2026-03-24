@@ -2,7 +2,7 @@ import json
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
 from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
-from fileAnalyzer import scan_repo_and_save_reports, analyze_file
+from fileAnalyzer import analyze_file
 from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdText
 
 from pathlib import Path

@@ -1,0 +1,2256 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SATD Knowledge Base</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        header {
+            background-color: #fff;
+            border-bottom: 2px solid #333;
+            padding: 30px 40px;
+        }
+        
+        header h1 {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        header p {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 30px;
+            padding: 25px 40px;
+            background: #fafafa;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .stat-item {
+            flex: 1;
+        }
+        
+        .stat-item .number {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .stat-item .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 2px;
+        }
+        
+        .controls {
+            padding: 20px 40px;
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #666;
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 6px 14px;
+            border: 1px solid #ccc;
+            background: white;
+            color: #333;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            background: #f5f5f5;
+            border-color: #999;
+        }
+        
+        .filter-btn.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+        
+        .entries {
+            padding: 25px 40px;
+        }
+        
+        .entry {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            background: #fff;
+        }
+        
+        .entry:hover {
+            border-color: #999;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .entry-type {
+            display: inline-block;
+            padding: 4px 10px;
+            border: 1px solid #666;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 0.8em;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .entry-meta {
+            color: #666;
+            font-size: 0.85em;
+            text-align: right;
+        }
+        
+        .entry-comment {
+            background: #fafafa;
+            padding: 12px;
+            border-left: 3px solid #666;
+            margin: 12px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            color: #333;
+        }
+        
+        .entry-context {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 3px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85em;
+            margin-top: 12px;
+        }
+        
+        .entry-context pre {
+            margin: 0;
+            white-space: pre-wrap;
+            color: #333;
+        }
+        
+        .context-label {
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 0.85em;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .no-results h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #fafafa;
+            color: #666;
+            font-size: 0.85em;
+            border-top: 1px solid #ddd;
+        }
+        
+        footer p {
+            margin: 3px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SATD Knowledge Base</h1>
+            <p>Self-Admitted Technical Debt in Bioinformatics R Packages</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="number">70</div>
+                <div class="label">Total Entries</div>
+            </div>
+            <div class="stat-item">
+                <div class="number">1</div>
+                <div class="label">Repositories</div>
+            </div>
+            <div class="stat-item">
+                <div class="number">6</div>
+                <div class="label">SATD Types</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search in comments, files, or repositories...">
+            
+            <div class="filter-group">
+                <button class="filter-btn active" onclick="filterByType('ALL')">All</button>
+                <button class="filter-btn" onclick="filterByType('FIX')">FIX (7)</button>
+                <button class="filter-btn" onclick="filterByType('FIXME')">FIXME (4)</button>
+                <button class="filter-btn" onclick="filterByType('HACK')">HACK (7)</button>
+                <button class="filter-btn" onclick="filterByType('NOTE:')">NOTE: (4)</button>
+                <button class="filter-btn" onclick="filterByType('TODO')">TODO (23)</button>
+                <button class="filter-btn" onclick="filterByType('WARNING')">WARNING (25)</button>
+
+            </div>
+        </div>
+        
+        <div class="entries" id="entriesContainer">
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GRanges-class.R" data-comment="TODO: Remove this temporary definition and add parallel_slot_names()
+methods to all packages that define extraColumnSlotNames() methods
+(e.g. VariantAnnotation, GenomicTuples, InteractionSet, SGSeq).">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GRanges-class.R • Line 36 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Remove this temporary definition and add parallel_slot_names()
+methods to all packages that define extraColumnSlotNames() methods
+(e.g. VariantAnnotation, GenomicTuples, InteractionSet, SGSeq).
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>function(x) c(extraColumnSlotNames(x), "seqnames", "ranges", "strand",
+              callNextMethod())</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="HACK" data-repo="GenomicRanges" data-file="GRanges-class.R" data-comment="HACK! Calling updateObject() is not reliable. See IMPORTANT NOTE
+in R/Seqinfo-class.R in Seqinfo package for more information.
+object@seqinfo <- updateObject(object@seqinfo, ..., verbose=verbose)">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">HACK</span>
+                    </div>
+                    <div class="entry-meta">
+                        GRanges-class.R • Line 108 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    HACK! Calling updateObject() is not reliable. See IMPORTANT NOTE
+in R/Seqinfo-class.R in Seqinfo package for more information.
+object@seqinfo <- updateObject(object@seqinfo, ..., verbose=verbose)
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>object@seqinfo <- Seqinfo:::update_Seqinfo_object(object@seqinfo, ..., verbose=verbose)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIX" data-repo="GenomicRanges" data-file="GRanges-class.R" data-comment="Fix old GRanges instances on-the-fly.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIX</span>
+                    </div>
+                    <div class="entry-meta">
+                        GRanges-class.R • Line 129 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Fix old GRanges instances on-the-fly.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>        object <- updateObject(object, check=FALSE)
+        BiocGenerics:::replaceSlots(object, ...)
+    }</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="NOTE:" data-repo="GenomicRanges" data-file="GRanges-class.R" data-comment="NOTE: 'ranges' is trusted! (should have been checked by the caller).">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">NOTE:</span>
+                    </div>
+                    <div class="entry-meta">
+                        GRanges-class.R • Line 142 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NOTE: 'ranges' is trusted! (should have been checked by the caller).
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>new_GRanges <- function(Class, seqnames=NULL, ranges=NULL, strand=NULL,
+                               mcols=NULL, seqinfo=NULL)
+{</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GRangesList-class.R" data-comment="TODO: Get rid of this! Used in RangedSummarizedExperiment class definition
+to specify the class of the 'rowRanges' slot and was originally introduced
+to support this use case. However, more packages use it these days e.g.
+DEFormats, GenomicFiles, ggbio, gmapR, HelloRanges, profileplyr, and maybe
+more... Everybody now should use GenomicRanges_OR_GenomicRangesList instead
+of GenomicRanges_OR_GRangesList.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GRangesList-class.R • Line 22 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Get rid of this! Used in RangedSummarizedExperiment class definition
+to specify the class of the 'rowRanges' slot and was originally introduced
+to support this use case. However, more packages use it these days e.g.
+DEFormats, GenomicFiles, ggbio, gmapR, HelloRanges, profileplyr, and maybe
+more... Everybody now should use GenomicRanges_OR_GenomicRangesList instead
+of GenomicRanges_OR_GRangesList.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setClassUnion("GenomicRanges_OR_GRangesList", c("GenomicRanges", "GRangesList"))</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GRangesList-class.R" data-comment="TODO: We should have more general methods defined at the GenomicRangesList
+level instead of the methods below.
+">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GRangesList-class.R • Line 305 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: We should have more general methods defined at the GenomicRangesList
+level instead of the methods below.
+
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>.sBracketSubsetGRList <- function(x, i, j, ..., drop)
+{
+    if (!missing(i)) {
+        x <- callNextMethod(x = x, i = i)
+    }
+    if (!missing(j)) {
+        if (!is.character(j))
+            stop("'j' must be a character vector")
+        withinLevel <- (j %in% colnames(x@unlistData@elementMetadata))
+        if (any(withinLevel) && !all(withinLevel))
+... (39 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="findOverlaps-methods.R" data-comment="TODO: Replace the code below by a call to
+poverlapWidth(q_ranges, s_ranges) when it's available.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        findOverlaps-methods.R • Line 37 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Replace the code below by a call to
+poverlapWidth(q_ranges, s_ranges) when it's available.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>score <- pmin.int(end(q_ranges), end(s_ranges)) -
+                 pmax.int(start(q_ranges), start(s_ranges)) + 1L
+pmax.int(score, 0L)
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="setops-methods.R" data-comment="TODO: What's the impact of circularity on the set operations?">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        setops-methods.R • Line 5 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: What's the impact of circularity on the set operations?
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="setops-methods.R" data-comment="If merge() is going to issue a warning, we don't want to get
+it twice.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        setops-methods.R • Line 105 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    If merge() is going to issue a warning, we don't want to get
+it twice.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>        seqinfo(y) <- suppressWarnings(merge(seqinfo(y), seqinfo(x)))
+        seqlengths <- seqlengths(x)
+        ## If the length of a sequence is unknown (NA), then we use</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="setops-methods.R" data-comment="If merge() is going to issue a warning, we don't want to get
+it twice.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        setops-methods.R • Line 141 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    If merge() is going to issue a warning, we don't want to get
+it twice.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>seqinfo(y) <- suppressWarnings(merge(seqinfo(y), seqinfo(x)))</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIXME" data-repo="GenomicRanges" data-file="setops-methods.R" data-comment="FIXME: This is currently not doing a "punion" at all. It just appends
+the ranges in 'y' to their corresponding element in 'x'.
+2 proposals for a more punion-like semantic:
+(a) for (i in seq_len(length(x)))
+x[[i]] <- punion(x[[i]], y[rep.int(i, length(x[[i]]))])
+(b) for (i in seq_len(length(x)))
+x[[i]] <- union(x[[i]], y[i])
+Note that behaviour (b) could also be considered a valid candidate for
+a union,GRangesList,GRanges method (which we don't have at the moment).">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIXME</span>
+                    </div>
+                    <div class="entry-meta">
+                        setops-methods.R • Line 217 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    FIXME: This is currently not doing a "punion" at all. It just appends
+the ranges in 'y' to their corresponding element in 'x'.
+2 proposals for a more punion-like semantic:
+(a) for (i in seq_len(length(x)))
+x[[i]] <- punion(x[[i]], y[rep.int(i, length(x[[i]]))])
+(b) for (i in seq_len(length(x)))
+x[[i]] <- union(x[[i]], y[i])
+Note that behaviour (b) could also be considered a valid candidate for
+a union,GRangesList,GRanges method (which we don't have at the moment).
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setMethod("punion", c("GRangesList", "GRanges"),
+    function(x, y, fill.gap=FALSE)
+    {
+        n <- length(x)
+        if (n != length(y)) 
+            stop("'x' and 'y' must have the same length")
+        mcols(x@unlistData) <- NULL
+        mcols(y) <- NULL
+        ans <-
+          split(c(x@unlistData, y), 
+... (9 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="setops-methods.R" data-comment="TODO: Review the semantic of this method (see previous TODO's for
+"punion" and "pintersect" methods for GRanges,GRangesList).">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        setops-methods.R • Line 428 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Review the semantic of this method (see previous TODO's for
+"punion" and "pintersect" methods for GRanges,GRangesList).
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setMethod("psetdiff", c("GRanges", "GRangesList"),
+    function(x, y, ignore.strand=FALSE)
+    {
+        ansSeqinfo <- merge(seqinfo(x), seqinfo(y))
+        if (length(x) != length(y)) 
+            stop("'x' and 'y' must have the same length")
+        ok <- compatibleSeqnames(rep(seqnames(x), elementNROWS(y)),
+                                 seqnames(y@unlistData))
+        if (!ignore.strand)
+          ok <- ok & compatibleStrand(rep(strand(x), elementNROWS(y)),
+... (16 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GenomicRanges-class.R" data-comment="TODO: The 'constraint' slot could be moved to the Vector class (or to the
+Annotated class) so any Vector object could be constrained.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-class.R • Line 6 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: The 'constraint' slot could be moved to the Vector class (or to the
+Annotated class) so any Vector object could be constrained.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setClass("GenomicRanges",
+    contains="Ranges",
+    representation(</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GenomicRanges-class.R" data-comment="TODO: Packages defining "extraColumnSlotNames" methods (e.g.
+VariantAnnotation, GenomicTuples, InteractionSet, SGSeq) should define
+parallel_slot_names() methods instead. They'll get more things working
+out-of-the-box by doing so (e.g. c()). Then the extraColumnSlotNames()
+generic will become a GenomicRanges private business and could be made
+a regular function.
+">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-class.R • Line 54 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Packages defining "extraColumnSlotNames" methods (e.g.
+VariantAnnotation, GenomicTuples, InteractionSet, SGSeq) should define
+parallel_slot_names() methods instead. They'll get more things working
+out-of-the-box by doing so (e.g. c()). Then the extraColumnSlotNames()
+generic will become a GenomicRanges private business and could be made
+a regular function.
+
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setGeneric("extraColumnSlotNames",
+    function(x) standardGeneric("extraColumnSlotNames")
+)
+
+setMethod("extraColumnSlotNames", "ANY", function(x) character())
+
+#setMethod("extraColumnSlotNames", "GRanges",
+#    function(x)
+#    {
+#        GRanges_pslotnames <- parallel_slot_names(new("GRanges"))
+... (9 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GenomicRanges-class.R" data-comment="TODO: Should we enforce ranges(x) to be an IRanges *instance* (i.e.
+class(ranges(x) == "IRanges")) instead of just an IRanges *object* (i.e.
+is(ranges(x), "IRanges"))? Right now I can create a GRanges object where
+the ranges are a Views object on a very long DNAString subject with
+something like 'GRanges("chr1", Views(subject, start=1:2, end=5))'.
+Sounds cool but there are also some potential complications with this...">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-class.R • Line 133 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Should we enforce ranges(x) to be an IRanges *instance* (i.e.
+class(ranges(x) == "IRanges")) instead of just an IRanges *object* (i.e.
+is(ranges(x), "IRanges"))? Right now I can create a GRanges object where
+the ranges are a Views object on a very long DNAString subject with
+something like 'GRanges("chr1", Views(subject, start=1:2, end=5))'.
+Sounds cool but there are also some potential complications with this...
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>.valid.GenomicRanges.ranges <- function(x)
+{
+    if (!(class(ranges(x)) %in% c("IRanges", "StitchedIPos", "UnstitchedIPos")))
+        return(paste0("'ranges(x)' must be an IRanges, StitchedIPos, ",
+                      "or UnstitchedIPos instance"))
+    NULL
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="NOTE:" data-repo="GenomicRanges" data-file="GenomicRanges-class.R" data-comment="NOTE: This list is also included in the man page for GRanges objects.
+Keep the 2 lists in sync!
+We don't put "genome" in that list in order to facilitate import of GFF3
+files as GRanges objects (see ?import.gff3 in rtracklayer).">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">NOTE:</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-class.R • Line 176 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NOTE: This list is also included in the man page for GRanges objects.
+Keep the 2 lists in sync!
+We don't put "genome" in that list in order to facilitate import of GFF3
+files as GRanges objects (see ?import.gff3 in rtracklayer).
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>### TODO: Get rid of this restriction. Not sure why we needed this in the
+### first place. Never made much sense to me.
+INVALID.GR.COLNAMES <- c("seqnames", "ranges", "strand",
+                         "seqlevels", "seqlengths", "isCircular",
+                         #"genome",
+                         "start", "end", "width", "element")</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GenomicRanges-class.R" data-comment="TODO: Get rid of this restriction. Not sure why we needed this in the
+first place. Never made much sense to me.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-class.R • Line 180 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Get rid of this restriction. Not sure why we needed this in the
+first place. Never made much sense to me.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>INVALID.GR.COLNAMES <- c("seqnames", "ranges", "strand",
+                         "seqlevels", "seqlengths", "isCircular",
+                         #"genome",</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIX" data-repo="GenomicRanges" data-file="GenomicRanges-class.R" data-comment="Fix old GRanges instances on-the-fly.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIX</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-class.R • Line 427 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Fix old GRanges instances on-the-fly.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>        x <- updateObject(x)
+        mcols(x)$score <- value
+        x</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIX" data-repo="GenomicRanges" data-file="GenomicRanges-class.R" data-comment="Fix old GRanges instances on-the-fly.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIX</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-class.R • Line 614 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Fix old GRanges instances on-the-fly.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>x <- updateObject(x)
+mcols(x)[[name]] <- value
+x</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIX" data-repo="GenomicRanges" data-file="GenomicRanges-class.R" data-comment="Fix old GRanges and GAlignments instance on-the-fly.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIX</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-class.R • Line 718 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Fix old GRanges and GAlignments instance on-the-fly.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>x <- updateObject(x, check=FALSE)
+
+objects <- S4Vectors:::prepare_objects_to_bind(x, objects)
+all_objects <- c(list(x), objects)
+
+## Combine seqinfo.
+seqinfo(x) <- combine_seqinfo_from_GenomicRanges_objects(all_objects)
+
+## Call method for Vector objects to concatenate all the parallel slots.
+callNextMethod()
+... (2 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GenomicRanges-comparison.R" data-comment="'x' is already sorted (TODO: Investigate why). Therefore, and
+somewhat counterintuitively, is.unsorted() can be faster when 'x'
+is already sorted (which, in theory, is the worst-case scenario
+because S4Vectors:::sortedIntegerQuads() will then need to take a
+full walk on 'x') than when it is unsorted (in which case
+S4Vectors:::sortedIntegerQuads() might stop walking on 'x' after
+checking its first 2 elements only -- the best-case scenario).">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-comparison.R • Line 223 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    'x' is already sorted (TODO: Investigate why). Therefore, and
+somewhat counterintuitively, is.unsorted() can be faster when 'x'
+is already sorted (which, in theory, is the worst-case scenario
+because S4Vectors:::sortedIntegerQuads() will then need to take a
+full walk on 'x') than when it is unsorted (in which case
+S4Vectors:::sortedIntegerQuads() might stop walking on 'x' after
+checking its first 2 elements only -- the best-case scenario).
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>quads <- .GenomicRanges_as_integer_quads(x, ignore.strand)
+        !S4Vectors:::sortedIntegerQuads(quads[[1L]], quads[[2L]],
+                                        quads[[3L]], quads[[4L]],
+                                        strictly=strictly)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GenomicRanges-comparison.R" data-comment="TODO: Support the 'ignore.strand' argument (the signature of the order()
+generic doesn't make this as straightforward as it could be).
+'na.last' is pointless (GenomicRanges objects don't contain NAs) so is
+ignored.
+'method' is also ignored at the moment.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-comparison.R • Line 248 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Support the 'ignore.strand' argument (the signature of the order()
+generic doesn't make this as straightforward as it could be).
+'na.last' is pointless (GenomicRanges objects don't contain NAs) so is
+ignored.
+'method' is also ignored at the moment.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setMethod("order", "GenomicRanges",
+    function(..., na.last=TRUE, decreasing=FALSE,
+                  method=c("auto", "shell", "radix"))
+    {
+        ## Turn off this warning for now since it triggers spurious warnings
+        ## when calling sort() on a GRangesList object. The root of the
+        ## problem is inconsistent defaults for 'na.last' between order() and
+        ## sort(), as reported here:
+        ##   https://stat.ethz.ch/pipermail/r-devel/2015-November/072012.html
+        #if (!identical(na.last, TRUE))
+... (14 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="GenomicRanges-comparison.R" data-comment="Turn off this warning for now since it triggers spurious warnings
+when calling sort() on a GRangesList object. The root of the
+problem is inconsistent defaults for 'na.last' between order() and
+sort(), as reported here:
+https://stat.ethz.ch/pipermail/r-devel/2015-November/072012.html
+if (!identical(na.last, TRUE))">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-comparison.R • Line 257 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Turn off this warning for now since it triggers spurious warnings
+when calling sort() on a GRangesList object. The root of the
+problem is inconsistent defaults for 'na.last' between order() and
+sort(), as reported here:
+https://stat.ethz.ch/pipermail/r-devel/2015-November/072012.html
+if (!identical(na.last, TRUE))
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>        #    warning("\"order\" method for GenomicRanges objects ",
+        #            "ignores the 'na.last' argument")
+        if (!isTRUEorFALSE(decreasing))</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="GenomicRanges-comparison.R" data-comment="warning("\"order\" method for GenomicRanges objects ",
+"ignores the 'na.last' argument")">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRanges-comparison.R • Line 263 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    warning("\"order\" method for GenomicRanges objects ",
+"ignores the 'na.last' argument")
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>        if (!isTRUEorFALSE(decreasing))
+            stop("'decreasing' must be TRUE or FALSE")
+        ## All arguments in '...' are guaranteed to be GenomicRanges objects.</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="TODO: Use this instead of GenomicRanges_OR_GRangesList in the
+RangedSummarizedExperiment class definition to specify the class
+of the 'rowRanges' slot.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 55 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Use this instead of GenomicRanges_OR_GRangesList in the
+RangedSummarizedExperiment class definition to specify the class
+of the 'rowRanges' slot.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setClassUnion("GenomicRanges_OR_GenomicRangesList",
+    c("GenomicRanges", "GenomicRangesList")
+)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="HACK" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="Temporary hack to make 'length(x)' work on an old GRangesList instance.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">HACK</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 134 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Temporary hack to make 'length(x)' work on an old GRangesList instance.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setMethod("length", "GenomicRangesList",
+    function(x)
+    {
+        if (class(x) == "GRangesList") {
+            #warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+            x <- updateObject(x, check=FALSE)
+        }
+        METHOD <- .selectClosestMethod1("length", x)
+        METHOD(x)
+    }
+... (1 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 139 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>            x <- updateObject(x, check=FALSE)
+        }
+        METHOD <- .selectClosestMethod1("length", x)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="HACK" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="Temporary hack to make 'names(x)' work on an old GRangesList instance.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">HACK</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 147 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Temporary hack to make 'names(x)' work on an old GRangesList instance.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setMethod("names", "GenomicRangesList",
+    function(x)
+    {</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 152 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>### Temporary hack to make 'names(x) <- value' work on an old GRangesList
+### instance.
+setReplaceMethod("names", "GenomicRangesList",
+    function(x, value)
+    {
+        if (class(x) == "GRangesList") {
+            #warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+            x <- updateObject(x, check=FALSE)
+        }
+        METHOD <- .selectClosestMethod1("names<-", x)
+... (31 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="HACK" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="Temporary hack to make 'names(x) <- value' work on an old GRangesList
+instance.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">HACK</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 160 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Temporary hack to make 'names(x) <- value' work on an old GRangesList
+instance.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setReplaceMethod("names", "GenomicRangesList",
+    function(x, value)
+    {
+        if (class(x) == "GRangesList") {
+            #warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+            x <- updateObject(x, check=FALSE)
+        }
+        METHOD <- .selectClosestMethod1("names<-", x)
+        METHOD(x, value)
+    }
+... (1 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 166 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>if (class(x) == "GRangesList") {
+    #warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+    x <- updateObject(x, check=FALSE)
+}
+METHOD <- .selectClosestMethod1("extractROWS", x)
+METHOD(x, i)
+
+if (class(x) == "GRangesList") {
+    #warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+    x <- updateObject(x, check=FALSE)
+... (8 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="HACK" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="Temporary hack to make 'extractROWS(x, i)' work on an old GRangesList
+instance.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">HACK</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 174 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Temporary hack to make 'extractROWS(x, i)' work on an old GRangesList
+instance.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setMethod("extractROWS", c("GenomicRangesList", "ANY"),
+    function(x, i)
+    {
+        if (class(x) == "GRangesList") {
+            #warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+            x <- updateObject(x, check=FALSE)
+        }
+        METHOD <- .selectClosestMethod1("extractROWS", x)
+        METHOD(x, i)
+    }
+... (1 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 180 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>            x <- updateObject(x, check=FALSE)
+        }
+        METHOD <- .selectClosestMethod1("extractROWS", x)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="HACK" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="Temporary hack to make 'getListElement(x, i)' work on an old GRangesList
+instance.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">HACK</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 188 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Temporary hack to make 'getListElement(x, i)' work on an old GRangesList
+instance.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>```r
+setMethod("getListElement", "GenomicRangesList",
+    function(x, i, exact=TRUE)
+    {
+        if (class(x) == "GRangesList") {
+            #warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+            x <- updateObject(x, check=FALSE)
+        }
+        METHOD <- .selectClosestMethod1("getListElement", x)
+        METHOD(x, i, exact=exact)
+... (3 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 194 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>### Temporary hack to make 'unlist(x)' work on an old GRangesList instance.
+setMethod("unlist", "GenomicRangesList",
+    function(x, recursive=TRUE, use.names=TRUE)
+    {
+        if (class(x) == "GRangesList") {
+            #warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+            x <- updateObject(x, check=FALSE)
+        }
+        if (is(x, "CompressedGenomicRangesList")) {
+            if (!isTRUEorFALSE(use.names))
+... (26 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="HACK" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="Temporary hack to make 'unlist(x)' work on an old GRangesList instance.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">HACK</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 202 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Temporary hack to make 'unlist(x)' work on an old GRangesList instance.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setMethod("unlist", "GenomicRangesList",
+    function(x, recursive=TRUE, use.names=TRUE)
+    {
+        if (class(x) == "GRangesList") {
+            #warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+            x <- updateObject(x, check=FALSE)
+        }
+        if (is(x, "CompressedGenomicRangesList")) {
+            if (!isTRUEorFALSE(use.names))
+                stop("'use.names' must be TRUE or FALSE")
+... (11 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 207 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>show_GenomicRangesList <- function(x, with.header=TRUE)
+{
+    if (class(x) == "GRangesList") {
+        warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+        x <- updateObject(x, check=FALSE)
+    }
+    x_len <- length(x)
+    if (with.header)
+        cat(classNameForDisplay(x), " object of length ", x_len,
+            ":\n", sep="")
+... (14 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIXME" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="FIXME: Seems to repeat a lot of code from IRanges:::show_IntegerRangesList!">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIXME</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 231 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    FIXME: Seems to repeat a lot of code from IRanges:::show_IntegerRangesList!
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>show_GenomicRangesList <- function(x, with.header=TRUE)
+{
+    if (class(x) == "GRangesList") {
+        warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+        x <- updateObject(x, check=FALSE)
+    }
+    x_len <- length(x)
+    if (with.header)
+        cat(classNameForDisplay(x), " object of length ", x_len,
+            ":\n", sep="")
+... (30 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="TODO: This should be defined as a method for RangesList objects (in
+the IRanges package). Then it would work on all RangesList derivatives,
+including IntegerRangesList, GenomicRangesList, and GAlignmentsList
+objects.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 299 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: This should be defined as a method for RangesList objects (in
+the IRanges package). Then it would work on all RangesList derivatives,
+including IntegerRangesList, GenomicRangesList, and GAlignmentsList
+objects.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>get_GenomicRangesList_mcols <-
+    function(x, use.names=FALSE, level = c("between", "within"), ...)
+{
+    if (!isTRUEorFALSE(use.names))
+        stop("'use.names' must be TRUE or FALSE")
+    level <- match.arg(level)
+    if (level == "between") {
+        ans <- x@elementMetadata
+        if (use.names)
+            rownames(ans) <- names(x)
+... (9 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="TODO: This should be defined as a method for RangesList objects (in
+the IRanges package). Then it would work on all RangesList derivatives,
+including IntegerRangesList, GenomicRangesList, and GAlignmentsList
+objects.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 388 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: This should be defined as a method for RangesList objects (in
+the IRanges package). Then it would work on all RangesList derivatives,
+including IntegerRangesList, GenomicRangesList, and GAlignmentsList
+objects.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>set_CompressedGenomicRangesList_mcols <-
+    function(x, level = c("between", "within"), ..., value)
+{
+    level <- match.arg(level)
+    if (level == "between") {
+        if (is.null(value))
+            value <- make_zero_col_DFrame(length(x))
+        else if (!is(value, "DataFrame"))
+            value <- DataFrame(value)
+        if (!is.null(rownames(value)))
+... (27 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GenomicRangesList-class.R" data-comment="TODO: For the start, end, and width setters, we should probably have
+methods for SimpleRangesList and CompressedRangesList objects (in the
+IRanges package) instead of methods for IntegerRangesList and
+CompressedGenomicRangesList objects.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GenomicRangesList-class.R • Line 463 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: For the start, end, and width setters, we should probably have
+methods for SimpleRangesList and CompressedRangesList objects (in the
+IRanges package) instead of methods for IntegerRangesList and
+CompressedGenomicRangesList objects.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>```r
+setReplaceMethod("start", "CompressedGenomicRangesList",
+    function(x, ..., value)
+    {
+        if (!is(value, "IntegerList") ||
+            !identical(elementNROWS(x), elementNROWS(value)))
+            stop("replacement 'value' is not an IntegerList with the same ",
+                 "elementNROWS as 'x'")
+        value <- unlist(value, use.names=FALSE)
+        start(x@unlistData, ...) <- value
+... (30 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIXME" data-repo="GenomicRanges" data-file="RangedData-methods.R" data-comment="FIXME: needs sanity checks">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIXME</span>
+                    </div>
+                    <div class="entry-meta">
+                        RangedData-methods.R • Line 23 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    FIXME: needs sanity checks
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setReplaceMethod("seqinfo", "List",
+                 function(x, value) {
+                   metadata(x)$seqinfo <- value
+                   x
+                 })</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="inter-range-methods.R" data-comment="TODO: Support 'method="presorted"' in duplicatedIntegerPairs() for
+when the 2 input vectors are already sorted.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        inter-range-methods.R • Line 164 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Support 'method="presorted"' in duplicatedIntegerPairs() for
+when the 2 input vectors are already sorted.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>        notdups <- !duplicatedIntegerPairs(of1, of2)
+        i1 <- of1[notdups]
+        i2 <- of2[notdups]</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="inter-range-methods.R" data-comment="warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        inter-range-methods.R • Line 263 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>if (class(x) == "GRangesList") {
+    #warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+    x <- updateObject(x, check=FALSE)
+}</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="inter-range-methods.R" data-comment="warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        inter-range-methods.R • Line 311 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>            x <- updateObject(x, check=FALSE)
+        }
+        if (!identical(with.inframe.attrib, FALSE)) </pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="inter-range-methods.R" data-comment="warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        inter-range-methods.R • Line 384 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>            x <- updateObject(x, check=FALSE)
+        }
+        if (is(x, "CompressedList")) {</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="inter-range-methods.R" data-comment="warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        inter-range-methods.R • Line 422 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    warning(wmsg(OLD_GRANGESLIST_INSTANCE_MSG))
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>            x <- updateObject(x, check=FALSE)
+        }
+        if (is(x, "CompressedList")) {</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="intra-range-methods.R" data-comment="TODO: Add "reflect" method for GenomicRanges objects.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        intra-range-methods.R • Line 163 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Add "reflect" method for GenomicRanges objects.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="NOTE:" data-repo="GenomicRanges" data-file="nearest-methods.R" data-comment="NOTE: select="all" is needed in general for nearestKNeighbors here">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">NOTE:</span>
+                    </div>
+                    <div class="entry-meta">
+                        nearest-methods.R • Line 515 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NOTE: select="all" is needed in general for nearestKNeighbors here
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>    if (drop.self) {
+        ol <- findOverlaps(x, maxgap=0L, select="all",
+                           ignore.strand=ignore.strand, drop.self=TRUE)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="test_intra-range-methods.R" data-comment="NO warning expected.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_intra-range-methods.R • Line 112 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NO warning expected.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>    S4Vectors:::errorIfWarning(current <- flank(gr, 10))
+    checkTrue(S4Vectors:::errorIfWarning(validObject(current)))
+    target_ranges <- IRanges(c(11, 32, 13, 34), width=10)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="test_intra-range-methods.R" data-comment="NO warning expected.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_intra-range-methods.R • Line 119 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NO warning expected.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>    S4Vectors:::errorIfWarning(current <- flank(gr, 10, start=FALSE))
+    checkTrue(S4Vectors:::errorIfWarning(validObject(current)))
+    target_ranges <- IRanges(c(31, 12, 33, 14), width=10)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="test_intra-range-methods.R" data-comment="NO warning expected.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_intra-range-methods.R • Line 126 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NO warning expected.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>    S4Vectors:::errorIfWarning(current <- flank(gr, 30))
+    checkTrue(S4Vectors:::errorIfWarning(validObject(current)))
+    target_ranges <- IRanges(c(-9, 32, -7, 34), width=30)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="test_intra-range-methods.R" data-comment="NO warning expected.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_intra-range-methods.R • Line 133 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NO warning expected.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>## NO warning expected.
+S4Vectors:::errorIfWarning(current <- flank(gr, 10))
+checkTrue(S4Vectors:::errorIfWarning(validObject(current)))
+target_ranges <- IRanges(c(11, 32, 13, 34), width=10)
+checkIdentical(target_ranges, ranges(current))</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="test_intra-range-methods.R" data-comment="Warning expected.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_intra-range-methods.R • Line 142 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Warning expected.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>## Warning expected.
+checkException(S4Vectors:::errorIfWarning(
+                   current <- flank(gr, 20)
+               ), silent=TRUE)
+suppressWarnings(current <- flank(gr, 20))
+
+checkException(S4Vectors:::errorIfWarning(
+                   validObject(current)
+               ), silent=TRUE)
+checkTrue(suppressWarnings(validObject(current)))
+... (3 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="test_intra-range-methods.R" data-comment="NO warning expected.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_intra-range-methods.R • Line 158 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NO warning expected.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>S4Vectors:::errorIfWarning(current <- flank(gr, 10))
+checkTrue(S4Vectors:::errorIfWarning(validObject(current)))
+target_ranges <- IRanges(c(11, 32, 13, 34), width=10)
+checkIdentical(target_ranges, ranges(current))</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="test_intra-range-methods.R" data-comment="Warning expected.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_intra-range-methods.R • Line 164 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Warning expected.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>checkException(S4Vectors:::errorIfWarning(
+                       current <- flank(gr, 20)
+                   ), silent=TRUE)
+suppressWarnings(current <- flank(gr, 20))
+
+checkException(S4Vectors:::errorIfWarning(
+                       validObject(current)
+                   ), silent=TRUE)
+checkTrue(suppressWarnings(validObject(current)))
+
+... (2 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="test_intra-range-methods.R" data-comment="NO warning expected.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_intra-range-methods.R • Line 255 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NO warning expected.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>    S4Vectors:::errorIfWarning(gr <- GRanges(gr_seqnames, gr_ranges))
+    checkTrue(S4Vectors:::errorIfWarning(validObject(gr)))
+    checkIdentical(trim(gr), gr)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="test_intra-range-methods.R" data-comment="Warning expected.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_intra-range-methods.R • Line 262 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Warning expected.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>    checkException(S4Vectors:::errorIfWarning(
+                       seqlengths(gr) <- gr_seqlengths
+                   ), silent=TRUE)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="test_intra-range-methods.R" data-comment="NO warning expected.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_intra-range-methods.R • Line 280 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NO warning expected.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>gr_seqlengths <- c(chr1=50, chr2=NA, chrM=15)
+    S4Vectors:::errorIfWarning(seqlengths(gr) <- gr_seqlengths)
+    checkTrue(S4Vectors:::errorIfWarning(validObject(gr)))
+    checkIdentical(trim(gr), gr)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="NOTE:" data-repo="GenomicRanges" data-file="test_nearest-methods.R" data-comment="NOTE: I don't know what this test means
+checkIdentical(length(near)[[2]], length(near2)[[2]])">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">NOTE:</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_nearest-methods.R • Line 455 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    NOTE: I don't know what this test means
+checkIdentical(length(near)[[2]], length(near2)[[2]])
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>checkIdentical(near[[1]], near2[[1]])
+checkIdentical(near[[2]], near2[[2]])
+
+## select == "all"
+## No ties
+#checkIdentical(nearestKNeighbors(g1, g2), nearestKNeighbors(g1, g2, select = "all"))
+## With ties
+r <- IRanges(c(14, 1, 6, 10, 10, 14), c(16, 4, 8, 12, 12, 16))
+g <- GRanges("chr1", r, "+")
+target <- nearestKNeighbors(g, select="all")
+... (2 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="absoluteRanges.R" data-comment="TODO: Maybe this could be re-used in tileGenome().">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        absoluteRanges.R • Line 10 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Maybe this could be re-used in tileGenome().
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>normarg_seqlengths <- function(seqlengths)
+{
+    if (!is.numeric(seqlengths)) </pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="genomicvars.R" data-comment="TODO: Implement (in C) fast 'elementIs(objects, class)' in S4Vectors
+that does 'sapply(objects, is, class, USE.NAMES=FALSE)', and use it
+here.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        genomicvars.R • Line 80 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Implement (in C) fast 'elementIs(objects, class)' in S4Vectors
+that does 'sapply(objects, is, class, USE.NAMES=FALSE)', and use it
+here.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>if (!all(sapply(args, is, "RleList", USE.NAMES=FALSE)))
+    stop("the objects to bind must be RleList objects")</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="WARNING" data-repo="GenomicRanges" data-file="test_GenomicRanges-comparison.R" data-comment="Warning expected">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">WARNING</span>
+                    </div>
+                    <div class="entry-meta">
+                        test_GenomicRanges-comparison.R • Line 12 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    Warning expected
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>checkException(S4Vectors:::errorIfWarning(is.unsorted(gr, na.rm=TRUE)),
+               silent=TRUE)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIXME" data-repo="GenomicRanges" data-file="GPos-class.R" data-comment="FIXME: Oct 6, 2023 -- With hindsight, I'm no longer convinced it was such
+a good idea to make GPos a subclass of GRanges and to inherit its 'ranges'
+slot. Maybe it would be cleaner to only contain GenomicPos, and to rename
+the 'ranges' slot to 'pos'. This would be more consistent with the
+IPos/IRanges relationship (IPos is not a subclass of IRanges). This
+would also probably simplify greatly many of the acrobatics required
+by the various coercion methods defined below in this file for switching
+between GRanges and GPos/UnstitchedGPos/StitchedGPos. Finally this would
+also mean that the specification of the 'ranges' slot in the definition
+of the GRanges class could be set back to "IRanges" instead of
+"IRanges_OR_IPos", and that the IRanges_OR_IPos class could go away.
+Note that this would bring back the definition of the GRanges class from
+the pre-GPos era. See GRanges-class.R.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIXME</span>
+                    </div>
+                    <div class="entry-meta">
+                        GPos-class.R • Line 7 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    FIXME: Oct 6, 2023 -- With hindsight, I'm no longer convinced it was such
+a good idea to make GPos a subclass of GRanges and to inherit its 'ranges'
+slot. Maybe it would be cleaner to only contain GenomicPos, and to rename
+the 'ranges' slot to 'pos'. This would be more consistent with the
+IPos/IRanges relationship (IPos is not a subclass of IRanges). This
+would also probably simplify greatly many of the acrobatics required
+by the various coercion methods defined below in this file for switching
+between GRanges and GPos/UnstitchedGPos/StitchedGPos. Finally this would
+also mean that the specification of the 'ranges' slot in the definition
+of the GRanges class could be set back to "IRanges" instead of
+"IRanges_OR_IPos", and that the IRanges_OR_IPos class could go away.
+Note that this would bring back the definition of the GRanges class from
+the pre-GPos era. See GRanges-class.R.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>setClass("GPos",
+    contains=c("GenomicPos", "GRanges"),
+    representation(</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="GPos-class.R" data-comment="TODO: Define and export stitch() generic and method for IntegerRanges
+objects in the IRanges package (in inter-range-methods.R). Then make
+stitch_GenomicRanges() and stitch_StitchedGPos() the "stitch" methods
+for GenomicRanges and StitchedGPos objects, respectively, and support
+the 'ignore.strand' argument.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        GPos-class.R • Line 88 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Define and export stitch() generic and method for IntegerRanges
+objects in the IRanges package (in inter-range-methods.R). Then make
+stitch_GenomicRanges() and stitch_StitchedGPos() the "stitch" methods
+for GenomicRanges and StitchedGPos objects, respectively, and support
+the 'ignore.strand' argument.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>### To be as fast as possible, we don't use internal low-level constructor
+### new_GRanges() and we don't check the new object.
+.new_stitched_GRanges <- function(seqnames, ranges, strand, seqinfo)
+{
+    mcols <- make_zero_col_DFrame(length(ranges))
+    new2("GRanges", seqnames=seqnames,
+                    ranges=ranges,
+                    strand=strand,
+                    elementMetadata=mcols,
+                    seqinfo=seqinfo,
+... (39 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIX" data-repo="GenomicRanges" data-file="GPos-class.R" data-comment="from@ranges <- as(from@ranges, "UnstitchedIPos")  # now fixed :-)">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIX</span>
+                    </div>
+                    <div class="entry-meta">
+                        GPos-class.R • Line 234 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    from@ranges <- as(from@ranges, "UnstitchedIPos")  # now fixed :-)
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>    from
+}
+.from_ANY_to_StitchedGPos <- function(from)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIX" data-repo="GenomicRanges" data-file="GPos-class.R" data-comment="from@ranges <- as(from@ranges, "StitchedIPos")  # now fixed :-)">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIX</span>
+                    </div>
+                    <div class="entry-meta">
+                        GPos-class.R • Line 242 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    from@ranges <- as(from@ranges, "StitchedIPos")  # now fixed :-)
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>    from
+}
+setAs("ANY", "UnstitchedGPos", .from_ANY_to_UnstitchedGPos)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="FIX" data-repo="GenomicRanges" data-file="GPos-class.R" data-comment="from@ranges <- as(from@ranges, "IRanges")  # now fixed :-)">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">FIX</span>
+                    </div>
+                    <div class="entry-meta">
+                        GPos-class.R • Line 278 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    from@ranges <- as(from@ranges, "IRanges")  # now fixed :-)
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>    from
+}
+setMethod("coerce", c("UnstitchedGPos", "GRanges"), from_GPos_to_GRanges)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="normarg-utils.R" data-comment="TODO: Use this in GenomicFeatures::transcriptLocs2refLocs() and
+remove GenomicFeatures:::.normargExonStartsOrEnds().">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        normarg-utils.R • Line 108 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Use this in GenomicFeatures::transcriptLocs2refLocs() and
+remove GenomicFeatures:::.normargExonStartsOrEnds().
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>normarg_list_of_integers <- function(arg, sep, argname)
+{
+    if (is.list(arg))
+        return(arg)
+    if (is(arg, "IntegerList"))
+        return(as.list(arg))
+    if (is.character(arg))
+        return(toListOfIntegerVectors(arg, sep=sep))
+    stop(wmsg("'", argname, "' must be a list of integer vectors, ",
+              "an IntegerList object,\n  or a character vector where ",
+... (2 more lines)</pre>
+                </div>
+            </div>
+
+            <div class="entry" data-type="TODO" data-repo="GenomicRanges" data-file="subtract-methods.R" data-comment="TODO: Move definition of generic to IRanges package and implement method
+for IntegerRanges objects.">
+                <div class="entry-header">
+                    <div>
+                        <span class="entry-type">TODO</span>
+                    </div>
+                    <div class="entry-meta">
+                        subtract-methods.R • Line 7 • GenomicRanges
+                    </div>
+                </div>
+                
+                <div class="entry-comment">
+                    TODO: Move definition of generic to IRanges package and implement method
+for IntegerRanges objects.
+                </div>
+                
+                <div class="entry-context">
+                    <span class="context-label">Code Context (lines):</span>
+                    <pre>```r
+setGeneric("subtract", signature=c("x", "y"),
+    function(x, y, minoverlap=1L, ...) standardGeneric("subtract")
+)
+
+setMethod("subtract", c("GenomicRanges", "GenomicRanges"),
+    function(x, y, minoverlap=1L, ignore.strand=FALSE)
+    {
+        y <- reduce(y, ignore.strand=ignore.strand)
+        hits <- findOverlaps(x, y, minoverlap=minoverlap,
+... (7 more lines)</pre>
+                </div>
+            </div>
+
+        </div>
+        
+        <div class="no-results" id="noResults" style="display: none;">
+            <h2>No results found</h2>
+            <p>Try adjusting your search or filter criteria.</p>
+        </div>
+        
+        <footer>
+            <p>Last updated: 2026-03-16T15:01:51.272951</p>
+        </footer>
+    </div>
+    
+    <script>
+        let currentFilter = 'ALL';
+        
+        // Search functionality
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            filterEntries();
+        });
+        
+        function filterByType(type) {
+            currentFilter = type;
+            
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            filterEntries();
+        }
+        
+        function filterEntries() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const entries = document.querySelectorAll('.entry');
+            let visibleCount = 0;
+            
+            entries.forEach(entry => {
+                const type = entry.getAttribute('data-type');
+                const repo = entry.getAttribute('data-repo').toLowerCase();
+                const file = entry.getAttribute('data-file').toLowerCase();
+                const comment = entry.getAttribute('data-comment').toLowerCase();
+                
+                const matchesType = currentFilter === 'ALL' || type === currentFilter;
+                const matchesSearch = searchTerm === '' || 
+                                     comment.includes(searchTerm) || 
+                                     repo.includes(searchTerm) || 
+                                     file.includes(searchTerm);
+                
+                if (matchesType && matchesSearch) {
+                    entry.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    entry.style.display = 'none';
+                }
+            });
+            
+            // Show/hide no results message
+            document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+            document.getElementById('entriesContainer').style.display = visibleCount === 0 ? 'none' : 'block';
+        }
+    </script>
+</body>
+</html>
