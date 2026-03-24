@@ -454,3 +454,48 @@ Average: Dette er Total / antall datapunkt med "aktivitet for en dag" i tidsperi
 
 Peak: Den dagen i perioden hvor det ble gjort aller mest (f.eks. hvis én dag hadde 500 i churn, mens resten hadde 10).
 """
+
+def checkDensityToThreshold(density, densityMedium, densityLow):
+    if (density > densityMedium) : #high
+        return 3
+    elif (density > densityLow):
+        return 2
+    else:
+        return 1
+
+
+def calculate_project_health(files_data):
+    total_risk_points = 0
+    num_files = len(files_data)
+    
+    if num_files == 0:
+        return 1.0, "Healthy", "#2ecc71"
+
+    # Definer poengverdi for hver risk-tag
+    risk_weights = {
+        "High": 3.0,
+        "Medium": 2.0,
+        "Low": 1.0
+    }
+
+    # Summer poeng for alle filer
+    for file in files_data.values():
+        risk_tag = file.get('risk_level', 'Low')
+        total_risk_points += risk_weights.get(risk_tag, 1.0)
+
+    # Beregn gjennomsnittlig risiko (verdi mellom 1.0 og 3.0)
+    avg_risk_score = total_risk_points / num_files
+
+    # Bestem status basert på thresholds
+    # Her bruker vi 1.8 som grense for Unhealthy (siden 2.0 er "Medium")
+    if avg_risk_score >= 2.2:
+        status = "Unhealthy"
+        color = "#e74c3c" # Rød
+    elif avg_risk_score >= 1.6:
+        status = "Needs Attention"
+        color = "#f39c12" # Oransje
+    else:
+        status = "Healthy"
+        color = "#2ecc71" # Grønn
+
+    return round(avg_risk_score, 2), status, color

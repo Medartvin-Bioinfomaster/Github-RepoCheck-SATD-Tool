@@ -1,6 +1,6 @@
 import json
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage, lagre_til_csv, write_to_churnlog_to_outputfile
-from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path, WriteListOfReportsStored, churn_stats_from_logs
+from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path, WriteListOfReportsStored, churn_stats_from_logs, checkDensityToThreshold, calculate_project_health
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
 from fileAnalyzer import analyze_file
 from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdText, generateDataJs, openHtmlReportFile
@@ -193,6 +193,14 @@ def RepositoryAnalyzation():
 
     averageChurnPrLoc = 0
     csvList = []
+    
+    report_data["data"]["satd_density_average"] = 17.82503192
+    report_data["data"]["satd_density_max"] = 181.818
+    report_data["data"]["satd_density_standard_deviation"] = 27.84
+
+    report_data["data"]["compromised_density_average"] = 83.807
+    report_data["data"]["compromised_density_max"] = 454.550
+    report_data["data"]["compromised_density_standard_deviation"] = 94.54
 
     for r_file in r_files_data.values():
         lateSatdText += f"\nAnalyze results for File: {r_file.filename}"
@@ -271,7 +279,8 @@ def RepositoryAnalyzation():
 
             # Set to 0 NOW so then later we switch out with an actual Churn Formula
             total_churn = 0
-            risk = "Not implemented"
+
+
             churn_per_loc = -1
 
             # if loc > 0:
@@ -349,17 +358,44 @@ def RepositoryAnalyzation():
             # calculate size of commits?
             # calculate activity level? Any other way?
 
+            
+            # SATDDensity = 40%, ComPDensity = 60%
+            
+            report_data["data"]["satd_density_average"] = 17.82503192
+            report_data["data"]["satd_density_max"] = 181.818
+            report_data["data"]["satd_density_standard_deviation"] = 27.84
+
+            report_data["data"]["compromised_density_average"] = 83.807
+            report_data["data"]["compromised_density_max"] = 454.550
+            report_data["data"]["compromised_density_standard_deviation"] = 94.54
+
+            
+            low_stddensity_risk = report_data["data"]["satd_density_average"] #can be within this number to be low risk
+            medium_stddensity_risk = report_data["data"]["satd_density_max"] - report_data["data"]["satd_density_standard_deviation"]
+            # high_stddensity_risk = thresholds["satd_density_max"]
+
+            low_compdens_risk = report_data["data"]["compromised_density_average"] #can be within this number to be low risk
+            medium_compdens_risk = report_data["data"]["compromised_density_max"] - report_data["data"]["compromised_density_standard_deviation"]
+
+
+            stddens_normalized = checkDensityToThreshold(satd_density, medium_stddensity_risk, low_stddensity_risk) * 0.4
+            compromised_normalized = checkDensityToThreshold(lines_compromised_density, medium_compdens_risk, low_compdens_risk) * 0.6
+            risk_number = stddens_normalized + compromised_normalized
+            risk = ""
+
+            if (risk_number >= 2.5):
+                risk = "High"
+            elif risk_number >= 1.5:
+                risk = "Medium"
+            else:
+                risk = "Low"
+
             datajson = {
                 "Text": fullText,
                 "filename": r_file.filename,
                 "file": r_file.fullpath,
                 "contributor_data": contributor_stats,
-                "thresholds": {
-                    "satd_density_average": 17.82503192,
-                    "satd_density_max": 181.818,
-                    "compromised_density_average": 83.807,
-                    "compromised_density_max": 454.550,
-                },
+                "risk_level": risk,
                 "metrics": {
                     "hasSatd": file_has_satd,
                     "commits": r_file.commits,
@@ -372,6 +408,7 @@ def RepositoryAnalyzation():
                     "file_td_density": satd_density,  #SATD density <---
                     "td_density_percentage": satd_density_percentage,  #SATD density <---
                     "lines_compromised": lines_compromised,
+                    "lines_compromised_percentage": round((lines_compromised / loc) * 100, 2),
                     "lines_compromised_density": lines_compromised_density,
                     "lines_compromised_density_percentage": lines_compromised_density_percentage,
                     "churn_per_loc": round(churn_per_loc, 2),
@@ -384,8 +421,7 @@ def RepositoryAnalyzation():
                         "peak_normalized": round((yp / loc) * 1000, 2),
                         "dev_status": "No current Development" if yt == 0 else "Inactive" if yt > 0 and yt < 120 else "Active development"
                     }
-                },
-                "risk_level": risk
+                }
             }
             rFileOutputStrings.append(datajson)
             report_data["files"][r_file.filename] = datajson
@@ -427,6 +463,18 @@ def RepositoryAnalyzation():
     report_data["data"]["filessatd"] = totalFilesSatd
     report_data["data"]["totalfiles"] = totalFiles
     report_data["data"]["totalcontributors"] = len(projectContributors)
+
+    avg_score, health_label, health_color = calculate_project_health(report_data["files"])
+    report_data["data"]["health_status"] = health_label
+    report_data["data"]["health_color"] = health_color
+
+    # stats["health_score"] = avg_score
+    # stats["health_label"] = health_label
+    # stats["health_color"] = health_color
+    
+    # Pakk ut threshold-verdiene direkte inn i report_data["data"]
+    # Dette gjør at du kan aksessere dem som f.eks. report_data["data"]["satd_density_average"]
+
 
 
     outputFileAnalyzeString += f"\nR-files with SATD: {totalFilesSatd} out of {totalFiles} total"
