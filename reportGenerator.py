@@ -54,5 +54,5 @@ def generateDataJs(repo_path, report_data):
     return final_url
 
 def openHtmlReportFile(url):
-    print(f"Opening File: {url}")
+    print(f"Opening File: {url}\n")
     webbrowser.open(url)

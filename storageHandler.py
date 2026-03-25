@@ -116,9 +116,7 @@ def writeRepoToStorage(repo, path):
         return False
     with open(path, 'a', encoding='utf-8') as f:
         f.write('\n' + repo)
-        print("Should have stored the repo in storeage now")
     #_
-    print("Should have stored the repo in storeage now")
     return True
 #_
 
