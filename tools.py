@@ -1,7 +1,12 @@
 from pydriller.metrics.process.code_churn import CodeChurn
 from pathlib import Path
 import unicodedata
+from dateutil.relativedelta import relativedelta
 
+import plotly.graph_objects as go
+import pandas as pd
+
+from datetime import timedelta
 
 def FindRepoName(repourl):
     lastlinkname = None
@@ -253,6 +258,44 @@ def getChurnForAFile(repopath, firstCommit, lastCommit):
     files_count = metric.count()
     return files_count
 
+def calculate_selfadmitted_technical_debt_density(satd_counts, compromised_lines, loc):
+    return (compromised_lines / loc) * 1000
+
+def getHtmlGraph(data):
+    df = pd.DataFrame(data)
+
+    # 2. Lag grafen med Plotly
+    fig = go.Figure()
+
+    # Legg til Total Churn som en linje
+    fig.add_trace(go.Scatter(
+        x=df['Date'], 
+        y=df['Total Churn'],
+        mode='lines+markers',
+        name='Total Churn (Volatility)',
+        text=df['Message'], # Vises når du hovrer over punktet
+        line=dict(color='firebrick', width=2)
+    ))
+
+    # Legg til barer for Added og Deleted for mer detaljer
+    fig.add_trace(go.Bar(x=df['Date'], y=df['Added'], name='Lines Added', marker_color='forestgreen', opacity=0.5))
+    fig.add_trace(go.Bar(x=df['Date'], y=df['Deleted'], name='Lines Deleted', marker_color='royalblue', opacity=0.5))
+
+    # 3. Styling for et "Research Paper" utseende
+    fig.update_layout(
+        title='Code Churn Timeline: Identifying Technical Debt Hotspots',
+        xaxis_title='Tidslinje',
+        yaxis_title='Antall linjer endret',
+        template='plotly_white',
+        hovermode='x unified',
+        barmode='stack'
+    )
+
+    # 4. EKSPORT TIL HTML
+    fig.write_html("churn_analysis.html")
+
+    print("Grafen er ferdig! Åpne churn_analysis.html i nettleseren din.")
+
 def normalize_windows_path(REPOURL: str) -> str:
     return str(Path(REPOURL).resolve())
 
@@ -267,3 +310,192 @@ def clean_name(name):
     new_cleaned_name = "".join([c for c in nfd_form if not unicodedata.combining(c)])
     
     return new_cleaned_name
+
+def churn_stats_from_logs(churnlogs, filename=""):
+    showlogs = False
+
+    if (filename == "MulticoreParam-class.R"):
+        showlogs = True
+    if (filename == "BiocParallelParam-class.R"):
+        showlogs = True
+    if (filename == "bpvec-methods.R"):
+        showlogs = True
+
+
+    # sort to make it reveal most recent commitdate first
+    churnlogs.sort(key=lambda x: x["commitdate"], reverse=True)
+    merged_data = {}
+
+    # if showlogs:
+    # #     print("Churnlog before merging")
+    # #     print(churnlogs)
+    #     print(f"For {filename}:")
+    #     print(most_recent_date)
+    #     print()
+
+    for entry in churnlogs:
+        # Vi bruker bare .date() delen som nøkkel
+        d_key = entry["commitdate"].date()
+        
+        if d_key in merged_data:
+            # Hvis datoen finnes, oppdater eksisterende objekt
+            merged_data[d_key]["added"] += entry["added"]
+            merged_data[d_key]["deleted"] += entry["deleted"]
+            # Vi legger til ID-en i en liste bare for å ha kontroll
+            # if isinstance(merged_data[d_key]["id"], list):
+            #     merged_data[d_key]["id"].append(entry["id"])
+            # else:
+            #     merged_data[d_key]["id"] = [merged_data[d_key]["id"], entry["id"]]
+        else:
+            # Hvis ny dato, lagre en kopi av objektet
+            merged_data[d_key] = entry.copy()
+            merged_data[d_key]["commitdate"] = d_key
+
+    # after merging the same dates, use "datapoints" list from now on 
+    datapoints = sorted(merged_data.values(), key=lambda x: x["commitdate"], reverse=True)
+
+    most_recent_date = datapoints[0]["commitdate"] 
+
+    # if showlogs:
+    #     print("Churnlog after merging")
+    #     print(datapoints)
+    #     print(most_recent_date)
+    #     print()
+
+    p1_limit = most_recent_date - relativedelta(months=2)
+    # Periode 2: 3-4 måneder siden
+    p2_limit = most_recent_date - relativedelta(months=4)
+    # Periode 3: 5-6 måneder siden
+    p3_limit = most_recent_date - relativedelta(months=6)
+    year_limit = most_recent_date - relativedelta(months=12)
+
+    stringos = ""
+    period_0_2 = []
+    period_3_4 = []
+    period_5_6 = []
+    year_cs = []
+    trash_pile = []
+
+    
+    # if showlogs:
+    #     print("Year and period piles")
+    #     print(period_0_2)
+    #     print(period_3_4)
+    #     print(period_5_6)
+    #     print(year_cs)
+    #     print()
+
+    for entry in datapoints:
+        dt = entry["commitdate"]
+        
+        if dt >= p1_limit:
+            period_0_2.append(entry)
+        elif dt >= p2_limit:
+            period_3_4.append(entry)
+        elif dt >= p3_limit:
+            period_5_6.append(entry)
+        elif dt >= year_limit:
+            year_cs.append(entry)
+        # else:
+        #     trash_pile.append(entry)
+    #_
+    a2=t2=p2=a4=t4=p4=a6=t6=p6=0
+    ya=yt=yp=0
+
+    tiny_churn = 0
+    if len(period_0_2) > 0:
+        for item in period_0_2:
+            tiny_churn = item["added"] + item["deleted"]
+            t2 += tiny_churn
+            if (p2 == 0 or tiny_churn > p2):
+                p2 = tiny_churn
+        a2 = t2 / len(period_0_2) #so here, the average is equal to the total churn divided by activitites, activities are a combination of all commits (adds and deletes) on the same day, no duplicate days. This measures the activity and not just add/delete average for each commit
+    tiny_churn = 0
+    if len(period_3_4) > 0:
+        for item in period_3_4:
+            tiny_churn = item["added"] + item["deleted"]
+            t4 += tiny_churn
+            if (p4 == 0 or tiny_churn > p4):
+                p4 = tiny_churn
+        a4 = t4 / len(period_3_4) #so here, the average is equal to the total churn divided by activitites, activities are a combination of all commits (adds and deletes) on the same day, no duplicate days. This measures the activity and not just add/delete average for each commit
+    tiny_churn = 0
+    if len(period_5_6) > 0:
+        for item in period_5_6:
+            tiny_churn = item["added"] + item["deleted"]
+            t6 += tiny_churn
+            if (p6 == 0 or tiny_churn > p6):
+                p6 = tiny_churn
+        a6 = t6 / len(period_5_6) #so here, the average is equal to the total churn divided by activitites, activities are a combination of all commits (adds and deletes) on the same day, no duplicate days. This measures the activity and not just add/delete average for each commit
+    tiny_churn = 0
+    if len(year_cs) > 0:
+        for item in year_cs:
+            tiny_churn = item["added"] + item["deleted"]
+            yt += tiny_churn
+            if (yp == 0 or tiny_churn > yp):
+                yp = tiny_churn
+        ya = yt / len(year_cs)
+    
+    if (showlogs):
+        print(f"For {filename}:")
+        print("Period 0-2:", period_0_2)
+        print("Period 3-4:", period_3_4)
+        print("Period 5-6:", period_5_6)
+        print(most_recent_date)
+        print()
+
+    return a2, t2, p2, a4, t4, p4, a6, t6, p6, ya, yt, yp
+"""
+Hva er "Total" og "Average"?
+Siden du var usikker på logikken, her er en rask forklaring:
+
+Total Churn Addition: Hvis du legger til 10 linjer og sletter 5 linjer, har du "rørt" 15 linjer totalt. Dette tallet (15) er Total. Det viser hvor mye aktivitet som faktisk har skjedd i fila.
+
+Average: Dette er Total / antall datapunkt med "aktivitet for en dag" i tidsperioden. Det forteller deg om endringene gjort i denne perioden og den sier litt om størrelsen deres, i stedet for å sjekke commits
+
+Peak: Den dagen i perioden hvor det ble gjort aller mest (f.eks. hvis én dag hadde 500 i churn, mens resten hadde 10).
+"""
+
+def checkDensityToThreshold(density, densityMedium, densityLow):
+    if (density > densityMedium) : #high
+        return 3
+    elif (density > densityLow):
+        return 2
+    else:
+        return 1
+
+
+def calculate_project_health(files_data):
+    total_risk_points = 0
+    num_files = len(files_data)
+    
+    if num_files == 0:
+        return 1.0, "Healthy", "#2ecc71"
+
+    # Definer poengverdi for hver risk-tag
+    risk_weights = {
+        "High": 3.0,
+        "Medium": 2.0,
+        "Low": 1.0
+    }
+
+    # Summer poeng for alle filer
+    for file in files_data.values():
+        risk_tag = file.get('risk_level', 'Low')
+        total_risk_points += risk_weights.get(risk_tag, 1.0)
+
+    # Beregn gjennomsnittlig risiko (verdi mellom 1.0 og 3.0)
+    avg_risk_score = total_risk_points / num_files
+
+    # Bestem status basert på thresholds
+    # Her bruker vi 1.8 som grense for Unhealthy (siden 2.0 er "Medium")
+    if avg_risk_score >= 2.2:
+        status = "Unhealthy"
+        color = "#e74c3c" # Rød
+    elif avg_risk_score >= 1.6:
+        status = "Needs Attention"
+        color = "#f39c12" # Oransje
+    else:
+        status = "Healthy"
+        color = "#2ecc71" # Grønn
+
+    return round(avg_risk_score, 2), status, color

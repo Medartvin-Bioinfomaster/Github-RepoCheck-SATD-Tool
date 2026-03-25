@@ -1,6 +1,6 @@
 import json
-from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
-from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path, WriteListOfReportsStored
+from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage, lagre_til_csv, write_to_churnlog_to_outputfile
+from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, RepoOutputDisplay, getChurnForAFile, normalize_windows_path, WriteListOfReportsStored, churn_stats_from_logs, checkDensityToThreshold, calculate_project_health
 from fetchGithubData import RepoFetcher, saveTheRepoUrlQuestion, findRepo
 from fileAnalyzer import analyze_file
 from reportGenerator import MainReport, CreateSingleFileReport, SingleFileSatdText, generateDataJs, openHtmlReportFile
@@ -73,7 +73,7 @@ def main_loop():
                 print('\nOpening Knowledge base...\n')
                 openHtmlReportFile('satd_knowledge_base.html')
             except FileNotFoundError as fn:
-                print("The Knowledgebase wasn't found, please try again. Action can have faield due to the knowledgebase being moved or deleted.")
+                print("The Knowledgebase wasn't found, please try again. Action can have failed due to the knowledgebase being moved or deleted.")
         elif (action == 4):
             start_db_interaction()
 
@@ -82,7 +82,7 @@ def OpenReportRoutine():
     reportssaved_bucket = readRepoStorageFile(reportssaved_path)
     report_url = WriteListOfReportsStored(reportssaved_bucket["repos"])
     if (report_url == ""):
-        print()
+        print("empty url, can't open.")
     else:
         openHtmlReportFile(report_url)
 
@@ -96,6 +96,7 @@ def RepositoryAnalyzation():
     files = []
     r_files_data: Dict[RFileData] = {}
     projectContributors: Dict[Contributor] = {}
+    commits_churndata = {}
     outputfilefolder = "File_Reports" #name of the folder where individual file reports are stored
     totalCommits = 0
     
@@ -156,6 +157,7 @@ def RepositoryAnalyzation():
             projectContributors = data_fetched.get("projectContributors", {})
             REPONAME = data_fetched.get("repositoryName")
             totalCommits = data_fetched.get("totalCommits")
+            # commits_churndata = data_fetched.get("commits_churndata")
     else:
         print("Task was canceled. \nThis is the full log")
         print(reasonForCancel)
@@ -187,9 +189,18 @@ def RepositoryAnalyzation():
 
     # Counters and list storage
 
-    print(f"The size of the R list: {r_files_data}, {len(r_files_data)}")
+    # print(f"The size of the R list: {r_files_data}, {len(r_files_data)}")
 
     averageChurnPrLoc = 0
+    # csvList = []
+    
+    report_data["data"]["satd_density_average"] = 17.82503192
+    report_data["data"]["satd_density_max"] = 181.818
+    report_data["data"]["satd_density_standard_deviation"] = 27.84
+
+    report_data["data"]["compromised_density_average"] = 83.807
+    report_data["data"]["compromised_density_max"] = 454.550
+    report_data["data"]["compromised_density_standard_deviation"] = 94.54
 
     for r_file in r_files_data.values():
         lateSatdText += f"\nAnalyze results for File: {r_file.filename}"
@@ -218,23 +229,81 @@ def RepositoryAnalyzation():
             lateSatdText += f"\nTotal findings: {satd_count}\nFile contains SATD: {fileHasSatdFormat}\n"
             
             # churn calculation
-            total_churn = r_file.churndata["added"] + r_file.churndata["deleted"]
-            if loc > 0:
-                churn_per_loc = total_churn / loc
-            else:
-                churn_per_loc = 0
+            # total_churn = r_file.churndata["added"] + r_file.churndata["deleted"]
+            addedlines = 0
+            deletedlines = 0
+            init_commit_addL = 0
+            init_commit_delL = 0
+            # iteration = 0
 
-            if churn_per_loc >= 5:
-                risk = "High"
-            elif churn_per_loc >= 1:
-                risk = "Medium"
-            else:
-                risk = "Low"
+            for iteration, log in enumerate(r_file.churnlogs):
+                #we can skip the initial commit and base the other churn types of this as a "proportional" churn value
+                # print(iteration)
+                # print(log)
 
-            averageChurnPrLoc += churn_per_loc
+                addL = log["added"]
+                delL = log["deleted"]
+                comDate = log["commitdate"]
+
+                # print(comDate)
+                
+                delL = abs(delL) #normalizing the deleted lines to be a positive number
+
+                addedlines += addL
+                deletedlines += delL
+
+                if (iteration == 0):
+                    init_commit_addL = addL
+                    init_commit_delL = delL
+                iteration += 1
+            #_
+
+            # a2, t2, p2, a4, t4, p4, a6, t6, p6, ya, yt, yp = churn_stats_from_logs(r_file.churnlogs, r_file.filename)
+            # ^^ this includes the past yearly activity, this is also interesting information if you have it, send to html!
+            
+            total_churn_add = addedlines + deletedlines
+            total_churn_sub = addedlines - deletedlines
+            # code decay, the initial commit should have added lines and deleted = 0, therefore we remove them from both sides:
+            code_decay_add = (addedlines - init_commit_addL) + (deletedlines - init_commit_delL) # always 0?
+            code_decay_sub = (addedlines - init_commit_addL) - (deletedlines - init_commit_delL) # always 0?
+
+            ## dette er de ulike vektene for RISK faktor
+            # activity_score = min(yt / 20, 1)
+            # churn_score = min(avg_churn / 500, 1)
+            # satd_score = min(satd_density / 0.1, 1)
+            # contributor_score = min(recent_contributors / 5, 1)
+
+            # if (r_file.filename == "calculator.R"):
+            #     # write_to_outputfile(r_file.churnlogs, "calculator_churnlog.txt")
+            #     write_to_churnlog_to_outputfile(r_file.churnlogs, "calculator_churnlog.txt")
+
+            # Set to 0 NOW so then later we switch out with an actual Churn Formula
+            total_churn = 0
+
+
+            churn_per_loc = -1
+
+            # if loc > 0:
+            #     churn_per_loc = total_churn / loc
+            # else:
+            #     churn_per_loc = 0
+
+            # # these tags might be unneccessary
+            # if churn_per_loc >= 5:
+            #     risk = "High"
+            # elif churn_per_loc >= 1:
+            #     risk = "Medium"
+            # else:
+            #     risk = "Low"
+
+            # averageChurnPrLoc += churn_per_loc
+            averageChurnPrLoc += 0
+
+            
+            
 
             text_with_details = SingleFileSatdText(r_file, file_has_satd, total_churn, loc, 
-                                                   churn_per_loc, risk, satd_count, lines_compromised)
+                                                   404, "not-measured rn", total_churn_add, total_churn_sub, code_decay_add, code_decay_sub, satd_count, lines_compromised)
         
             fullText = text_with_details + "\n\n" + textResult
 
@@ -260,28 +329,107 @@ def RepositoryAnalyzation():
             contributor_stats.sort(key=lambda x: float(x["contribution_percent"].strip('%')), reverse=True)
             
             density = round((satd_count / loc) * 1000, 2)
+            hasStatd = "SATD" if file_has_satd == True else "Clean"
+
+            """
+            total_churn_add, total_churn_sub, code_decay_add, code_decay_sub
+            
+            avg_2 = avg_4 = avg_6 = 0
+            peak_2 = peak_4 = peak_6 = 0
+            total_2 = total_4 = total_6 = 0
+            """
+
+            # if len(csvList):
+            #     csvList.append(f"r_file.filename;loc;r_file.commits;hasStatd;REPONAME;len(contributor_stats);satd_count;lines_compromised;total_churn_add;total_churn_sub;code_decay_add;code_decay_sub;avg_2;peak_2;total_2;avg_4;peak_4;total_4;avg_6;peak_6;total_6")
+            # file_csv_format = f"{r_file.filename};{loc};{r_file.commits};{hasStatd};{REPONAME};{len(contributor_stats)};{satd_count};{lines_compromised};{total_churn_add};{total_churn_sub};{addedlines};{deletedlines};{a2};{t2};{p2};{a4};{t4};{p4};{a6};{t6};{p6};{ya};{yt};{yp}"
+            # csvList.append(file_csv_format)
+
+            satd_density = round((satd_count / loc) * 1000, 2)
+            satd_density_percentage = round((((satd_count / loc) * 1000) / 1000)*100, 2)
+            lines_compromised_density = round((lines_compromised / loc) * 1000, 2)
+            lines_compromised_density_percentage = round((((lines_compromised / loc) * 1000) / 1000)*100, 2)
+            
+            #danger levels, 1 is ok risk, 2 is bad, 3 is warning
+            satd_density_score = (0 if satd_density < 2.5 else 1 if satd_density > 2.5 and satd_density < 40 
+                                  else 2 if satd_density > 40 and satd_density < 180 else 3)
+            # lc_density_score = (0 if satd_density < 2.5 else 1 if satd_density > 2.5 and satd_density < 40 
+            #                       else 2 if satd_density > 40 and satd_density < 180 else 3)
+            # ^^ this hasn't been calculated average, max etc from yet
+            # calculate size of commits?
+            # calculate activity level? Any other way?
+
+            
+            # SATDDensity = 40%, ComPDensity = 60%
+            
+            report_data["data"]["satd_density_average"] = 17.82503192
+            report_data["data"]["satd_density_max"] = 181.818
+            report_data["data"]["satd_density_standard_deviation"] = 27.84
+
+            report_data["data"]["compromised_density_average"] = 83.807
+            report_data["data"]["compromised_density_max"] = 454.550
+            report_data["data"]["compromised_density_standard_deviation"] = 94.54
+
+            
+            low_stddensity_risk = report_data["data"]["satd_density_average"] #can be within this number to be low risk
+            medium_stddensity_risk = report_data["data"]["satd_density_max"] - report_data["data"]["satd_density_standard_deviation"]
+            # high_stddensity_risk = thresholds["satd_density_max"]
+
+            low_compdens_risk = report_data["data"]["compromised_density_average"] #can be within this number to be low risk
+            medium_compdens_risk = report_data["data"]["compromised_density_max"] - report_data["data"]["compromised_density_standard_deviation"]
+
+
+            stddens_normalized = checkDensityToThreshold(satd_density, medium_stddensity_risk, low_stddensity_risk) * 0.4
+            compromised_normalized = checkDensityToThreshold(lines_compromised_density, medium_compdens_risk, low_compdens_risk) * 0.6
+            risk_number = stddens_normalized + compromised_normalized
+            risk = ""
+
+            if (risk_number >= 2.5):
+                risk = "High"
+            elif risk_number >= 1.5:
+                risk = "Medium"
+            else:
+                risk = "Low"
 
             datajson = {
                 "Text": fullText,
                 "filename": r_file.filename,
                 "file": r_file.fullpath,
                 "contributor_data": contributor_stats,
+                "risk_level": risk,
                 "metrics": {
                     "hasSatd": file_has_satd,
                     "commits": r_file.commits,
-                    "lines_added": r_file.churndata["added"],
-                    "lines_deleted": r_file.churndata["deleted"],
-                    "total_churn": total_churn,
+                    "lines_added": addedlines,
+                    "lines_deleted": deletedlines,
+                    "churn_total": total_churn_add,
+                    "churn_activity": total_churn_sub,
                     "loc": loc,
                     "satd_count": satd_count,
-                    "file_td_density": density,
+                    "file_td_density": satd_density,  #SATD density <---
+                    "td_density_percentage": satd_density_percentage,  #SATD density <---
                     "lines_compromised": lines_compromised,
-                    "churn_per_loc": round(churn_per_loc, 2)
-                },
-                "risk_level": risk
+                    "lines_compromised_percentage": round((lines_compromised / loc) * 100, 2),
+                    "lines_compromised_density": lines_compromised_density,
+                    "lines_compromised_density_percentage": lines_compromised_density_percentage,
+                    "churn_per_loc": round(churn_per_loc, 2),
+                    "past_year_activity": { #This section down here should not be shown in the final report if it doesn't work, as a general rule, don't include stuff that doesn't work
+                        "average": ya,
+                        "total": yt,
+                        "peak": yp,
+                        "average_normalized": round((ya / loc) * 1000, 2),
+                        "total_normalized": round((yt / loc) * 1000, 2),
+                        "peak_normalized": round((yp / loc) * 1000, 2),
+                        "dev_status": "No current Development" if yt == 0 else "Inactive" if yt > 0 and yt < 120 else "Active development"
+                    }
+                }
             }
             rFileOutputStrings.append(datajson)
             report_data["files"][r_file.filename] = datajson
+
+            # if (file_has_satd): #only add to list if the file actually has SATD; otherwise there is no point lol
+            #     density_to_csv = f'{datajson["filename"]};{datajson["metrics"]["satd_count"]};{datajson["metrics"]["file_td_density"]};{datajson["metrics"]["lines_compromised_density"]}\n'
+                # csvList.append(density_to_csv)
+
 
             # Create File and store result
         else:
@@ -296,6 +444,7 @@ def RepositoryAnalyzation():
     satd_percentage = (linesWithSatdCounter / totalLoc * 100) if totalLoc > 0 else 0
     total_td_density = round((totalSatdCounter / totalLoc) * 1000, 2)
 
+    # lagre_til_csv(csvList, REPONAME + ".csv") # VIKTIG <--- husk å fjern før merge
     
     outputFileAnalyzeString += (
         f"\nTotal amount of SATD comments found: {totalSatdCounter}"
@@ -314,6 +463,18 @@ def RepositoryAnalyzation():
     report_data["data"]["filessatd"] = totalFilesSatd
     report_data["data"]["totalfiles"] = totalFiles
     report_data["data"]["totalcontributors"] = len(projectContributors)
+
+    avg_score, health_label, health_color = calculate_project_health(report_data["files"])
+    report_data["data"]["health_status"] = health_label
+    report_data["data"]["health_color"] = health_color
+
+    # stats["health_score"] = avg_score
+    # stats["health_label"] = health_label
+    # stats["health_color"] = health_color
+    
+    # Pakk ut threshold-verdiene direkte inn i report_data["data"]
+    # Dette gjør at du kan aksessere dem som f.eks. report_data["data"]["satd_density_average"]
+
 
 
     outputFileAnalyzeString += f"\nR-files with SATD: {totalFilesSatd} out of {totalFiles} total"

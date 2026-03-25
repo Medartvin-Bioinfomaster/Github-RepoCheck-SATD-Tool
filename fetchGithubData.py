@@ -2,11 +2,13 @@ from pydriller import Repository
 
 from storageHandler import write_to_outputfile, readRepoStorageFile, writeRepoToStorage
 
-from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, choose_separator, clean_name
+from tools import FindRepoName, CreateTypedRepoName, isUrl, WriteRepoName, choose_separator, clean_name, getHtmlGraph
 
 from dataClasses import RepoDetails, FileData, RFileData, Contributor
 
 from typing import Dict, List
+
+import pandas as pd
 
 import time
 
@@ -74,6 +76,8 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
     listOfAbsolutePaths = []
 
+    churn_data = {"commits": {}, "files": {}} #includes
+
     startAnalyzation = time.time()
 
     if (cancelcommand == True):
@@ -92,20 +96,47 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
         commitUser = clean_name(uncleaned_username)
         commitHash = commit.hash
 
+        commit_churndatapoint = {"added": commit.insertions , "deleted": commit.deletions , "commitdate": commit.committer_date}
+        churn_data["commits"] = commit_churndatapoint
+
         if (firstCommitHash == ""):
             firstCommitHash = commitHash
         lastCommitHash = commitHash
 
         commitsTraveresedCounter += 1
 
+        added = 0
+        deleted = 0
         for file in commit.modified_files: 
-
-            filesTraveresedCounter += 1
-
+            
             relative_filepath = file.new_path or file.old_path
             symbol = choose_separator(repoUrl)
             absolute_path = repoUrl + symbol + relative_filepath
             filename = file.filename
+
+            showlogs = False
+
+            if (filename == "MulticoreParam-class.R"):
+                showlogs = True
+
+            added += file.added_lines
+            deleted += file.deleted_lines
+
+            if showlogs:
+                print("Churnlogs in GitFetch")
+                print(added)
+                print(deleted)
+                print()
+
+            file_churndatapoint = {"added": file.added_lines, "deleted": file.deleted_lines, "commitdate": commit.committer_date}
+            churn_data["files"] = file_churndatapoint
+
+            # print(f"(File) Added: {added}, Deleted: {deleted}")
+            # print(f"(commit) Added: {commit.insertions}, Deleted: {commit.deletions}")
+            # print(f"(File) Added: {file.added_lines}, Deleted: {file.deleted_lines}\n") #<--- this one is correct
+
+            filesTraveresedCounter += 1
+
 
             fileObj = FileData(filename, absolute_path) #creating a basic dataclass for the file
 
@@ -116,11 +147,14 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
 
                 # Handle R file data and collect
 
+                # old churn handeling?
                 churn_stats = {"added": 0, "deleted": 0, "commits": 0, "loc": 0}
-                churn_stats["added"] = file.added_lines
-                churn_stats["deleted"] = file.deleted_lines
+                churn_stats["added"] += file.added_lines
+                churn_stats["deleted"] += file.deleted_lines
                 churn_stats["commits"] = 1
                 churn_stats["loc"] = 1
+
+                
                 
                 r_file = RFileData(filename, 
                                    absolute_path, 
@@ -129,8 +163,9 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                                    1, 
                                    commitHash)
                 
+                r_file.addChurnDataPoint(file_churndatapoint) #adds churndata to the log
                 # adding the final object to the list
-                r_files_data_list[filename] = r_file
+                r_files_data_list[absolute_path] = r_file
 
                 if commitUser not in all_contributors: # add contributor to its own list
                     # all_contributors.append(contr = Contributor(commitUser, 1, commit.hash))
@@ -143,9 +178,10 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             else: # if the file has been logged, update data
                 if (filename.lower().endswith(".r")):
 
-                    existing_r_file: RFileData = r_files_data_list[filename]
+                    existing_r_file: RFileData = r_files_data_list[absolute_path]
                     existing_r_file.addCommit()
                     existing_r_file.addCommitHash(commitHash)
+                    existing_r_file.addChurnDataPoint(file_churndatapoint)
                     # add only unique contributor
                     if commitUser not in existing_r_file.contributors:
                         existing_r_file.addContributor(commitUser)
@@ -158,10 +194,20 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
                         existing_contributor.addCommit()
                         existing_contributor.addCommitHash(commitHash)
 
-        # print(f'Commits read: {commitsTraveresedCounter}, total files iterated: {filesTraveresedCounter}')
-
+            #_
+        # churn_data.append({
+        #     'Date': commit.committer_date,
+        #     'Added': added,
+        #     'Deleted': deleted,
+        #     'Total Churn': added + deleted,
+        #     'Message': commit.msg[:50]
+        # })
+        #_
+    #_
     endAnalyzation = time.time()
     print(f"\nTime spent fetching: {endAnalyzation - startAnalyzation} seconds")
+
+    # getHtmlGraph(churn_data)
 
     return {
             "repositoryName": repositoryName, 
@@ -170,5 +216,6 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             "projectContributors": all_contributors, 
             "firstCommitHash": firstCommitHash, 
             "lastCommitHash": lastCommitHash,
-            "totalCommits": commitsTraveresedCounter
+            "totalCommits": commitsTraveresedCounter #,
+            # "commits_churndata": churn_data["commits"]
             }

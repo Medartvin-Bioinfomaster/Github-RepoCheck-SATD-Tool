@@ -9,6 +9,23 @@ def generate_full_report(repo_path, report_data, stats):
     percentCompromised = round((stats['locCompromised'] / stats['loc']) * 100, 1)
     json_contributors = json.dumps(report_data["data"]["contributorCommits"])
 
+        # Opprett et strukturert objekt (dictionary) fra de flate stats-verdiene
+    thresholds = {
+        "satd_density_average": stats["satd_density_average"], 
+        "satd_density_standard_deviation": stats["satd_density_standard_deviation"],
+        "satd_density_max": stats["satd_density_max"],
+        "compromised_density_average": stats["compromised_density_average"],
+        "compromised_density_standard_deviation": stats["compromised_density_standard_deviation"],
+        "compromised_density_max": stats["compromised_density_max"]
+    }
+
+    low_stddensity_risk = thresholds["satd_density_average"] #can be within this number to be low risk
+    medium_stddensity_risk = thresholds["satd_density_max"] - thresholds["satd_density_standard_deviation"]
+    # high_stddensity_risk = thresholds["satd_density_max"]
+
+    low_compdens_risk = thresholds["compromised_density_average"] #can be within this number to be low risk
+    medium_compdens_risk = thresholds["compromised_density_max"] - thresholds["compromised_density_standard_deviation"]
+
     html_content = f"""<!DOCTYPE html>
     <html lang="en">
     <head>
@@ -57,18 +74,44 @@ def generate_full_report(repo_path, report_data, stats):
                 <p>Analysis for: <strong>{repo_path}</strong></p>
             </header>
             
-            <div class="stats-bar">
-                <div class="stat-item"><div class="number">{stats['satd_count']}</div><div class="label">SATD comments</div></div>
-                <div style="display: flex; gap: 10px; background-color: #ededed; padding: 4px 15px; border-radius: 10px;">
-                    <div class="stat-item"><div class="number">{stats['loc']}</div><div class="label">Lines of code (Loc)</div></div>
-                    <div class="stat-item"><div class="number">{stats['locCompromised']}</div><div class="label">Loc affected by SATD</div></div>
-                    <div class="stat-item"><div class="number" style="color: {StatusDebtPercent(percentCompromised)};">{percentCompromised}%</div><div class="label">Percentage affected</div></div>
+            <div class="stats-bar" style="display: flex; flex-wrap: wrap; gap: 20px; padding: 15px;">
+                <!-- Gruppe 1: SATD Core -->
+                <div class="stat-item">
+                    <div class="number" style="color: {stats['health_color']}">{stats['health_status']}</div>
+                    <div class="label">Codebase Health</div>
                 </div>
-                <div class="stat-item"><div class="number">{stats['density']}</div><div class="label">Technical Debt Density (pr 1000 loc)</div></div>
-                <div class="stat-item"><div class="number">{stats['commits']}</div><div class="label">Total Commits</div></div>
-                <div class="stat-item"><div class="number">{stats['totalfiles']}</div><div class="label">Files</div></div>
-                <div class="stat-item"><div class="number">{stats['filessatd']}/{stats['totalfiles']}</div><div class="label">Files affected</div></div>
-                <div class="stat-item"><div class="number">{stats['totalcontributors']}</div><div class="label">Contributors</div></div>
+                <div class="stat-item">
+                    <div class="number">{stats['satd_count']}</div>
+                    <div class="label">SATD comments</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">{stats['density']}</div>
+                    <div class="label">Avg. Density (kLOC)</div>
+                </div>
+
+                <!-- Gruppe 2: LOC Detaljer (Grå boks) -->
+                <div style="display: flex; gap: 15px; background-color: #f0f0f0; padding: 10px 20px; border-radius: 12px; border: 1px dashed #ccc;">
+                    <div class="stat-item"><div class="number">{stats['loc']}</div><div class="label">Total LOC</div></div>
+                    <div class="stat-item"><div class="number">{stats['locCompromised']}</div><div class="label">Affected LOC</div></div>
+                    <div class="stat-item">
+                        <div class="number" style="color: {StatusDebtPercent(percentCompromised)};">{percentCompromised}%</div>
+                        <div class="label">Ratio</div>
+                    </div>
+                </div>
+
+                <!-- Gruppe 3: Prosjekt helse -->
+                <div class="stat-item">
+                    <div class="number">{stats['filessatd']} / {stats['totalfiles']}</div>
+                    <div class="label">Affected Files</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">{stats['commits']}</div>
+                    <div class="label">Commits</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">{stats['totalcontributors']}</div>
+                    <div class="label">Contributors</div>
+                </div>
             </div>
 
             <div class="stats-bar" style="flex-direction: column; align-items: flex-start;">
@@ -76,15 +119,67 @@ def generate_full_report(repo_path, report_data, stats):
                 <div id="contributorList" style="display: flex; gap: 15px; overflow-x: auto; width: 100%; padding-bottom: 10px;">
                     </div>
             </div>
+
+            <div class="stats-bar" style="flex-direction: column; align-items: flex-start; background: #f9f9f9; padding: 20px; border-radius: 12px; border: 1px solid #ddd;">
+                <h2 style="font-size: 1.1em; margin-bottom: 15px; color: #333; display: flex; align-items: center; gap: 8px;">
+                    Metrics Explained ℹ️
+                </h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%;">
+                    <!-- SATD Forklaring -->
+                    <div style="background: white; padding: 15px; border-radius: 8px; border-left: 5px solid #2ecc71;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 0.9em; color: #666;">SATD Density (per 1k LOC)</h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85em;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 12px; height: 12px; background: #2ecc71; border-radius: 50%;"></span>
+                                <span><strong>Low Risk:</strong> 0 - {low_stddensity_risk} (Average)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 12px; height: 12px; background: #f39c12; border-radius: 50%;"></span>
+                                <span><strong>Medium Risk:</strong> {low_stddensity_risk} - {medium_stddensity_risk} (Max - Stand Devi)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 12px; height: 12px; background: #e74c3c; border-radius: 50%;"></span>
+                                <span><strong>Critical:</strong> above {medium_stddensity_risk}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compromised Forklaring -->
+                    <div style="background: white; padding: 15px; border-radius: 8px; border-left: 5px solid #e74c3c;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 0.9em; color: #666;">Compromised Density (per 1k LOC)</h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85em;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 12px; height: 12px; background: #2ecc71; border-radius: 50%;"></span>
+                                <span><strong>Normal:</strong>  0 - {low_compdens_risk} (Average)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 12px; height: 12px; background: #f39c12; border-radius: 50%;"></span>
+                                <span><strong>Advarsel:</strong> {low_compdens_risk} - {medium_compdens_risk} (Max - Stand Devi)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 12px; height: 12px; background: #e74c3c; border-radius: 50%;"></span>
+                                <span><strong>Kritisk (Outlier):</strong> above {medium_compdens_risk}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <div class="divider">
                 <div class="file-list-column">
                     <div class="controls-area">
                         <input type="text" class="search-box" id="fileSearch" placeholder="Search files..." onkeyup="filterFiles()">
-                        <div class="filter-group">
-                            <button class="filter-btn active" onclick="setSatdFilter('BOTH', this)">Both</button>
-                            <button class="filter-btn" onclick="setSatdFilter('HasSATD', this)">Satd</button>
-                            <button class="filter-btn" onclick="setSatdFilter('Clean', this)">Clean</button>
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; padding: 0 5px; gap: 20px;">
+
+                            <div class="filter-group">
+                                <button class="filter-btn active" onclick="setSatdFilter('BOTH', this)">Both</button>
+                                <button class="filter-btn" onclick="setSatdFilter('HasSATD', this)">Satd</button>
+                                <button class="filter-btn" onclick="setSatdFilter('Clean', this)">Clean</button>
+                            </div>
+
+                            <div id="riskStats" style="display: flex; gap: 15px; font-size: 0.85em; font-weight: 600;"></div>
+
                         </div>
                     </div>
                     <div class="file-entries-scroll" id="fileList"></div>
@@ -168,6 +263,12 @@ def generate_full_report(repo_path, report_data, stats):
                 document.querySelectorAll('.file-item').forEach(el => el.classList.remove('selected'));
                 element.classList.add('selected');
 
+                
+                s_avg = {thresholds["satd_density_average"]}
+                s_std = {thresholds["satd_density_standard_deviation"]}
+                c_avg = {thresholds["compromised_density_average"]}
+                c_std = {thresholds["compromised_density_standard_deviation"]}
+
                 const view = document.getElementById('analysisView');
                 const percentage = ((file.metrics.lines_compromised / file.metrics.loc) * 100).toFixed(1);
 
@@ -191,19 +292,51 @@ def generate_full_report(repo_path, report_data, stats):
                 }}
                 
                 view.innerHTML = `
-                    <h2>📄${{file.filename}}</h2>
-                    <p><strong>File path:</strong> ${{file.file}}</p>
-                    <p><strong>Contains SATD:</strong> <span style="color: ${{StatusDebt(file.metrics.hasSatd)}};">${{file.metrics.hasSatd ? "Yes" : "No"}}</span></p>
-                    <p><strong>Total SATD Occurrences:</strong> <span style="font-weight: 700; color: red;"> ${{file.metrics.satd_count}}</span></p>
-                    <p><strong>Lines of Code:</strong> ${{file.metrics.loc}}</p>
-                    <p><strong>Lines affected by TD:</strong> ${{file.metrics.lines_compromised}}/${{file.metrics.loc}}</p>
-                    <p><strong>Percentage:</strong> <span style="color: ${{StatusDebtPercent(parseFloat(percentage))}};">${{percentage}}%</span></p>
-                    <p><strong>Risk Level:</strong> ${{riskState(file.risk_level)}} ${{file.risk_level}}</p>
-                    <p><strong>Total commits:</strong><span style="font-weight: 700;color:#319fec;"> ${{file.metrics.commits}}</span></p>
-                    ${{contributorHtml}}
-                    <hr style="margin: 20px 0;">
-                    <h3>Report:</h3>
-                    <pre style="background: #eee; padding: 15px; border-radius: 4px; white-space: pre-wrap;">${{file.Text}}</pre>
+                    <div style="background: white; padding: 20px; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                            <h2>📄 ${{file.filename}}</h2>
+                            <div style="background: #f0f0f0; padding: 8px 15px; border-radius: 20px; font-weight: bold;">
+                                Risk: ${{riskState(file.risk_level)}} ${{file.risk_level}}
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                            
+                            <div style="padding: 15px; background: #fafafa; border-radius: 8px;">
+                                <h4 style="color: #666; margin-bottom: 10px; font-size: 0.8em; text-transform: uppercase;">File Info</h4>
+                                <p><strong>LOC:</strong> ${{file.metrics.loc}}</p>
+                                <p><strong>Lines compromised:</strong> ${{file.metrics.lines_compromised}} (${{file.metrics.lines_compromised_percentage}}%)</p>
+                                <p><strong>Commits:</strong> ${{file.metrics.commits}}</p>
+                                <p><strong>Status:</strong> <span style="color: ${{StatusDebt(file.metrics.hasSatd)}}">${{file.metrics.hasSatd ? "⚠️ Contains SATD" : "✅ Clean"}}</span></p>
+                            </div>
+
+                            <div style="padding: 15px; background: #fafafa; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                                <h4 style="color: #666; margin-bottom: 10px; font-size: 0.8em; text-transform: uppercase;">Debt Metrics</h4>
+                                <p><strong>Occurrences:</strong> <span style="color: red; font-weight: bold;">${{file.metrics.satd_count}}</span></p>
+                                <p style="color: ${{getSeverityColorSatd(file.metrics.file_td_density)}}">
+                                    <strong>SATD Density:</strong> ${{file.metrics.file_td_density}}
+                                </p>
+                                <p style="color: ${{getSeverityColorComp(file.metrics.lines_compromised_density)}}">
+                                    <strong>Comp. Density:</strong> ${{file.metrics.lines_compromised_density}}
+                                </p>
+                            </div>
+
+                            <div style="padding: 15px; background: #fafafa; border-radius: 8px;">
+                                <h4 style="color: #666; margin-bottom: 10px; font-size: 0.8em; text-transform: uppercase;">Activity (Past Year)</h4>
+                                <p><strong>Churn Activity:</strong> ${{file.metrics.churn_activity}}</p>
+                                <p><strong>Dev Status:</strong> ${{file.metrics.past_year_activity.dev_status}}</p>
+                                <p><strong>Avg. Churn:</strong> ${{file.metrics.past_year_activity.average}}</p>
+                            </div>
+                        </div>
+
+                        <div style="border-top: 1px solid #eee; padding-top: 15px; font-size: 0.85em; color: #555;">
+                            <p style="margin-bottom: 10px;"><strong>Full Path:</strong> <code>${{file.file}}</code></p>
+                            ${{contributorHtml}}
+                        </div>
+
+                        <h3>Report:</h3>
+                        <pre style="background: #eee; padding: 15px; border-radius: 4px; white-space: pre-wrap;">${{file.Text}}</pre>
+                    </div>
                 `;
             }}
 
@@ -236,14 +369,55 @@ def generate_full_report(repo_path, report_data, stats):
                 }});
             }}
 
+                function updateRiskCounters() {{
+                    let counts = {{ High: 0, Medium: 0, Low: 0 }};
+
+                    // Teller opp basert på file.risk_level i JSON-dataene
+                    Object.values(allFiles).forEach(file => {{
+                        if (counts.hasOwnProperty(file.risk_level)) {{
+                            counts[file.risk_level]++;
+                        }}
+                    }});
+
+                    const statsContainer = document.getElementById('riskStats');
+                    if (statsContainer) {{
+                        statsContainer.innerHTML = `
+                            <span style="color: #e74c3c;">High: ${{counts.High}}</span>
+                            <span style="color: #f39c12;">Medium: ${{counts.Medium}}</span>
+                            <span style="color: #2ecc71;">Low: ${{counts.Low}}</span>
+                        `;
+                    }}
+                }}
+
 
             window.onload = () => {{
                 renderFiles();
                 renderContributors();
+                updateRiskCounters();
             }};
             
             function riskState(risk) {{
-                return risk === "High" ? "⚠️" : risk === "Medium" ? "🟠" : "🟢";
+                return risk === "High" ? "🔴" : risk === "Medium" ? "🟠" : "🟢";
+            }}
+
+            function getSeverityColorSatd(value) {{
+                if (value > {medium_stddensity_risk}) {{
+                    return "red";    
+                }} else if (value > {low_stddensity_risk}) {{
+                    return "orange"; 
+                }} else {{
+                    return "green";
+                }}
+            }}
+
+            function getSeverityColorComp(value) {{
+                if (value > {medium_compdens_risk}) {{
+                    return "red";    
+                }} else if (value > {low_compdens_risk}) {{
+                    return "orange"; 
+                }} else {{
+                    return "green";
+                }}
             }}
 
     </script>

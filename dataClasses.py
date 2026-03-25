@@ -32,6 +32,8 @@ class RFileData:
         self.commitHashes = []
         self.churn = 0
         self.churndata = {"added": 0, "deleted": 0, "loc": 0}
+        self.churnlogs = []
+        self.satdDensity = 0
         if churndata is not None:
             self.churndata = churndata
         if contributor is not None:
@@ -52,6 +54,12 @@ class RFileData:
 
     def addChurnValue(self, churnvalue):
         self.churn = churnvalue
+
+    def addChurnDataPoint(self, dpobject):
+        self.churnlogs.append(dpobject)
+
+    def addSatdDensity(self, density): #Density pr 1000 loc
+        self.satdDensity = density
 
 # class GitFetchReturn:
 #     def in
