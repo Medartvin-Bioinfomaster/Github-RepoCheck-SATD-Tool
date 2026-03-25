@@ -192,7 +192,7 @@ def RepositoryAnalyzation():
     # print(f"The size of the R list: {r_files_data}, {len(r_files_data)}")
 
     averageChurnPrLoc = 0
-    csvList = []
+    # csvList = []
     
     report_data["data"]["satd_density_average"] = 17.82503192
     report_data["data"]["satd_density_max"] = 181.818
@@ -258,7 +258,7 @@ def RepositoryAnalyzation():
                 iteration += 1
             #_
 
-            a2, t2, p2, a4, t4, p4, a6, t6, p6, ya, yt, yp = churn_stats_from_logs(r_file.churnlogs, r_file.filename)
+            # a2, t2, p2, a4, t4, p4, a6, t6, p6, ya, yt, yp = churn_stats_from_logs(r_file.churnlogs, r_file.filename)
             # ^^ this includes the past yearly activity, this is also interesting information if you have it, send to html!
             
             total_churn_add = addedlines + deletedlines
@@ -341,7 +341,7 @@ def RepositoryAnalyzation():
 
             # if len(csvList):
             #     csvList.append(f"r_file.filename;loc;r_file.commits;hasStatd;REPONAME;len(contributor_stats);satd_count;lines_compromised;total_churn_add;total_churn_sub;code_decay_add;code_decay_sub;avg_2;peak_2;total_2;avg_4;peak_4;total_4;avg_6;peak_6;total_6")
-            file_csv_format = f"{r_file.filename};{loc};{r_file.commits};{hasStatd};{REPONAME};{len(contributor_stats)};{satd_count};{lines_compromised};{total_churn_add};{total_churn_sub};{addedlines};{deletedlines};{a2};{t2};{p2};{a4};{t4};{p4};{a6};{t6};{p6};{ya};{yt};{yp}"
+            # file_csv_format = f"{r_file.filename};{loc};{r_file.commits};{hasStatd};{REPONAME};{len(contributor_stats)};{satd_count};{lines_compromised};{total_churn_add};{total_churn_sub};{addedlines};{deletedlines};{a2};{t2};{p2};{a4};{t4};{p4};{a6};{t6};{p6};{ya};{yt};{yp}"
             # csvList.append(file_csv_format)
 
             satd_density = round((satd_count / loc) * 1000, 2)
@@ -426,8 +426,8 @@ def RepositoryAnalyzation():
             rFileOutputStrings.append(datajson)
             report_data["files"][r_file.filename] = datajson
 
-            if (file_has_satd): #only add to list if the file actually has SATD; otherwise there is no point lol
-                density_to_csv = f'{datajson["filename"]};{datajson["metrics"]["satd_count"]};{datajson["metrics"]["file_td_density"]};{datajson["metrics"]["lines_compromised_density"]}\n'
+            # if (file_has_satd): #only add to list if the file actually has SATD; otherwise there is no point lol
+            #     density_to_csv = f'{datajson["filename"]};{datajson["metrics"]["satd_count"]};{datajson["metrics"]["file_td_density"]};{datajson["metrics"]["lines_compromised_density"]}\n'
                 # csvList.append(density_to_csv)
 
 
