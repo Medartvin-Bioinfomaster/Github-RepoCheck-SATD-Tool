@@ -258,7 +258,7 @@ def RepositoryAnalyzation():
                 iteration += 1
             #_
 
-            # a2, t2, p2, a4, t4, p4, a6, t6, p6, ya, yt, yp = churn_stats_from_logs(r_file.churnlogs, r_file.filename)
+            a2, t2, p2, a4, t4, p4, a6, t6, p6, ya, yt, yp = churn_stats_from_logs(r_file.churnlogs, r_file.filename)
             # ^^ this includes the past yearly activity, this is also interesting information if you have it, send to html!
             
             total_churn_add = addedlines + deletedlines
