@@ -170,9 +170,7 @@ def analyze_file(RFileInstance: RFileData, repo_name: str, context_lines=3, capt
             content = fh.read() #reads the file, stores the script in "content" variable
             loc = content.count("\n") if content else 0 # denne kodesnutten kan bli byttet ut med en mer "genuin" innhentingsmetode, hvis funksjonen går igjennom filer line for line i for-loop, så er dette bedre og mer robust
             foundFile = True
-            # print(f"File {FindRepoName(file_path)} has {loc} lines of code")
     except Exception as e:
-        print(f"Error reading {FindRepoName(file_path)}. It may be an old path that no longer exists.")
         foundFile = False
         # if file has no content (could have been deleted or emptied), skip it
 

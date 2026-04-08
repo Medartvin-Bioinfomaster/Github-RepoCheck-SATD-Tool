@@ -74,7 +74,7 @@ def generate_full_report(repo_path, report_data, stats):
                 <p>Analysis for: <strong>{repo_path}</strong></p>
             </header>
             
-            <div class="stats-bar" style="display: flex; flex-wrap: wrap; gap: 20px; padding: 15px;">
+            <div class="stats-bar" style="display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; align-items: baseline;">
                 <!-- Gruppe 1: SATD Core -->
                 <div class="stat-item">
                     <div class="number" style="color: {stats['health_color']}">{stats['health_status']}</div>
@@ -90,7 +90,7 @@ def generate_full_report(repo_path, report_data, stats):
                 </div>
 
                 <!-- Gruppe 2: LOC Detaljer (Grå boks) -->
-                <div style="display: flex; gap: 15px; background-color: #f0f0f0; padding: 10px 20px; border-radius: 12px; border: 1px dashed #ccc;">
+                <div style="display: flex; gap: 15px; background-color: #f0f0f0; padding: 10px 20px; border-radius: 12px; border: 2px dashed #ccc;">
                     <div class="stat-item"><div class="number">{stats['loc']}</div><div class="label">Total LOC</div></div>
                     <div class="stat-item"><div class="number">{stats['locCompromised']}</div><div class="label">Affected LOC</div></div>
                     <div class="stat-item">
@@ -124,42 +124,50 @@ def generate_full_report(repo_path, report_data, stats):
                 <h2 style="font-size: 1.1em; margin-bottom: 15px; color: #333; display: flex; align-items: center; gap: 8px;">
                     Metrics Explained ℹ️
                 </h2>
+
+                <p>Low is everything less than average. Medium is Max density - standard deviation. High is everything above the Medium threshold number. All numbers are fetched from a github repository, where an average was calculated, a max value of the density was found, aswell as standard deviation.</p>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%;">
                     <!-- SATD Forklaring -->
                     <div style="background: white; padding: 15px; border-radius: 8px; border-left: 5px solid #2ecc71;">
-                        <h3 style="margin: 0 0 10px 0; font-size: 0.9em; color: #666;">SATD Density (per 1k LOC)</h3>
+                        <h3 style="margin: 0 0 10px 0; font-size: 0.9em; color: #666;">SATD Density Thresholds</h3>
                         <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85em;">
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="width: 12px; height: 12px; background: #2ecc71; border-radius: 50%;"></span>
-                                <span><strong>Low Risk:</strong> 0 - {low_stddensity_risk} (Average)</span>
+                                <span><strong>Low:</strong> 0 - {round(low_stddensity_risk, 2)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="width: 12px; height: 12px; background: #f39c12; border-radius: 50%;"></span>
-                                <span><strong>Medium Risk:</strong> {low_stddensity_risk} - {medium_stddensity_risk} (Max - Stand Devi)</span>
+                                <span><strong>Medium:</strong> {round(low_stddensity_risk, 2)} - {round(medium_stddensity_risk, 2)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="width: 12px; height: 12px; background: #e74c3c; border-radius: 50%;"></span>
-                                <span><strong>Critical:</strong> above {medium_stddensity_risk}</span>
+                                <span><strong>Critical:</strong> above {round(medium_stddensity_risk, 2)}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <p>This metric counts every sample of SATD found in a file, and normalizes it to be X samples within 1000 lines of code (LoC). This metric determines low, medium, or high levels of SATD cases within a file.</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Compromised Forklaring -->
                     <div style="background: white; padding: 15px; border-radius: 8px; border-left: 5px solid #e74c3c;">
-                        <h3 style="margin: 0 0 10px 0; font-size: 0.9em; color: #666;">Compromised Density (per 1k LOC)</h3>
+                        <h3 style="margin: 0 0 10px 0; font-size: 0.9em; color: #666;">Compromised Lines Density</h3>
                         <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85em;">
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="width: 12px; height: 12px; background: #2ecc71; border-radius: 50%;"></span>
-                                <span><strong>Normal:</strong>  0 - {low_compdens_risk} (Average)</span>
+                                <span><strong>Normal:</strong>  0 - {round(low_compdens_risk, 2)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="width: 12px; height: 12px; background: #f39c12; border-radius: 50%;"></span>
-                                <span><strong>Advarsel:</strong> {low_compdens_risk} - {medium_compdens_risk} (Max - Stand Devi)</span>
+                                <span><strong>Advarsel:</strong> {round(low_compdens_risk, 2)} - {round(medium_compdens_risk, 2)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="width: 12px; height: 12px; background: #e74c3c; border-radius: 50%;"></span>
-                                <span><strong>Kritisk (Outlier):</strong> above {medium_compdens_risk}</span>
+                                <span><strong>Kritisk (Outlier):</strong> above {round(medium_compdens_risk, 2)}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <p>This metric counts every compromised line found in a file. A compromised line can be a function that contains SATD. This metric is normalized to x lines pr 1000 lines of code (LoC). This metric determines low, medium, or high levels of lines potentially compromised with SATD within a file.</p>
                             </div>
                         </div>
                     </div>

@@ -35,20 +35,15 @@ def getProjectRoot():
 
 
 def main_loop():
-    # files = {}
-    # fileAndContributors = {} # an object containing multiple "file" objects. File.contributors should contain every user that has channged that file. Also it should contain how many commits it has been part of, amount of times changed in commits.
-    # projectContributors = [] # a list that will contain all contributors from the git project. Include everyone who has ever commited changes. Idea: Put in loop during fetch - or after fetch, where you iterate through the file-object list? What is more efficient?
-    # issues = [] # list with amount of issues from the github. OBS: not implemented yet
-    
 
     cancelProgram = False
     reasonForCancel = ""
 
-    print("\n#/3#/3 Welcome to the SATD Tool 3\\#3\\#")
     action = 0
+    print("\n#/3#/3 Welcome to the SATD Tool 3\\#3\\#")
 
     while cancelProgram == False:
-        print('Select an option below by typing in its number. \n (1) Start Github Analyzation\n (2) Open Earlier Report\n (3) Open Knowledgebase\n (4) Open Semantic Similarity Search\n type "STOP", "0" or "X" to exit program.')
+        print('Select an option below by typing in its number. \n (1) Start Github Analysis\n (2) Open Earlier Report\n (3) Open Knowledgebase\n (4) Open Semantic Similarity Search\n type "STOP", "0" or "X" to exit program.')
         readyToContinue = input("Command|: ")
         if (readyToContinue.lower() == "stop" or readyToContinue == "0" or readyToContinue == "x"):
             cancelProgram = CancelProgram("User stopped program at first menu")
@@ -76,6 +71,9 @@ def main_loop():
                 print("The Knowledgebase wasn't found, please try again. Action can have failed due to the knowledgebase being moved or deleted.")
         elif (action == 4):
             start_db_interaction()
+        #_
+    #_
+#_
 
 
 def OpenReportRoutine():
@@ -88,28 +86,24 @@ def OpenReportRoutine():
 
     
 def RepositoryAnalyzation():
-    # define variables to use
     global cancelProgram 
     global reasonForCancel 
 
     REPONAME = ""
-    files = []
     r_files_data: Dict[RFileData] = {}
     projectContributors: Dict[Contributor] = {}
-    commits_churndata = {}
-    outputfilefolder = "File_Reports" #name of the folder where individual file reports are stored
     totalCommits = 0
     
     outputFileAnalyzeString = "Main report\n\n"
     lateSatdText = "Here is the rundown of the Total Findings:\n"
     rFileOutputStrings = []
-    rFilesNotFound = 0
 
-    totalSatdCounter = 0
-    linesWithSatdCounter = 0
-    totalLoc = 0
-    totalFilesSatd = 0
-    totalFiles = 0
+    rFilesNotFound=totalSatdCounter=linesWithSatdCounter=totalLoc=totalFilesSatd=totalFiles = 0 # all defined as 0
+
+    # Get repoURL
+    storageBucket = readRepoStorageFile(storage_path)
+    _url = WriteRepoName(storageBucket["repos"])
+    REPOURL = normalize_windows_path(_url)
 
     report_data = {
         "data": {
@@ -118,13 +112,9 @@ def RepositoryAnalyzation():
         },
         "files": {}
     }
-    #stage 1
-    print("What repository do you want to analyze?")
 
-    # Get repoURL
-    storageBucket = readRepoStorageFile(storage_path)
-    _url = WriteRepoName(storageBucket["repos"])
-    REPOURL = normalize_windows_path(_url)
+    #stage 1
+    # print("What repository do you want to analyze?")
 
     repo_been_found_and_is_valid = findRepo( REPOURL, cancelProgram ) #check if the url is valid
     wasValid = (repo_been_found_and_is_valid.get("status"))
@@ -137,15 +127,15 @@ def RepositoryAnalyzation():
 
     # Simple pause before analyzation
     if (cancelProgram != True):
-        print('System is ready to analyze the github \"' + FindRepoName(REPOURL) + '\". Type any key + ENTER to continue, or type "stop" or 0 to stop the program. ')
+        print('System is ready to analyze the github \"' + FindRepoName(REPOURL) + '\". Type \"ENTER\" to continue, or type "stop" or 0 to stop the program. ')
         readyToContinue = input("Command|: ")
         if (readyToContinue.lower() == "stop" or readyToContinue == "0"):
-            cancelProgram = CancelProgram("User stopped program before analyzation.")
+            cancelProgram = CancelProgram("User stopped program before analysis started.")
             return
     
     # Fetching Data Phase:
     if (cancelProgram == False):
-        print("Here the program should have started \__")
+        print()
         data_fetched = RepoFetcher( REPOURL, cancelProgram, False ) # OBS, set isLocal to FALSE by default, its not implemented yet, may not need to be
 
         if (data_fetched.get("status")):
@@ -163,36 +153,18 @@ def RepositoryAnalyzation():
         print(reasonForCancel)
 
     database_contribution = False
+    print('\nGithub analyzation complete! You can begin the file analyzation. ')
 
     # Individual File Analyzation Program
     if (cancelProgram != True):
-        print('\nGithub analyzation complete! You can begin the file analyzation. ')
-
-        print('\nDo you wish to store any SATD findings to our database?. Answer: (yes/1) or (no/0), then press "ENTER" to continue, or type "STOP" or "X" to stop the program. ')
-        readyToContinue = input("Command|: ")
-        if (readyToContinue.lower() == "stop" or readyToContinue == "x"):
-            cancelProgram = CancelProgram("User stopped program before analyzation.")
-            return
-        elif (readyToContinue.lower() == "yes" or readyToContinue == "1"):
-            database_contribution = True
-        else:
-            database_contribution = False
-        yesnot = "not" if database_contribution == False else ""
-        print(f"Database contribution was {yesnot} agreed to. Will {yesnot} save to database.")
-        
         print('\nPress "ENTER" to continue, or type "STOP", "X" or 0 to stop the program. ')
         readyToContinue = input("Command|: ")
         if (readyToContinue.lower() == "stop" or readyToContinue == "0" or readyToContinue == "x"):
             cancelProgram = CancelProgram("User stopped program before analyzation.")
 
-    print("Running file analyzer...")
-
-    # Counters and list storage
-
-    # print(f"The size of the R list: {r_files_data}, {len(r_files_data)}")
+    print("Running file analyzer...\n")
 
     averageChurnPrLoc = 0
-    # csvList = []
     
     report_data["data"]["satd_density_average"] = 17.82503192
     report_data["data"]["satd_density_max"] = 181.818
@@ -229,24 +201,18 @@ def RepositoryAnalyzation():
             lateSatdText += f"\nTotal findings: {satd_count}\nFile contains SATD: {fileHasSatdFormat}\n"
             
             # churn calculation
-            # total_churn = r_file.churndata["added"] + r_file.churndata["deleted"]
             addedlines = 0
             deletedlines = 0
             init_commit_addL = 0
             init_commit_delL = 0
-            # iteration = 0
 
             for iteration, log in enumerate(r_file.churnlogs):
                 #we can skip the initial commit and base the other churn types of this as a "proportional" churn value
-                # print(iteration)
-                # print(log)
 
                 addL = log["added"]
                 delL = log["deleted"]
                 comDate = log["commitdate"]
 
-                # print(comDate)
-                
                 delL = abs(delL) #normalizing the deleted lines to be a positive number
 
                 addedlines += addL
@@ -267,40 +233,12 @@ def RepositoryAnalyzation():
             code_decay_add = (addedlines - init_commit_addL) + (deletedlines - init_commit_delL) # always 0?
             code_decay_sub = (addedlines - init_commit_addL) - (deletedlines - init_commit_delL) # always 0?
 
-            ## dette er de ulike vektene for RISK faktor
-            # activity_score = min(yt / 20, 1)
-            # churn_score = min(avg_churn / 500, 1)
-            # satd_score = min(satd_density / 0.1, 1)
-            # contributor_score = min(recent_contributors / 5, 1)
-
-            # if (r_file.filename == "calculator.R"):
-            #     # write_to_outputfile(r_file.churnlogs, "calculator_churnlog.txt")
-            #     write_to_churnlog_to_outputfile(r_file.churnlogs, "calculator_churnlog.txt")
-
-            # Set to 0 NOW so then later we switch out with an actual Churn Formula
             total_churn = 0
 
 
             churn_per_loc = -1
 
-            # if loc > 0:
-            #     churn_per_loc = total_churn / loc
-            # else:
-            #     churn_per_loc = 0
-
-            # # these tags might be unneccessary
-            # if churn_per_loc >= 5:
-            #     risk = "High"
-            # elif churn_per_loc >= 1:
-            #     risk = "Medium"
-            # else:
-            #     risk = "Low"
-
-            # averageChurnPrLoc += churn_per_loc
             averageChurnPrLoc += 0
-
-            
-            
 
             text_with_details = SingleFileSatdText(r_file, file_has_satd, total_churn, loc, 
                                                    404, "not-measured rn", total_churn_add, total_churn_sub, code_decay_add, code_decay_sub, satd_count, lines_compromised)
@@ -331,19 +269,6 @@ def RepositoryAnalyzation():
             density = round((satd_count / loc) * 1000, 2)
             hasStatd = "SATD" if file_has_satd == True else "Clean"
 
-            """
-            total_churn_add, total_churn_sub, code_decay_add, code_decay_sub
-            
-            avg_2 = avg_4 = avg_6 = 0
-            peak_2 = peak_4 = peak_6 = 0
-            total_2 = total_4 = total_6 = 0
-            """
-
-            # if len(csvList):
-            #     csvList.append(f"r_file.filename;loc;r_file.commits;hasStatd;REPONAME;len(contributor_stats);satd_count;lines_compromised;total_churn_add;total_churn_sub;code_decay_add;code_decay_sub;avg_2;peak_2;total_2;avg_4;peak_4;total_4;avg_6;peak_6;total_6")
-            # file_csv_format = f"{r_file.filename};{loc};{r_file.commits};{hasStatd};{REPONAME};{len(contributor_stats)};{satd_count};{lines_compromised};{total_churn_add};{total_churn_sub};{addedlines};{deletedlines};{a2};{t2};{p2};{a4};{t4};{p4};{a6};{t6};{p6};{ya};{yt};{yp}"
-            # csvList.append(file_csv_format)
-
             satd_density = round((satd_count / loc) * 1000, 2)
             satd_density_percentage = round((((satd_count / loc) * 1000) / 1000)*100, 2)
             lines_compromised_density = round((lines_compromised / loc) * 1000, 2)
@@ -352,13 +277,6 @@ def RepositoryAnalyzation():
             #danger levels, 1 is ok risk, 2 is bad, 3 is warning
             satd_density_score = (0 if satd_density < 2.5 else 1 if satd_density > 2.5 and satd_density < 40 
                                   else 2 if satd_density > 40 and satd_density < 180 else 3)
-            # lc_density_score = (0 if satd_density < 2.5 else 1 if satd_density > 2.5 and satd_density < 40 
-            #                       else 2 if satd_density > 40 and satd_density < 180 else 3)
-            # ^^ this hasn't been calculated average, max etc from yet
-            # calculate size of commits?
-            # calculate activity level? Any other way?
-
-            
             # SATDDensity = 40%, ComPDensity = 60%
             
             report_data["data"]["satd_density_average"] = 17.82503192
@@ -372,11 +290,9 @@ def RepositoryAnalyzation():
             
             low_stddensity_risk = report_data["data"]["satd_density_average"] #can be within this number to be low risk
             medium_stddensity_risk = report_data["data"]["satd_density_max"] - report_data["data"]["satd_density_standard_deviation"]
-            # high_stddensity_risk = thresholds["satd_density_max"]
 
             low_compdens_risk = report_data["data"]["compromised_density_average"] #can be within this number to be low risk
             medium_compdens_risk = report_data["data"]["compromised_density_max"] - report_data["data"]["compromised_density_standard_deviation"]
-
 
             stddens_normalized = checkDensityToThreshold(satd_density, medium_stddensity_risk, low_stddensity_risk) * 0.4
             compromised_normalized = checkDensityToThreshold(lines_compromised_density, medium_compdens_risk, low_compdens_risk) * 0.6
@@ -426,26 +342,13 @@ def RepositoryAnalyzation():
             rFileOutputStrings.append(datajson)
             report_data["files"][r_file.filename] = datajson
 
-            # if (file_has_satd): #only add to list if the file actually has SATD; otherwise there is no point lol
-            #     density_to_csv = f'{datajson["filename"]};{datajson["metrics"]["satd_count"]};{datajson["metrics"]["file_td_density"]};{datajson["metrics"]["lines_compromised_density"]}\n'
-                # csvList.append(density_to_csv)
-
-
-            # Create File and store result
         else:
-            # datajson = {
-            #     "filename": r_file.filename + "_(Not found)",
-            #     "file": r_file.fullpath,
-            # }
             rFilesNotFound += 1
-            # rFileOutputStrings.append(datajson)
 
     
     satd_percentage = (linesWithSatdCounter / totalLoc * 100) if totalLoc > 0 else 0
     total_td_density = round((totalSatdCounter / totalLoc) * 1000, 2)
 
-    # lagre_til_csv(csvList, REPONAME + ".csv") # VIKTIG <--- husk å fjern før merge
-    
     outputFileAnalyzeString += (
         f"\nTotal amount of SATD comments found: {totalSatdCounter}"
         f"\nRepo's total lines of code: {totalLoc}"
@@ -467,15 +370,6 @@ def RepositoryAnalyzation():
     avg_score, health_label, health_color = calculate_project_health(report_data["files"])
     report_data["data"]["health_status"] = health_label
     report_data["data"]["health_color"] = health_color
-
-    # stats["health_score"] = avg_score
-    # stats["health_label"] = health_label
-    # stats["health_color"] = health_color
-    
-    # Pakk ut threshold-verdiene direkte inn i report_data["data"]
-    # Dette gjør at du kan aksessere dem som f.eks. report_data["data"]["satd_density_average"]
-
-
 
     outputFileAnalyzeString += f"\nR-files with SATD: {totalFilesSatd} out of {totalFiles} total"
 
