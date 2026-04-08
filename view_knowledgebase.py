@@ -51,18 +51,46 @@ def similarity_search():
     """
     Perform semantic similarity search using all-MiniLM-L6-v2.
     User pastes code, system finds similar SATD entries.
-
     """
-
     print("\n" + "="*80)
     print("SEMANTIC SIMILARITY SEARCH")
     print("="*80)
     print("\nInstructions:")
-    print("  1. Paste your code snippet below")
-    print("  2. Press Enter twice when finished")
-    print("  3. System will find similar entries (similarity >= 70%)")
+    print("  1. Set your similarity threshold")
+    print("  2. Paste your code snippet")
+    print("  3. Press Enter twice when finished")
     print("\nNote: Uses all-MiniLM-L6-v2 for semantic similarity detection")
     print("\n" + "-"*80 + "\n")
+    
+    # Get threshold from user
+    while True:
+        try:
+            threshold_input = input("Enter similarity threshold (0-100%, default 70): ").strip()
+            
+            if not threshold_input:
+                threshold = 0.70  # Default
+                print(f"Using default threshold: 70%")
+                break
+            
+            threshold_value = float(threshold_input)
+            
+            # Accept both 0-1 format and 0-100 format
+            if 0 <= threshold_value <= 1:
+                threshold = threshold_value
+            elif 1 < threshold_value <= 100:
+                threshold = threshold_value / 100.0
+            else:
+                print("Please enter a value between 0-100")
+                continue
+            
+            print(f"Threshold set to: {threshold:.0%}")
+            break
+            
+        except ValueError:
+            print("Invalid input. Please enter a number between 0-100")
+    
+    print("\n" + "-"*80 + "\n")
+    print("Paste your code snippet below (press Enter twice when finished):\n")
     
     # Collect user input
     code_lines = []
@@ -98,6 +126,8 @@ def similarity_search():
     else:
         print(user_code)
     print(f"{'='*80}\n")
+
+    print("Starting similarity search ... allMiniLM-L6-v2 model is loading!\n")
     
     # Perform similarity search
     try:
@@ -105,7 +135,7 @@ def similarity_search():
         
         print("Initializing similarity search...")
         
-        results = find_similar_satd_in_kb(user_code, threshold=0.70)
+        results = find_similar_satd_in_kb(user_code, threshold)
         
         # Display results
         print(f"\n{'='*80}")
@@ -113,17 +143,16 @@ def similarity_search():
         print(f"{'='*80}\n")
         
         if not results:
-            print("No similar entries found (all scores below 70%(this might change depending on user input))\n")
+            print(f"No similar entries found (all scores below {threshold:.0%})\n")
             print("Suggestions:")
             print("  - Try a different code snippet")
             print("  - Use more complete code context")
-            print("  - Lower the threshold (currently 70%)")
+            print(f"  - Lower the threshold (currently {threshold:.0%})")
         else:
             print(f"Found {len(results)} similar SATD entries")
-            print(f"(Similarity >= 70%)\n")
+            print(f"(Similarity >= {threshold:.0%})\n")
             print(f"{'='*80}\n")
             
-
             # Display top results
             for idx, (entry, similarity_score) in enumerate(results[:10], 1):
                 print_entry(entry, idx, similarity_score)
@@ -155,7 +184,7 @@ def similarity_search():
     except ImportError:
         print("\nError: satd_similarity.py not found or dependencies missing!")
         print("\nInstall required packages:")
-        print("  pip install sentence-transformers numpy")
+        print("  pip install sentence-transformers numpy --break-system-packages")
     except Exception as e:
         print(f"\nError during similarity search: {e}")
 
