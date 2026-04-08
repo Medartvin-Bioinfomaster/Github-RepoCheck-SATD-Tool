@@ -145,7 +145,7 @@ def generate_full_report(repo_path, report_data, stats):
                                 <span><strong>Critical:</strong> above {round(medium_stddensity_risk, 2)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <p>This metric counts every sample of SATD found in a file, and normalizes it to a number pr 1000 lines of code (LoC). This metric determines low, medium, or high levels of SATD cases within a file.</p>
+                                <p>This metric counts every sample of SATD found in a file, and normalizes it to be X samples within 1000 lines of code (LoC). This metric determines low, medium, or high levels of SATD cases within a file.</p>
                             </div>
                         </div>
                     </div>
@@ -167,7 +167,7 @@ def generate_full_report(repo_path, report_data, stats):
                                 <span><strong>Kritisk (Outlier):</strong> above {round(medium_compdens_risk, 2)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <p>This metric counts every compromised line found in a file. A compromised line can be a function that contains SATD. This metric is normalized to a number pr 1000 lines of code (LoC). This metric determines low, medium, or high levels of lines potentially compromised with SATD within a file.</p>
+                                <p>This metric counts every compromised line found in a file. A compromised line can be a function that contains SATD. This metric is normalized to x lines pr 1000 lines of code (LoC). This metric determines low, medium, or high levels of lines potentially compromised with SATD within a file.</p>
                             </div>
                         </div>
                     </div>
