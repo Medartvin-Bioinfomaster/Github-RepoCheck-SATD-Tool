@@ -329,12 +329,6 @@ def generate_full_report(repo_path, report_data, stats):
                                 </p>
                             </div>
 
-                            <div style="padding: 15px; background: #fafafa; border-radius: 8px;">
-                                <h4 style="color: #666; margin-bottom: 10px; font-size: 0.8em; text-transform: uppercase;">Activity (Past Year)</h4>
-                                <p><strong>Churn Activity:</strong> ${{file.metrics.churn_activity}}</p>
-                                <p><strong>Dev Status:</strong> ${{file.metrics.past_year_activity.dev_status}}</p>
-                                <p><strong>Avg. Churn:</strong> ${{file.metrics.past_year_activity.average}}</p>
-                            </div>
                         </div>
 
                         <div style="border-top: 1px solid #eee; padding-top: 15px; font-size: 0.85em; color: #555;">

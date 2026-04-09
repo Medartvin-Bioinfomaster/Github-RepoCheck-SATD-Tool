@@ -31,13 +31,13 @@ def SingleFileSatdText(r_file, satd_status, total_churn, loc, churn_per_loc, ris
     text += f"\nlines_added: {r_file.churndata['added']}"
     text += f"\nlines_deleted: {r_file.churndata['deleted']}"
     text += f"\ntotal_churn: {total_churn}"
-    text += f"\n\ntotal_churn Add (new): {total_churn_add}"
-    text += f"\n\ntotal_churn Sub (New): {total_churn_sub}"
-    text += f"\n\ncode decay churn Add (New): {code_decay_add}"
-    text += f"\n\ncode decay churn Sub (New): {code_decay_sub}"
+    # text += f"\n\ntotal_churn Add (new): {total_churn_add}"
+    # text += f"\n\ntotal_churn Sub (New): {total_churn_sub}"
+    # text += f"\n\ncode decay churn Add (New): {code_decay_add}"
+    # text += f"\n\ncode decay churn Sub (New): {code_decay_sub}"
     text += f"\nLines of code (loc): {loc}"
     text += f"\nLines of code potentially compromised: {lines_compromised}"
-    text += f"\nchurn_per_loc: {round(churn_per_loc, 2)}"
+    # text += f"\nchurn_per_loc: {round(churn_per_loc, 2)}"
     text += f"\nrisk_level: {risk}"
     return text
 

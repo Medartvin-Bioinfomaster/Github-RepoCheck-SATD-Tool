@@ -240,10 +240,6 @@ def RepositoryAnalyzation():
 
             averageChurnPrLoc += 0
 
-            text_with_details = SingleFileSatdText(r_file, file_has_satd, total_churn, loc, 
-                                                   404, "not-measured rn", total_churn_add, total_churn_sub, code_decay_add, code_decay_sub, satd_count, lines_compromised)
-        
-            fullText = text_with_details + "\n\n" + textResult
 
             #contributor & endringer:
             contributor_stats = []
@@ -305,6 +301,12 @@ def RepositoryAnalyzation():
                 risk = "Medium"
             else:
                 risk = "Low"
+
+
+            text_with_details = SingleFileSatdText(r_file, file_has_satd, total_churn, loc, 
+                                                   404, risk, total_churn_add, total_churn_sub, code_decay_add, code_decay_sub, satd_count, lines_compromised)
+        
+            fullText = text_with_details + "\n\n" + textResult
 
             datajson = {
                 "Text": fullText,
