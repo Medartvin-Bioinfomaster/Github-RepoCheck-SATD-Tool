@@ -66,7 +66,7 @@ def main_loop():
         elif (action == 3):
             try:
                 print('\nOpening Knowledge base...\n')
-                openHtmlReportFile('satd_knowledge_base.html')
+                openHtmlReportFile('satd_knowledgebase.html')
             except FileNotFoundError as fn:
                 print("The Knowledgebase wasn't found, please try again. Action can have failed due to the knowledgebase being moved or deleted.")
         elif (action == 4):
