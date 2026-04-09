@@ -12,7 +12,7 @@ from dataClasses import RFileData
 
 from satd_knowledgebase import add_to_knowledge_base  
 
-KEYWORDS = ['TODO', 'TO-DO', 'FIXME', 'FIX-ME', 'FIX:', 'HACK', 'NOTE', 'WARNING:', 'SATD']
+KEYWORDS = ['TODO', 'TO-DO', 'TO DO' 'FIXME', 'FIX-ME', 'FIX ME' 'FIX:', 'HACK', 'NOTE', 'WARNING:', 'SATD']
 _SINGLE_RE = re.compile(r'#.*(' + '|'.join(KEYWORDS) + ').*', re.IGNORECASE)
 
 # R function pattern: matches function definitions
