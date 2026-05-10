@@ -58,9 +58,6 @@ class RFileData:
     def addChurnDataPoint(self, dpobject):
         self.churnlogs.append(dpobject)
 
-    def addSatdDensity(self, density): #Density pr 1000 loc
-        self.satdDensity = density
-
 # class GitFetchReturn:
 #     def in
         

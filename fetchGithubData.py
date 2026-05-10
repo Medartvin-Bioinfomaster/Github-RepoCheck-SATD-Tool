@@ -114,19 +114,8 @@ def RepoFetcher(repoUrl, cancelcommand, isLocal = False):
             absolute_path = repoUrl + symbol + relative_filepath
             filename = file.filename
 
-            showlogs = False
-
-            if (filename == "MulticoreParam-class.R"):
-                showlogs = True
-
             added += file.added_lines
             deleted += file.deleted_lines
-
-            if showlogs:
-                print("Churnlogs in GitFetch")
-                print(added)
-                print(deleted)
-                print()
 
             file_churndatapoint = {"added": file.added_lines, "deleted": file.deleted_lines, "commitdate": commit.committer_date}
             churn_data["files"] = file_churndatapoint
