@@ -4,7 +4,7 @@ University-provided API for intelligent context extraction
 """
 
 # Azure OpenAI Configuration
-AZURE_API_KEY = "ugdTg1D2c2VzTflsKYOE7SxNHmaZZ0Me3u9MFWPWl8PFBzCYMiFpJQQJ99BJACfhMk5XJ3w3AAABACOGzgeH"
+AZURE_API_KEY = ""
 AZURE_ENDPOINT = "https://gpt-ifi-prog-eksperimenter-swe1.openai.azure.com"
 AZURE_API_VERSION = "2025-04-01-preview"
 AZURE_DEPLOYMENT_NAME = "gpt-5.1-codex-mini-AM-edvinu-martieka-prod"
