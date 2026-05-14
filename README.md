@@ -1,4 +1,4 @@
-# Github-RepoCheck-SATD-Tool
+
 # SATD Detection Tool for R
 
 A practical Self-Admitted Technical Debt (SATD) detection tool designed specifically for R researchers and bioinformatics developers.
