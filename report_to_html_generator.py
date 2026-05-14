@@ -6,7 +6,7 @@ import urllib.request
 def generate_full_report(repo_path, report_data, stats):
     json_data = json.dumps(report_data["files"])
     
-    percentCompromised = round((stats['locCompromised'] / stats['loc']) * 100, 1)
+    percentCompromised = round((stats['locCompromised'] / stats['loc']) * 100, 1) if stats['loc'] > 0 else 0
     json_contributors = json.dumps(report_data["data"]["contributorCommits"])
 
         # Opprett et strukturert objekt (dictionary) fra de flate stats-verdiene
@@ -128,7 +128,6 @@ def generate_full_report(repo_path, report_data, stats):
                 <p>Low is everything less than average. Medium is Max density - standard deviation. High is everything above the Medium threshold number. All numbers are fetched from a github repository, where an average was calculated, a max value of the density was found, aswell as standard deviation.</p>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%;">
-                    <!-- SATD Forklaring -->
                     <div style="background: white; padding: 15px; border-radius: 8px; border-left: 5px solid #2ecc71;">
                         <h3 style="margin: 0 0 10px 0; font-size: 0.9em; color: #666;">SATD Density Thresholds</h3>
                         <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85em;">
@@ -150,21 +149,20 @@ def generate_full_report(repo_path, report_data, stats):
                         </div>
                     </div>
 
-                    <!-- Compromised Forklaring -->
                     <div style="background: white; padding: 15px; border-radius: 8px; border-left: 5px solid #e74c3c;">
                         <h3 style="margin: 0 0 10px 0; font-size: 0.9em; color: #666;">Compromised Lines Density</h3>
                         <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85em;">
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="width: 12px; height: 12px; background: #2ecc71; border-radius: 50%;"></span>
-                                <span><strong>Normal:</strong>  0 - {round(low_compdens_risk, 2)}</span>
+                                <span><strong>Low:</strong>  0 - {round(low_compdens_risk, 2)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="width: 12px; height: 12px; background: #f39c12; border-radius: 50%;"></span>
-                                <span><strong>Advarsel:</strong> {round(low_compdens_risk, 2)} - {round(medium_compdens_risk, 2)}</span>
+                                <span><strong>Medium:</strong> {round(low_compdens_risk, 2)} - {round(medium_compdens_risk, 2)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="width: 12px; height: 12px; background: #e74c3c; border-radius: 50%;"></span>
-                                <span><strong>Kritisk (Outlier):</strong> above {round(medium_compdens_risk, 2)}</span>
+                                <span><strong>Critical:</strong> above {round(medium_compdens_risk, 2)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <p>This metric counts every compromised line found in a file. A compromised line can be a function that contains SATD. This metric is normalized to x lines pr 1000 lines of code (LoC). This metric determines low, medium, or high levels of lines potentially compromised with SATD within a file.</p>
@@ -308,7 +306,7 @@ def generate_full_report(repo_path, report_data, stats):
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
                             
                             <div style="padding: 15px; background: #fafafa; border-radius: 8px;">
                                 <h4 style="color: #666; margin-bottom: 10px; font-size: 0.8em; text-transform: uppercase;">File Info</h4>

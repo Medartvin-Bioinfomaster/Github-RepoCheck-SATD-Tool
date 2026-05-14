@@ -349,7 +349,7 @@ def RepositoryAnalyzation():
 
     
     satd_percentage = (linesWithSatdCounter / totalLoc * 100) if totalLoc > 0 else 0
-    total_td_density = round((totalSatdCounter / totalLoc) * 1000, 2)
+    total_td_density = round((totalSatdCounter / totalLoc) * 1000, 2) if totalLoc > 0 else 0
 
     outputFileAnalyzeString += (
         f"\nTotal amount of SATD comments found: {totalSatdCounter}"
